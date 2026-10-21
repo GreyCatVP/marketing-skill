@@ -75,8 +75,8 @@ was made with the same renderer.
   effects.
 - **Property and product montages:** hand over a client's photos (or
   phone clips) of a home, a room, or a product, and get a finished
-  vertical reel: each photo panning or zooming with purpose, cuts on the
-  beat, labels, the price and specs, and the client's logo and contact
+  vertical reel: each photo moving like a camera through the room (in 3D,
+  near things moving more than far ones), cuts on the beat, labels, the price and specs, and the client's logo and contact
   details on the end card, with music in their sound or a voiceover. Then
   keep editing it ("faster", "kitchen first", "calmer music") version by
   version, with a saved profile per client.
@@ -265,9 +265,10 @@ times for TikTok, Reels, and Shorts, and, if you want, makes the video:
   pauses cut and captions added (`cut.js`); screen recordings play in a
   phone frame.
 - **A montage of your photos** (`montage-video`): a home's or a product's
-  photos, each moving (a pan across a wide room, a push in on a detail),
-  cut on the beat, with labels, the price and specs, and a client's own
-  look and contact end card (`montage.js`).
+  photos, each moving (in 3D from a free local depth model, so the camera
+  seems to move through the room, or as a pan or push in), cut on the
+  beat, with labels, the price and specs, and a client's own look and
+  contact end card (`montage.js`).
 
 Every video gets your **sonic identity** (one genre, key, and hook, so
 your sound becomes recognizable) and **visual identity** (colors, font,
@@ -439,6 +440,7 @@ scripts/
     captions.js          # word timing for a voice line, caption chunks, and .srt files
     compose.js           # a narrated video page from a script: voice, backgrounds (photos, 3D, or pixel art), synced captions
     montage.js           # a montage page from a client's photos: intake, moves, beat-synced cuts, labels, contact end card
+    depth.js             # a photo's depth map (free local model), for the montage's 3D camera moves
     brand.js             # applies the Visual Identity to a page: colors, font, logo end card
     cut.js               # a filmed talking-head take: pauses cut, captions, and a page to render it
     beats.js             # a music track's tempo, beats, bars, and drops, to cut a video on its beat

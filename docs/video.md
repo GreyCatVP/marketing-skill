@@ -99,6 +99,7 @@ cd scripts/video
 npm install                       # Playwright, and three.js for the 3D template
 npx playwright install chromium   # skip if Google Chrome is installed; it's used as a fallback
 npm install kokoro-js             # optional: free generated voiceovers (about 600 MB)
+npm install @huggingface/transformers   # optional: 3D photo moves in montages (depth maps; add --ignore-scripts if it stops on a GPU download)
 ```
 
 For stock backgrounds, also get free API keys from
@@ -128,6 +129,7 @@ node compose.js script.md                                 # a narrated video pag
 node compose.js script.md --style 3d                      # the same, drawn as 3D scenes (or --style pixel, as pixel art)
 node montage.js inspect photos/ --slug maple             # copy a client's photos in: upright, sized, metadata stripped, contact sheet
 node montage.js state/videos/2026-10-21-maple.md         # a montage page from them: moves, beat-synced cuts, labels, end card
+node depth.js assets/maple-02.jpg                        # a photo's depth map (montage.js makes them itself, for 3D moves)
 node render.js page.html --voice-lengths                  # each voice line's start, length, and room in its scene
 node captions.js assets/voice-1.wav --text "the line"     # when each word of a line is said
 node brand.js page.html                                   # the Visual Identity: colors, font, a logo end card
@@ -396,7 +398,18 @@ node montage.js state/videos/2026-10-21-maple.md
   `scripts/video/montage.js`.
 - **The page** shows the photos bright, without the darkening other
   templates use behind text. Wide photos pan across the 9:16 frame so the
-  whole room is seen. Every cut lands on the music's beat (a licensed
+  whole room is seen.
+- **3D moves:** with the depth model set up (`npm install
+  @huggingface/transformers`, about 100 MB downloaded on first use),
+  `depth.js` estimates how far each point of a photo is (Depth Anything V2
+  Small, an open model that runs locally), and the page draws the photo
+  from it with WebGL. Near things move more than far ones, so the camera
+  seems to circle the room (`orbit`), move into it (`dolly-in`), or lift
+  (`rise`) rather than slide over a flat picture. The moves stay small,
+  since a photo shows one viewpoint: nothing behind the sofa or around a
+  corner. A depth map from any other app works too (`[depth: file]`).
+  Without the model, shots move flat. 3D shots render about three times
+  slower on a machine without a graphics card. Every cut lands on the music's beat (a licensed
   track's beats are read with `beats.js`), or follows the voice. A shot is
   held longer when its label needs time to be read. It ends on an end
   card with the client's logo, handle, contact lines, and fine print.

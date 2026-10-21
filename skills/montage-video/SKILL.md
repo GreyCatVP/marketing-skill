@@ -1,6 +1,6 @@
 ---
 name: montage-video
-description: "Turns a client's own photos or phone clips of a room, a home for sale or rent, or a product into a finished vertical marketing montage for TikTok, Instagram Reels, and YouTube Shorts: each photo moving (a pan across a wide room, a push in on a detail), cut on the music's beat, with labels, a hook, the price and specs, and the client's logo and contact details on the end card. Adds music in the client's saved sound, a licensed track, or the user's own, and an optional voiceover (a free local voice or the user's recordings) with synced captions, then keeps editing the video on request (faster, reorder shots, other music, new text, another voice) and saves each version. Keeps a profile per client. Use when the user shares photos of a property, listing, room, or product and asks for a montage, slideshow, listing video, property tour, product video, or a reel or TikTok made from their pictures."
+description: "Turns a client's own photos or phone clips of a room, a home for sale or rent, or a product into a finished vertical marketing montage for TikTok, Instagram Reels, and YouTube Shorts: each photo moving like a real camera (3D orbits and dolly moves from a free local depth model, or pans and push-ins), cut on the music's beat, with labels, a hook, the price and specs, and the client's logo and contact details on the end card. Adds music in the client's saved sound, a licensed track, or the user's own, and an optional voiceover (a free local voice or the user's recordings) with synced captions, then keeps editing the video on request (faster, reorder shots, other music, new text, another voice) and saves each version. Keeps a profile per client. Use when the user shares photos of a property, listing, room, or product and asks for a montage, slideshow, listing video, property tour, product video, or a reel or TikTok made from their pictures."
 allowed-tools: Read, Grep, Glob, WebSearch, Write, Bash
 ---
 
@@ -11,7 +11,9 @@ allowed-tools: Read, Grep, Glob, WebSearch, Write, Bash
 Take the photos (or short phone clips) a client hands over, a house or
 apartment, a single room, or a product, and turn them into a finished
 9:16 montage that's ready to post: the best shot first with a hook on it,
-each photo moving with purpose, cuts on the beat, a label on every shot,
+each photo moving with purpose (in 3D where it can: the camera seems to
+circle, move into the room, or lift, with near things moving more than far
+ones), cuts on the beat, a label on every shot,
 the price and specs, a CTA, and the client's branded end card. Music, a
 voiceover, or both. Then keep editing it with the user until they're happy
 ("faster", "kitchen first", "calmer music", "drop the price"), one version
@@ -98,6 +100,11 @@ command below. `VIDEO` below means `${CLAUDE_PLUGIN_ROOT}/scripts/video`.
      starter script, `state/videos/<date>-<slug>.md`, one shot per file.
    - iPhone HEIC photos are converted when the machine has a converter.
      If not, it says how to export them as JPEG.
+   - It says whether **3D moves** are on. They need a free depth model set
+     up once (`npm install @huggingface/transformers` in `VIDEO`; the
+     first use downloads about 100 MB). If they're off, ask the user
+     whether to set it up. Never install it unasked. Without it, every shot
+     still moves, just flat (pans and zooms).
 
 5. **Look at every photo.** Read the contact sheet, then each photo you
    need a closer look at, with the Read tool.
@@ -138,6 +145,14 @@ command below. `VIDEO` below means `${CLAUDE_PLUGIN_ROOT}/scripts/video`.
    - **Staged or edited photos:** ask whether any photo is virtually
      staged, or edited beyond color and exposure. A virtually staged photo
      gets the `[staged]` badge.
+   - **How the camera moves:** say plainly what the moves are. A 3D move
+     (`orbit`, `dolly-in`, `rise`) re-draws the photo from how far each
+     part of it is, so the camera seems to move a little through the
+     space. It only shows what's in the photo: no new angles, nothing
+     around a corner, and only small moves (about a step, or a slight
+     turn). For a real change of angle, the cut goes to another photo of
+     the same room taken from another spot. Ask the photographer for two
+     or three angles of the best rooms.
 
 7. **Write the script and build the page.** Edit the starter script. The
    format and every tag are documented at the top of `VIDEO/montage.js`:
@@ -201,7 +216,10 @@ command below. `VIDEO` below means `${CLAUDE_PLUGIN_ROOT}/scripts/video`.
    | "add a voiceover" | `[say: ...]` lines and `voice:` (audition first) or `recordings:` |
    | "a man's voice" / "slower voice" | `voice:` another voice, `speed: 0.9` |
    | "change the text", "remove the price" | the label, `hook:`, `price:`, `specs:`, `cta:` |
-   | "zoom in on the fireplace" | `[move: push-in focus=62%,48%]` |
+   | "zoom in on the fireplace" | `[move: push-in focus=62%,48%]`, or `[move: dolly-in focus=62%,48%]` for a move in 3D |
+   | "make it feel like a real camera" | 3D moves: `[move: orbit]` on wide rooms, `dolly-in` or `rise` on others (on by default when the depth model is set up) |
+   | "more 3D" / "less 3D" | `amount=1.5` or `amount=0.6` in that shot's move |
+   | "it looks warped" | a lower `amount=`, a flat move (`pan-right`, `push-in`) on that shot, or `depth: off` for all |
    | "smoother" / "punchier cuts" | `transition: fade`, or `cut`, `slide`, `zoom`, `wipe`, `flash` |
    | "show the whole photo" | `[fit: contain]` |
    | "the product looks lost" | `[fit: card]` (best for a packshot on white) |
@@ -238,7 +256,8 @@ spends the user's credits, so show the cost quote and get an explicit yes
 first. For a property, say plainly that a generated clip can change what
 the room looks like (a window that wasn't there, a bigger yard).
 Check every frame against the photo, and prefer the local moves for
-listings. Drop any generated clip that changes the property.
+listings: the 3D moves only re-draw the photo, so they never change the
+property. Drop any generated clip that does.
 
 ## When to use this skill
 
@@ -265,7 +284,8 @@ out with the reason.
 
 ### Video
 Whether a video was actually rendered this round, and where it was saved
-(each version's path). Also the cover frame and its `--cover-ms`, the sound
+(each version's path), which shots move in 3D (and, if 3D moves are off,
+how to turn them on). Also the cover frame and its `--cover-ms`, the sound
 (genre and the client's identity, or the licensed track and its credit),
 the voice (none, which generated voice, or the user's recordings) and how
 captions were timed, any hook variants, and anything `--check` or

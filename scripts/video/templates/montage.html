@@ -36,6 +36,17 @@
     wipe stays until the incoming one covers it.
   - Before/after: the slot holds the before photo, then <img class="bg-media
     after"> and <div class="seam"></div>; the after photo wipes in at --at.
+  - 3D moves (a slot with --kb:none holding <canvas class="bg-media depth"
+    width="1080" height="1920" data-src="assets/maple-02.jpg"
+    data-depth="assets/maple-02.depth.png" data-move="orbit-right">): the
+    photo moved by its depth map (white near, from scripts/video/depth.js),
+    near parts more than far ones, so the camera seems to move through the
+    room. data-move is orbit-left or orbit-right (around data-focus, the
+    point of the photo that stays put, "x,y" from 0 to 1, with data-pan
+    "x0,x1" to travel across a wide photo), dolly-in, dolly-out, or rise;
+    data-pos is the object-position ("x,y"), data-zoom (default 1.08) the
+    margin that hides the edges, data-amount (default 1) the strength. The
+    script at the top of this page draws them; without WebGL they're flat.
   - Overlays, in each shot's .scene.shot: .lt (the label: <b>Chef's
     kitchen</b><small>quartz island</small>), .staged (the "Virtually staged"
     badge every virtually staged photo needs), .facts with .price and .specs
@@ -395,6 +406,189 @@
   .callout.below span { top: 44px; }
 
 </style>
+<script>
+/* 3D photo moves: a slot holding <canvas class="bg-media depth" data-src="the photo"
+   data-depth="its depth map" data-move="orbit-right"> (montage.js writes these) is drawn from the
+   photo moved by its depth map, the near parts more than the far ones, so the camera seems to move
+   through the space instead of over a flat picture. render.js calls window.renderFrame(t) on every
+   frame. Without WebGL the shot is drawn flat, with the same framing. */
+(() => {
+  const W = 1080, H = 1920;
+  const VERT = 'attribute vec2 p; varying vec2 uv; void main() { uv = vec2(p.x, -p.y) * .5 + .5; gl_Position = vec4(p, 0., 1.); }';
+  // each pixel of the frame looks for the nearest point of the photo that moves onto it: it steps
+  // from near to far, and the first point whose depth reaches the step is the surface it sees, so
+  // near things cover what's behind them (parallax occlusion mapping)
+  const FRAG = `precision highp float;
+    varying vec2 uv;
+    uniform sampler2D img, dep;
+    uniform vec2 origin, size, shift, center;
+    uniform float push, focus;
+    const int STEPS = 24;
+    void main() {
+      vec2 q = origin + uv * size;
+      vec2 dir = shift + (q - center) * push;
+      float z = 1.0;
+      float h = texture2D(dep, q - dir * (z - focus)).r;
+      float zPrev = z, gapPrev = h - z;
+      for (int i = 0; i < STEPS; i++) {
+        if (h >= z) break;
+        zPrev = z;
+        gapPrev = h - z;
+        z -= 1.0 / float(STEPS);
+        h = texture2D(dep, q - dir * (z - focus)).r;
+      }
+      float gap = h - z;
+      float t = gapPrev < 0.0 ? gapPrev / (gapPrev - gap) : 1.0;
+      gl_FragColor = texture2D(img, q - dir * (mix(zPrev, z, t) - focus));
+    }`;
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const pair = (v, d) => { const p = String(v || '').split(',').map(Number); return p.length === 2 && p.every(Number.isFinite) ? p : d; };
+  const seconds = (el, name, d) => {
+    const v = getComputedStyle(el).getPropertyValue(name).trim();
+    const n = v.endsWith('ms') ? parseFloat(v) / 1000 : parseFloat(v);
+    return Number.isFinite(n) ? n : d;
+  };
+  const load = (src) => new Promise((resolve, reject) => {
+    const im = new Image();
+    im.onload = () => resolve(im);
+    im.onerror = () => reject(new Error(`a 3D shot couldn't load ${src}`));
+    im.src = src;
+  });
+  let gl = null, glCanvas, loc;
+
+  function setup() {
+    glCanvas = document.createElement('canvas');
+    glCanvas.width = W;
+    glCanvas.height = H;
+    gl = glCanvas.getContext('webgl', { preserveDrawingBuffer: true, antialias: false });
+    if (!gl) return;
+    const compile = (type, src) => {
+      const sh = gl.createShader(type);
+      gl.shaderSource(sh, src);
+      gl.compileShader(sh);
+      if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
+      return sh;
+    };
+    const prog = gl.createProgram();
+    gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const p = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(p);
+    gl.vertexAttribPointer(p, 2, gl.FLOAT, false, 0, 0);
+    loc = {};
+    for (const n of ['img', 'dep', 'origin', 'size', 'shift', 'center', 'push', 'focus']) loc[n] = gl.getUniformLocation(prog, n);
+    gl.uniform1i(loc.img, 0);
+    gl.uniform1i(loc.dep, 1);
+    gl.viewport(0, 0, W, H);
+  }
+
+  function texture(source) {
+    const t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+    for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
+    return t;
+  }
+
+  // the photo at about the size it's shown, and its depth map, softened a touch against jagged edges
+  async function prepare(c) {
+    const [photo, depth] = await Promise.all([load(c.dataset.src), load(c.dataset.depth)]);
+    const w = photo.naturalWidth, h = photo.naturalHeight;
+    const k = Math.min(1, 4096 / Math.max(w, h), 1.3 * Math.max(W / w, H / h));
+    const pc = document.createElement('canvas');
+    pc.width = Math.round(w * k);
+    pc.height = Math.round(h * k);
+    pc.getContext('2d').drawImage(photo, 0, 0, pc.width, pc.height);
+    const dc = document.createElement('canvas');
+    dc.width = Math.max(64, Math.round(pc.width / 3));
+    dc.height = Math.max(64, Math.round(pc.height / 3));
+    const dctx = dc.getContext('2d', { willReadFrequently: true });
+    dctx.filter = `blur(${Math.max(1, Math.round(dc.width / 600))}px)`;
+    dctx.drawImage(depth, 0, 0, dc.width, dc.height);
+    const focus = pair(c.dataset.focus, [0.5, 0.5]);
+    const s = Math.max(W / w, H / h);
+    const slot = c.closest('.bg') || c;
+    return {
+      ctx: c.getContext('2d'), photo: pc, img: gl && texture(pc), dep: gl && texture(dc),
+      move: c.dataset.move || 'orbit-right', amount: parseFloat(c.dataset.amount) || 1, zoom: parseFloat(c.dataset.zoom) || 1.08,
+      // the share of the photo the frame shows, filling it
+      size: [W / s / w, H / s / h], pos: pair(c.dataset.pos, [0.5, 0.5]), pan: pair(c.dataset.pan, null),
+      // the focus stays put; nearer things move one way, farther ones the other
+      focus, fz: dctx.getImageData(Math.round(focus[0] * (dc.width - 1)), Math.round(focus[1] * (dc.height - 1)), 1, 1).data[0] / 255,
+      in: seconds(slot, '--in', 0), dur: seconds(slot, '--dur', 4), out: seconds(slot, '--out', Infinity),
+    };
+  }
+
+  function draw(sh, t) {
+    const p = clamp((t - sh.in) / sh.dur, 0, 1);
+    const k = sh.amount;
+    let zoom = sh.zoom, shift = [0, 0], push = 0, pos = sh.pos;
+    if (sh.move === 'orbit-left' || sh.move === 'orbit-right') {
+      // the camera slides around the focus: going right, near things slide left
+      shift = [(sh.move === 'orbit-right' ? -1 : 1) * 0.1 * k * (p - 0.5), 0];
+      if (sh.pan) pos = [sh.pan[0] + (sh.pan[1] - sh.pan[0]) * p, pos[1]];
+    } else if (sh.move === 'dolly-in' || sh.move === 'dolly-out') {
+      // the camera moves in: near things grow faster than far ones
+      const e = sh.move === 'dolly-in' ? p : 1 - p;
+      push = 0.3 * k * e;
+      zoom *= 1 + 0.05 * k * e;
+    } else if (sh.move === 'rise') {
+      // the camera lifts: near things drop away faster
+      shift = [0, 0.16 * k * (p - 0.5)];
+    }
+    // the frame's window on the photo, zoomed around the focus where it sits in the frame
+    const size = [sh.size[0] / zoom, sh.size[1] / zoom];
+    const base = [pos[0] * (1 - sh.size[0]), pos[1] * (1 - sh.size[1])];
+    const at = [0, 1].map((i) => clamp((sh.focus[i] - base[i]) / sh.size[i], 0, 1));
+    const origin = [0, 1].map((i) => clamp(base[i] + at[i] * (sh.size[i] - size[i]), 0, 1 - size[i]));
+    if (!gl) {
+      sh.ctx.drawImage(sh.photo, origin[0] * sh.photo.width, origin[1] * sh.photo.height, size[0] * sh.photo.width, size[1] * sh.photo.height, 0, 0, W, H);
+      return;
+    }
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, sh.img);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, sh.dep);
+    gl.uniform2f(loc.origin, origin[0], origin[1]);
+    gl.uniform2f(loc.size, size[0], size[1]);
+    gl.uniform2f(loc.shift, shift[0] * size[0], shift[1] * size[1]);
+    gl.uniform2f(loc.center, sh.focus[0], sh.focus[1]);
+    gl.uniform1f(loc.push, push);
+    gl.uniform1f(loc.focus, sh.fz);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    sh.ctx.drawImage(glCanvas, 0, 0);
+  }
+
+  // this script runs in <head>, so it waits for the shots further down the page
+  let shots = [];
+  const parsed = new Promise((resolve) => (document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', resolve) : resolve()));
+  window.renderReady = parsed.then(async () => {
+    const canvases = [...document.querySelectorAll('canvas.depth[data-src]')];
+    if (!canvases.length) return;
+    try {
+      setup();
+    } catch (e) {
+      gl = null;
+      console.warn(`3D moves drawn flat: ${e.message}`);
+    }
+    shots = await Promise.all(canvases.map(prepare));
+    for (const sh of shots) draw(sh, sh.in);
+  });
+  window.renderFrame = async (t) => {
+    try {
+      await window.renderReady;
+    } catch {
+      return; // render.js reports why it failed
+    }
+    // only the shots on screen (a slot fades out over .45s after its --out)
+    for (const sh of shots) if (t >= sh.in - 0.05 && t <= sh.out + 0.5) draw(sh, t);
+  };
+})();
+</script>
 </head>
 <body class="montage" data-duration="15" data-drop="2.5" data-music="acoustic" data-bpm="96" data-key="D" data-mode="major" data-energy="2" data-motif="1 3 5 6 | 5 3 2 -">
   <div class="glow g1"></div>

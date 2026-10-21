@@ -37,6 +37,17 @@ Skills that read "our changelog" for source material read this file too.
     darkening behind text. It adds `panX`, `shiftX`, `shiftY`, `pushIn`,
     `pullOut`, and `drift` moves, `contain` and `card` fits, and cut,
     slide, zoom, wipe, and flash transitions.
+- **3D camera moves in montages.** `scripts/video/depth.js` estimates each
+  photo's depth with Depth Anything V2 Small (Apache-2.0, runs locally;
+  `npm install @huggingface/transformers` once). The montage page draws
+  the photo from it with WebGL, using parallax occlusion mapping so near
+  things cover what's behind them. That gives `orbit` (the camera circles
+  the focus while traveling across a wide room), `dolly-in` / `dolly-out`
+  (near things grow faster than the far wall), and `rise`. They're the
+  default moves when a depth map is available, made as needed and kept
+  next to each photo, with `amount=` for strength, `[depth: file]` for a
+  depth map from elsewhere, and `depth: off` for flat moves. Without the
+  model, every shot moves flat, as before.
 - **Client profiles** in `state/clients/<slug>.md` (format in its
   README). Each holds a client's colors, font, logo, sound, contact
   details, and the preferences they've asked for. They're kept out of

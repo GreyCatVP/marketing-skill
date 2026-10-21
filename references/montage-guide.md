@@ -75,6 +75,34 @@ it with `[move: ...]` when the photo asks for something else.
   faster than about a sixth of the frame a second, since faster reads as
   a shaky phone.
 
+### 3D moves
+
+With the depth model set up, `montage.js` gives photos 3D moves by
+default. A depth map (how far each point of the photo is) lets near
+things move more than far ones, which is what a real camera does and a
+plain zoom doesn't.
+
+- **`orbit`** (on a wide room): the camera slides a little around the
+  focal point while traveling across the room. The furniture slides
+  against the back wall. Set `focus=` on what should stay put (the
+  fireplace, the island).
+- **`dolly-in` / `dolly-out`** (on a room with something near the
+  camera): the camera moves in. Near things grow faster than the far
+  wall, so it feels like stepping into the room, not zooming.
+- **`rise`** (on a tall space or an exterior): the camera lifts, and the
+  foreground drops away faster than the house behind it.
+- **Strength:** `amount=1` by default. Up to `1.5` for photos with clear
+  layers (a sofa in front of a window), down to `0.6` for busy ones.
+- **Where it breaks:** thin things against a far background (chair legs,
+  plants, railings) can smear at their edges, and glass and mirrors fool
+  the depth model. Use a flat move or a lower `amount=` on those shots.
+  Look at the `--slides`, and at a `--draft`, which shows the motion.
+- **What it can't do:** show anything that isn't in the photo. The camera
+  can't turn a corner or see behind the sofa. For a real new angle, cut
+  to another photo of the same room taken from somewhere else.
+- 3D shots render slower, about three times as long on a machine without
+  a graphics card. Say so before a long render.
+
 ## Transitions
 
 - **fade** (the default): calm, for homes and premium products.

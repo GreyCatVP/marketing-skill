@@ -37,6 +37,7 @@
  *   pace: 1 bar                        # each shot: N bars, N beats, or seconds (2.5s); or instead
  *   length: 30                         # a target length for the shots, in seconds (the end card adds ~3s)
  *   transition: fade                   # fade (default), cut, slide, zoom, wipe, or flash
+ *   depth: auto                        # auto (default): 3D moves where a depth map can be had; off
  *   bpm: 100                           # the generated music's tempo (and energy: 1-5), to override
  *   ---
  *   1. assets/maple-01.jpg  Welcome home  [move: pull-out]
@@ -48,6 +49,10 @@
  * Tags:
  *   [move: push-in | pull-out | pan-left | pan-right | pan-up | pan-down | drift | none]
  *        with focus=x%,y% (the point of the photo to frame and move toward) and zoom=1.2
+ *   [move: orbit | orbit-left | orbit-right | dolly-in | dolly-out | rise]   3D moves: the photo is
+ *        drawn from its depth map, near parts moving more than far ones, so the camera seems to
+ *        circle the focus, move into the room, or lift; amount=1.5 makes it stronger. They show
+ *        only what's in the photo, so the moves stay small (about a step, or a slight turn).
  *   [fit: cover | contain | card]   cover fills the frame (the default); contain shows the whole
  *        photo over a blurred copy of it; card sets a packshot on a soft backdrop in the accent
  *        color, where a white background melts away
@@ -59,9 +64,13 @@
  *   [before: assets/maple-04-before.jpg]   this shot's photo wipes in over the before photo
  *   [from: 3.5]         where a clip starts, in seconds
  *   [facts]             the price and specs go on this shot instead of the last
+ *   [depth: assets/maple-02-depth.png]   a depth map from elsewhere (white near) for this photo
  *
- * A shot without a move gets one that suits it: a pan across a wide photo, a push in on a tall
- * one, alternating direction; a clip keeps its own motion. Without a voice, every shot is a
+ * A shot without a move gets one that suits it, each the other way from the last: with a depth
+ * map, an orbit across a wide photo and a dolly in or a rise on a tall one; without, a pan or a
+ * push in. A clip keeps its own motion. Depth maps come from depth.js (a free local model, set
+ * up once with `npm install @huggingface/transformers`), made as they're needed and kept next to
+ * each photo; without it, every shot moves flat. Without a voice, every shot is a
  * whole number of the music's beats, with the first cut where the beat drops (a licensed track
  * is read with beats.js and cut on its bars when its beat is steady). With a voice, a shot
  * lasts at least its line. A shot is held longer when its label needs the time to be read.
@@ -78,6 +87,7 @@ const { visualIdentity, applyIdentity } = require('./brand');
 const { parseFrontmatter, sonicIdentity } = require('./compose');
 const { analyseTrack, alignTrack } = require('./beats');
 const { GENRES } = require('./soundtrack');
+const depthMaps = require('./depth');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const W = 1080;
@@ -95,9 +105,13 @@ const MAX_SHOT = 5;
 const DEFAULT_SHOT = { property: 2.6, product: 2.0 }; // seconds, rounded to whole beats
 const READ_WPS = 4; // words a second, the reading pace render.js --check holds text to
 const TRANSITIONS = { fade: 0.45, cut: 0, flash: 0, slide: 0.5, zoom: 0.5, wipe: 0.6 };
-const MOVES = ['push-in', 'pull-out', 'pan-left', 'pan-right', 'pan-up', 'pan-down', 'drift', 'none'];
+// 3D moves draw the photo from its depth map, so the camera seems to move through the space
+const MOVES_3D = ['orbit', 'orbit-left', 'orbit-right', 'dolly', 'dolly-in', 'dolly-out', 'rise'];
+const MOVES = ['push-in', 'pull-out', 'pan-left', 'pan-right', 'pan-up', 'pan-down', 'drift', 'none', ...MOVES_3D];
+// each 3D move's flat stand-in, for a shot without a depth map
+const FLAT = { orbit: 'pan-right', 'orbit-left': 'pan-left', 'orbit-right': 'pan-right', dolly: 'push-in', 'dolly-in': 'push-in', 'dolly-out': 'pull-out', rise: 'pan-up' };
 const FITS = ['cover', 'contain', 'card'];
-const TAGS = ['move', 'fit', 'say', 'hold', 'transition', 'staged', 'callout', 'before', 'from', 'facts'];
+const TAGS = ['move', 'fit', 'say', 'hold', 'transition', 'staged', 'callout', 'before', 'from', 'facts', 'depth'];
 
 function fail(message) {
   console.error(message);
@@ -325,6 +339,9 @@ async function inspect(args) {
   for (const s of skipped) console.warn(`Skipped ${s}`);
   if (!items.length) fail('Nothing could be copied.');
 
+  console.log(depthMaps.available()
+    ? '3D moves: on (depth maps are made for the photos that use them)'
+    : '3D moves: off until the depth model is set up; from scripts/video, run once: npm install @huggingface/transformers');
   const sheet = await contactSheet(items, path.join(assets, `${slug}-contact.png`), tmp);
   fs.rmSync(tmp, { recursive: true, force: true });
   if (sheet) console.log(`Contact sheet: ${sheet}`);
@@ -377,7 +394,7 @@ function parseLength(v) {
   return { seconds: n };
 }
 
-// "push-in focus=40%,55% zoom=1.2" -> { name, focus: [0.4, 0.55], zoom }
+// "push-in focus=40%,55% zoom=1.2" -> { name, focus: [0.4, 0.55], zoom } (amount=1.5 for a 3D move's strength)
 function parseMove(v) {
   const [name = '', ...rest] = String(v).trim().toLowerCase().split(/\s+/);
   const out = { name };
@@ -387,6 +404,7 @@ function parseMove(v) {
       const xy = val.split(',').map((p) => parseFloat(p) / 100);
       if (xy.length === 2 && xy.every((p) => p >= 0 && p <= 1)) out.focus = xy;
     } else if (k === 'zoom' && parseFloat(val) > 1) out.zoom = Math.min(1.6, parseFloat(val));
+    else if (k === 'amount' && parseFloat(val) > 0) out.amount = Math.min(2.5, parseFloat(val));
   }
   return out;
 }
@@ -442,6 +460,23 @@ function resolveMove(shot, dur, defaults, prev) {
     name = 'drift';
   }
   const zoom = shot.move.zoom;
+  if (name === 'orbit') name = /-right$/.test(prev) ? 'orbit-left' : 'orbit-right';
+  if (name === 'dolly') name = 'dolly-in';
+  if (MOVES_3D.includes(name)) {
+    // drawn by the page from the depth map (templates/montage.html); a wide photo also travels
+    // across, the way the camera does
+    const [fx, fy] = shot.move.focus || [0.5, 0.5];
+    const depth = { move: name, focus: [fx, fy], pos: [place.ox, place.oy], zoom: zoom || 1.08, amount: shot.move.amount || 1 };
+    if (/^orbit/.test(name) && place.overflowX >= 120) {
+      const span = Math.min(0.6, (0.7 * PAN_SPEED * dur) / place.overflowX);
+      const sign = name === 'orbit-right' ? 1 : -1;
+      const a = clamp(place.ox - (sign * span) / 2, 0, 1);
+      const b = clamp(place.ox + (sign * span) / 2, 0, 1);
+      depth.pan = [a, b];
+    }
+    vars['--kb'] = 'none';
+    return { name, vars, place, notes, depth };
+  }
   if (name === 'pan-left' || name === 'pan-right') {
     const sign = name === 'pan-right' ? 1 : -1;
     if (place.overflowX >= 120) {
@@ -474,14 +509,21 @@ function resolveMove(shot, dur, defaults, prev) {
   return { name, vars, place, notes };
 }
 
-// The default moves, each the other way from the shot before: wide photos pan, tall ones push in
-// and pull out, a product pushes in and drifts, and a clip keeps its own motion.
+// The default moves, each the other way from the shot before. With a depth map, a wide photo
+// orbits (and travels across), a tall one dollies in or rises, a product dollies in and orbits.
+// Without one, wide photos pan, tall ones push in and pull out, a product pushes in and drifts.
+// A clip keeps its own motion.
 function moveDefaults(kind) {
   return {
     next(shot, place, prev) {
       if (shot.clip) return 'none';
+      if (shot.depthFile) {
+        if (kind === 'product') return prev === 'dolly-in' ? 'orbit' : 'dolly-in';
+        if (place.overflowX >= 200) return 'orbit';
+        return prev === 'dolly-in' ? 'rise' : 'dolly-in';
+      }
       if (kind === 'product' || shot.fit !== 'cover') return prev === 'push-in' ? 'drift' : 'push-in';
-      if (place.overflowX >= 200) return prev === 'pan-right' ? 'pan-left' : 'pan-right';
+      if (place.overflowX >= 200) return /-right$/.test(prev) ? 'pan-left' : 'pan-right';
       return prev === 'push-in' ? 'pull-out' : 'push-in';
     },
   };
@@ -555,6 +597,37 @@ async function build(args) {
     look = visualIdentity();
     identity = sonicIdentity();
   }
+
+  // ---- depth maps, for the shots that move in 3D: the ones that ask for it, and (unless the
+  // script says depth: off) every photo that fills the frame and has no move of its own
+  const auto3d = String(meta.depth || 'auto').trim().toLowerCase() !== 'off';
+  const flatOnly = (s) => (s.clip ? 'is a clip' : s.fit !== 'cover' ? `shows the whole photo (fit: ${s.fit})` : s.callout ? 'has a callout' : s.tags.before ? 'is a before/after' : '');
+  for (const s of shots) {
+    const why = !auto3d ? 'the script says depth: off' : flatOnly(s) ? `it ${flatOnly(s)}` : '';
+    if (MOVES_3D.includes(s.move.name) && why) {
+      notes.push(`shot ${s.n} can't move in 3D (${why}); it gets ${FLAT[s.move.name]} instead`);
+      s.move.name = FLAT[s.move.name];
+    }
+  }
+  const want = auto3d ? shots.filter((s) => !flatOnly(s) && (MOVES_3D.includes(s.move.name) || !s.move.name)) : [];
+  const own = (s) => typeof s.tags.depth === 'string' && s.tags.depth;
+  for (const s of want) if (own(s) && !fs.existsSync(path.join(dir, s.tags.depth))) fail(`shot ${s.n}: depth map ${s.tags.depth} not found (relative to ${dir})`);
+  const toMake = [...new Set(want.filter((s) => !own(s) && !depthMaps.fresh(path.join(dir, s.media))).map((s) => path.join(dir, s.media)))];
+  if (toMake.length && depthMaps.available()) {
+    console.log(`Making depth maps for ${toMake.length} photo${toMake.length === 1 ? '' : 's'} (depth.js)...`);
+    const res = run('depth.js', toMake, { stdio: ['ignore', 'inherit', 'pipe'] });
+    if (res.status !== 0) notes.push(`no depth maps, so those shots move flat: ${(res.stderr || '').trim().split('\n').slice(0, 2).join(' ')}`);
+  }
+  for (const s of want) {
+    if (own(s)) s.depthFile = s.tags.depth;
+    else if (depthMaps.fresh(path.join(dir, s.media))) s.depthFile = path.relative(dir, depthMaps.depthPath(path.join(dir, s.media))).split(path.sep).join('/');
+  }
+  const flat = want.filter((s) => !s.depthFile);
+  for (const s of flat.filter((x) => MOVES_3D.includes(x.move.name))) {
+    notes.push(`shot ${s.n} has no depth map, so its ${s.move.name} is a flat ${FLAT[s.move.name]}`);
+    s.move.name = FLAT[s.move.name];
+  }
+  if (flat.length && !depthMaps.available()) notes.push(`3D moves are off: they need a depth model. From scripts/video, run once: npm install @huggingface/transformers`);
 
   // ---- the voice: the user's recordings, or a generated voice, for the [say: ...] lines
   let said = shots.filter((s) => typeof s.tags.say === 'string' && s.tags.say);
@@ -732,6 +805,7 @@ async function build(args) {
     const move = resolveMove(s, dur, defaults, i > 0 ? shots[i - 1].moveName : '');
     notes.push(...move.notes);
     s.moveName = move.name;
+    s.is3d = !!move.depth;
     s.place = move.place;
     const cls = ['bg', i === 0 ? 'now' : '', s.fit === 'cover' ? '' : s.fit === 'contain' ? 'fit' : 'card',
       i > 0 && s.transition !== 'fade' ? `t-${s.transition === 'flash' ? 'cut' : s.transition}` : ''].filter(Boolean).join(' ');
@@ -743,7 +817,13 @@ async function build(args) {
       ? `<video class="bg-media${extra}" src="${src}" data-loop="false"${s.tags.from ? ` data-offset="${parseFloat(s.tags.from) || 0}"` : ''}></video>`
       : `<img class="bg-media${extra}" src="${src}" alt="">`);
     let inner;
-    if (s.fit === 'contain') inner = media(' backdrop') + media(' whole');
+    if (move.depth) {
+      const d = move.depth;
+      const r3 = (v) => Math.round(v * 1000) / 1000;
+      inner = `<canvas class="bg-media depth" width="${W}" height="${H}" data-src="${src}" data-depth="${esc(s.depthFile)}" data-move="${d.move}"`
+        + ` data-focus="${r3(d.focus[0])},${r3(d.focus[1])}" data-pos="${r3(d.pos[0])},${r3(d.pos[1])}"${d.pan ? ` data-pan="${r3(d.pan[0])},${r3(d.pan[1])}"` : ''}`
+        + ` data-zoom="${d.zoom}" data-amount="${d.amount}"></canvas>`;
+    } else if (s.fit === 'contain') inner = media(' backdrop') + media(' whole');
     else if (s.fit === 'card') inner = media(' whole');
     else if (s.tags.before) inner = `<img class="bg-media" src="${esc(s.tags.before)}" alt="">${media(' after')}<div class="seam"></div>`;
     else inner = media();
@@ -832,7 +912,7 @@ ${scenes.join('\n\n')}
 
   console.log(`Wrote ${page}: ${shots.length} shots, ${total}s${total !== duration ? ` (${duration}s of shots and the end card)` : ''}`);
   for (const s of shots) {
-    const what = [s.moveName, s.fit !== 'cover' ? `fit ${s.fit}` : '', s.transition !== 'fade' && s.n !== shots[0].n ? s.transition : '', s.say ? 'voiced' : '', s.tags.staged ? 'staged' : ''].filter(Boolean).join(', ');
+    const what = [s.is3d ? `${s.moveName} (3D)` : s.moveName, s.fit !== 'cover' ? `fit ${s.fit}` : '', s.transition !== 'fade' && s.n !== shots[0].n ? s.transition : '', s.say ? 'voiced' : '', s.tags.staged ? 'staged' : ''].filter(Boolean).join(', ');
     console.log(`  ${String(s.n).padStart(2)}. ${s.start.toFixed(2)}–${s.end.toFixed(2)}s  ${s.media.padEnd(22)} ${what.padEnd(24)} ${[s.label, s.sub].filter(Boolean).join(' | ').slice(0, 44)}`);
   }
   const soundLine = musicSrc

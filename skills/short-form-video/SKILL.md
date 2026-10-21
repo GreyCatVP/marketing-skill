@@ -1,6 +1,6 @@
 ---
 name: short-form-video
-description: "Creates ready-to-post short-form vertical video packages for TikTok, Instagram Reels, and YouTube Shorts, both marketing videos (ads, explainers, how-tos, testimonials, launches) and everyday memeable FYP posts (POV, tier lists, text-message skits, storytimes, hot takes, and more): a hook-first script and shot list, plus a per-platform title or caption, hashtags sized to each platform's current norms, and a best-time-to-post window. If the user opts in, makes the actual video too: with a connected video-generation tool (Higgsfield, Figma Weave, Canva, or any other image/video MCP tool), or by rendering an animated-text video with an original soundtrack and meme sound effects locally; otherwise recommends free tools such as CapCut and still delivers the full script and packages. Use when the user asks for a TikTok video, an Instagram Reel, a YouTube Short, a short-form or vertical video script, video hooks, a meme or trend-style post, everyday content for the feed, or a viral video for social media."
+description: "Creates ready-to-post vertical video packages for TikTok, Instagram Reels, and YouTube Shorts, both marketing videos (ads, explainers, how-tos, testimonials, launches) and everyday memeable FYP posts (POV, tier lists, text-message skits, storytimes, hot takes, and more): a hook-first script and shot list, plus a per-platform caption, hashtags sized to each platform's current norms, and a best-time-to-post window. If the user opts in, makes the actual video too: with a connected video-generation tool (Higgsfield, Figma Weave, Canva, or similar), or rendered locally with an original soundtrack and voiceover, as animated text, a narrated 3D animation, or pixel art; otherwise recommends free tools such as CapCut and still delivers the script and packages. Use when the user asks for a TikTok, Reel, or YouTube Short, a short-form or vertical video script, video hooks, a 3D or pixel-art animated video, a meme or trend-style post, everyday content for the feed, or a viral video for social media."
 allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write, Bash
 ---
 
@@ -103,10 +103,14 @@ command below.
      rules").
    - The look, if the video will be rendered locally: real backgrounds
      (stock photos, stock video clips, or AI-generated images; see
-     `references/video-rendering.md`) behind the text, or the plain
-     gradient. Backgrounds are the default
-     when a source is available; they make the video feel produced rather
-     than like a slide.
+     `references/video-rendering.md`) behind the text, the plain gradient,
+     or animation drawn in 3D or pixel art, narrated with a voiceover.
+     Backgrounds are the default when a source is available; they make the
+     video feel produced rather than like a slide. When the user asks for
+     3D, pixel art, an 8-bit or retro game look, or an animated video, use
+     an animation style ("3D or pixel-art animation: a style" in
+     `video-rendering.md`); for a style the renderer can't draw (cartoon or
+     anime characters, claymation), see step 3.
    - The hook/angle and core message — what should stop the scroll in the
      first second, and what's the one thing a viewer should walk away
      knowing or feeling.
@@ -170,9 +174,10 @@ command below.
    - **Local rendering (no connector needed):** this plugin's own
      `${CLAUDE_PLUGIN_ROOT}/scripts/video/render.js` turns an animated HTML
      page into a finished 9:16 MP4 with an original soundtrack in the
-     project's sonic identity, over stock photos, stock clips, or AI images.
-     Be plain about what it makes: motion graphics, not filmed footage of
-     the user's product or people. Read
+     project's sonic identity, over stock photos, stock clips, or AI images,
+     or as narrated 3D or pixel-art animation with a voiceover.
+     Be plain about what it makes: motion graphics or drawn animation, not
+     filmed footage of the user's product or people. Read
      `${CLAUDE_PLUGIN_ROOT}/references/video-rendering.md` ("What it makes")
      for what it suits and how to check it's usable; if anything is
      missing, give the user the one-time setup from "Rendering a
@@ -195,6 +200,12 @@ command below.
      rather than confidently endorsing something unverified, the same
      epistemic bar `community-post-generator` applies to secondhand claims
      about platform rules.
+   - **Animation styles the renderer can't draw** (cartoon or anime
+     characters, claymation, a mascot animated in 3D): only a connected
+     video model can make these, prompted with the style, under the same
+     credit rule as above. Offer the local 3D or pixel-art styles as the
+     free alternative, and never imitate a specific studio's or game's
+     characters.
    - **When the type needs real footage** ("Film" in `video-types.md`, such
      as behind the scenes, a vlog, UGC, or an on-camera testimonial), no
      tool can stand in for it. Say so, and plan to deliver a phone shot
@@ -280,7 +291,9 @@ command below.
    opts in): follow `${CLAUDE_PLUGIN_ROOT}/references/video-rendering.md`
    from top to bottom. In short: for a voiceover over backgrounds, write
    the script as numbered lines and let `scripts/video/compose.js` build
-   a narrated page with captions synced to the voice; for anything else,
+   a narrated page with captions synced to the voice (with `style: 3d` or
+   `style: pixel`, drawn as 3D or pixel-art animation, a shot per line);
+   for anything else,
    copy the template the type or format names to
    `state/videos/<date>-<slug>.html` and rewrite its scenes to the step 4
    script, then set the music from the Sonic Identity and add the
@@ -339,6 +352,7 @@ Trigger on requests like:
 - "Give me a short-form video / vertical video script for..."
 - "Help me go viral with a video about..."
 - "Make a POV / tier list / text-message skit / storytime about..."
+- "Make a 3D animated video / a pixel-art or 8-bit video with a voiceover about..."
 - "We need something memeable / relatable for the feed this week"
 
 **Do not** trigger on a request for a long-form video brief, a static
@@ -421,9 +435,10 @@ aspect ratio/length reminder.
 
 ### Generation Status
 State plainly whether an actual video was generated this run, via which
-tool (or rendered locally, which is motion graphics with an original
-soundtrack, not footage), where the file was saved, which backgrounds were
-used (stock, with provider, or AI, with tool), the sound (genre and hook,
+tool (or rendered locally, which is motion graphics or drawn animation with
+an original soundtrack, not footage), where the file was saved, which
+backgrounds were used (stock, with provider, or AI, with tool; or the
+animation style and its shots, and which of the user's images went in them), the sound (genre and hook,
 or the licensed track), the voice (recorded or generated, which voice)
 and how captions were timed, which hook variants were rendered, and the
 cover frame and its `--cover-ms` — or that none was

@@ -25,7 +25,7 @@ Made something with it? [Share it in Show and tell](https://github.com/marcosmod
 
 ## See it
 
-29 video templates, rendered on your machine with music composed in your
+31 video templates, rendered on your machine with music composed in your
 brand's own sound. Each frame below is one template, mid-video:
 
 **Marketing videos** (ads, demos, narrated explainers, testimonials, FAQs, launches, team)
@@ -37,6 +37,10 @@ brand's own sound. Each frame below is one template, mid-video:
 ![Meme caption templates](docs/gallery/meme-captions.jpg)
 ![Comment bait templates](docs/gallery/comment-bait.jpg)
 ![Skit and story templates](docs/gallery/skits-and-stories.jpg)
+
+**3D and pixel-art animation**, narrated, with captions synced to the voice
+
+![3D and pixel-art templates](docs/gallery/animation.jpg)
 
 [The plugin's own explainer](media/explainer/marketing-skill-explainer.mp4)
 was made with the same renderer.
@@ -65,8 +69,9 @@ was made with the same renderer.
   launch, FAQ, and more) or to an everyday FYP format (POV, tier list,
   text-message skit, storytime, hot take, and 17 more). Also the finished
   vertical video itself, rendered on your machine: animated text over
-  stock or AI backgrounds, with music composed in your brand's own sound
-  and meme sound effects.
+  stock or AI backgrounds, or a narrated 3D or pixel-art animation, with
+  a voiceover, music composed in your brand's own sound, and meme sound
+  effects.
 - **Community posts:** Reddit, Product Hunt, Hacker News (Show HN), Indie
   Hackers, dev.to, Discord, Slack, and Telegram posts written to each
   community's actual rules, with a Go/No-Go before drafting.
@@ -93,7 +98,7 @@ anything actually publishes.
 | `email-sequence` | "email sequence," "drip campaign," "welcome series" | A multi-email sequence with send timing, subject lines, and a real narrative arc across emails |
 | `email-outreach` | "cold outreach," "prospecting emails," "daily sales outreach," "personalized cold email to [name]" | Researches real prospects against a defined ICP (public-web research by default; a connected prospecting tool only if you ask for verified contact details), checks each one against a permanent contact log so nobody's contacted twice — or ever again once unsubscribed/replied — drafts a genuinely personalized email per prospect, re-confirms strategy monthly, and queues everything for approval (or drafts directly in Gmail if connected); never sends |
 | `visual-brief-generator` | "visual brief," "video brief," "shot list," "image prompts for X" | A structured shot list, per-scene prompts, aspect ratios, and style guide; generates the actual asset only if a visual-gen tool is connected |
-| `short-form-video` | "TikTok video," "Instagram Reel script," "YouTube Short," "short-form/vertical video for..." | A hook-first script/shot list plus a ready-to-post package per platform (YouTube Shorts/Instagram Reels/TikTok) — title/caption, sized hashtags, and a best-time-to-post window, shaped to one of 23 marketing video types (testimonial, how-to, announcement, and so on) or 22 everyday FYP formats (POV, tier list, text-message skit, storytime, and so on); if you opt in, makes the actual video too, either with a connected tool (Higgsfield, Figma Weave, Canva, or similar) or by rendering it locally (`scripts/video/`): animated text over stock or AI backgrounds, with music in the project's own saved sound; otherwise points to current free tools |
+| `short-form-video` | "TikTok video," "Instagram Reel script," "YouTube Short," "short-form/vertical video for..." | A hook-first script/shot list plus a ready-to-post package per platform (YouTube Shorts/Instagram Reels/TikTok) — title/caption, sized hashtags, and a best-time-to-post window, shaped to one of 23 marketing video types (testimonial, how-to, announcement, and so on) or 22 everyday FYP formats (POV, tier list, text-message skit, storytime, and so on); if you opt in, makes the actual video too, either with a connected tool (Higgsfield, Figma Weave, Canva, or similar) or by rendering it locally (`scripts/video/`): animated text over stock or AI backgrounds, or a narrated 3D or pixel-art animation, with music in the project's own saved sound; otherwise points to current free tools |
 | `community-post-generator` | "post this to r/[subreddit]," "help me post on Product Hunt," "write a Show HN/Show IH for this," "post this on dev.to," "post this in our Discord/Slack/Telegram" | Live-researches that specific subreddit's, Product Hunt's, Hacker News's, Indie Hackers', dev.to's, or a public Telegram channel's/group's actual rules and typical post style first (verifying each source is actually about that target, not a similarly-named one); for Discord, Slack, and private Telegram targets, asks you for the rules instead, since it can't research those. Gives a plain Go/No-Go either way, and only drafts a post (shaped for that platform — title+body, title+URL+first comment for Show HN, dev.to's title+body+tags, or a single chat message in Discord's, Slack's, or Telegram's own formatting for the chat platforms) if it's actually welcome there, written to read like a person wrote it |
 | `publish-pipeline` | "publish this," "send to n8n/Make," "fire the webhook," "send the queued post for [date]" | Packages finished content/assets into JSON and hands off to your automation via webhook (or, optionally, straight to a platform API) after showing you the exact payload |
 | `full-pipeline` | "run the full pipeline," "research X and publish it," "do the whole thing end to end" | Chains research, repurposing, visual brief, and publish into one run, with a mandatory pause before anything actually publishes |
@@ -243,6 +248,10 @@ times for TikTok, Reels, and Shorts, and, if you want, makes the video:
 - **Narrated:** a script of numbered lines becomes a voiceover (a free
   local voice, or your own takes) over a background per line, with
   word-by-word captions synced to the voice (`compose.js`).
+- **Animated, in 3D or pixel art:** the same narrated script, drawn as 3D
+  scenes in your brand's colors (your screenshot on a phone, your logo on
+  a coin) or as a pixel-art game with chiptune music (`style: 3d` or
+  `style: pixel`).
 - **Your own footage:** a talking-head take from your phone gets its
   pauses cut and captions added (`cut.js`); screen recordings play in a
   phone frame.
@@ -412,12 +421,12 @@ scripts/
     check.js             # QA pass over templates: layout lint, cues, fonts, loudness, contact sheets
     voice.js             # free local voiceover (Kokoro): a script -> one WAV per line
     captions.js          # word timing for a voice line, caption chunks, and .srt files
-    compose.js           # a narrated video page from a script: voice, backgrounds, synced captions
+    compose.js           # a narrated video page from a script: voice, backgrounds (photos, 3D, or pixel art), synced captions
     brand.js             # applies the Visual Identity to a page: colors, font, logo end card
     cut.js               # a filmed talking-head take: pauses cut, captions, and a page to render it
     beats.js             # a music track's tempo, beats, bars, and drops, to cut a video on its beat
     gallery.js           # rebuilds the template gallery in docs/gallery
-    templates/           # 7 marketing + 22 everyday starting pages, built from templates/build.py and fyp.py
+    templates/           # 7 marketing + 22 everyday + 3D and pixel-art starting pages, built by templates/build.py
 ```
 
 ## Share what you made

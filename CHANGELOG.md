@@ -5,6 +5,24 @@ Skills that read "our changelog" for source material read this file too.
 
 ## 0.8.0 (unreleased)
 
+- **3D and pixel-art animation, with voice.** Two templates that draw their
+  own frames: `3d.html` (three.js, lit in the brand's colors: floating
+  shapes, a phone with your screenshot, feature cards, a bar chart, a coin
+  with your logo, a ring tunnel, a globe) and `pixel.html` (an original
+  robot hero walking, fighting a boss, opening a chest of coins, leveling
+  up, in a 16-color palette, with captions in a game dialog box). Each is
+  narrated with word-by-word captions synced to the voice. `compose.js`
+  makes either from a script with `style: 3d` or `style: pixel`, one shot
+  per line (`[shot: hero src=assets/screen.png]` picks one).
+- The renderer seeks pages that draw with WebGL or a canvas frame by frame
+  (`window.renderFrame(t)`), serves three.js from `scripts/video/node_modules`
+  (now a dependency) so renders work offline, and reports page script
+  errors. A shot change counts as a change on screen in the pacing check.
+- **Chiptune**, a twelfth genre: a pulse-wave lead, an arpeggio for chords,
+  a triangle bass, and noise-channel drums. And five 8-bit sound effects:
+  `coin`, `jump`, `powerup`, `blip`, `hurt`.
+- `gallery.js` builds a strip of the drawn templates' shots, and can build
+  just the strips you name.
 - **Narrated videos with synced captions.** `scripts/video/compose.js`
   turns a script of numbered lines into a finished page: a voiceover
   (Kokoro or your own takes), a background per line, scenes timed to the

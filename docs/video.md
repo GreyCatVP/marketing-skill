@@ -3,8 +3,9 @@
 How `short-form-video` makes the actual video: with a connected
 image/video tool, or rendered on your machine for free. The renderer is
 the main path: templates for marketing and everyday posts, narrated
-videos with captions synced to the voice (`compose.js`), your own
-filmed takes (`cut.js`), and the brand's look and sound on every one.
+videos with captions synced to the voice (`compose.js`), 3D and
+pixel-art animation narrated the same way, your own filmed takes
+(`cut.js`), and the brand's look and sound on every one.
 
 - [Connecting a visual-generation tool](#connecting-a-visual-generation-tool)
 - [Connecting a short-form video generation tool](#connecting-a-short-form-video-generation-tool)
@@ -80,8 +81,9 @@ in, `short-form-video` writes the page from its own script and renders
 it. You can also run the renderer yourself.
 
 **What it makes:** motion graphics (kinetic text, shapes, UI mockups) over
-real backgrounds, with music composed for your project, and a voiceover if
-you record one. It doesn't film your product or people, but it does finish
+real backgrounds, or drawn 3D and pixel-art scenes (see "3D and pixel-art
+animation" below), with music composed for your project, and a voiceover if
+you record or generate one. It doesn't film your product or people, but it does finish
 footage you film: `cut.js` takes a talking-head take from your phone, cuts
 out the pauses, and makes the video from it with its own sound, captions,
 your hook, music, and end card, and screen recordings play in the how-to
@@ -94,7 +96,7 @@ YouTube Shorts, Instagram Reels, and TikTok all expect.
 
 ```
 cd scripts/video
-npm install
+npm install                       # Playwright, and three.js for the 3D template
 npx playwright install chromium   # skip if Google Chrome is installed; it's used as a fallback
 npm install kokoro-js             # optional: free generated voiceovers (about 600 MB)
 ```
@@ -123,6 +125,7 @@ node beats.js assets/track.mp3 --align 2 --duration 24   # a track's tempo and b
 node voice.js script.md --out assets --voice af_heart     # a free voiceover, one WAV per script line
 node voice.js --audition samples "One line to try."       # the same line in four voices, to pick one
 node compose.js script.md                                 # a narrated video page from a script: voice, backgrounds, synced captions
+node compose.js script.md --style 3d                      # the same, drawn as 3D scenes (or --style pixel, as pixel art)
 node render.js page.html --voice-lengths                  # each voice line's start, length, and room in its scene
 node captions.js assets/voice-1.wav --text "the line"     # when each word of a line is said
 node brand.js page.html                                   # the Visual Identity: colors, font, a logo end card
@@ -186,10 +189,11 @@ photos and screenshots.
 Every video gets music composed for it in your project's **sonic
 identity**: one genre, tempo, key, energy, and signature hook. It's saved
 in `references/brand-voice.md` and used for every video, so your sound
-becomes recognizable the way a jingle does. There are eleven genres:
+becomes recognizable the way a jingle does. There are twelve genres:
 `pop`, `house`, `hiphop`, `acoustic`, `cinematic`, `tech`, `lofi`, `calm`,
-and three for very online Gen Z and Gen Alpha feeds: `phonk`, `jersey`
-(jersey club), and `funk` (Brazilian funk).
+three for very online Gen Z and Gen Alpha feeds: `phonk`, `jersey`
+(jersey club), and `funk` (Brazilian funk), and `chiptune`, an old game
+console's sound, for pixel art.
 The first time you render, the skill proposes two identities that fit your
 audience and plays you a short preview of each.
 [`references/sound-guide.md`](../references/sound-guide.md) explains the
@@ -205,7 +209,8 @@ How a video's soundtrack is put together:
   music's key. Everyday posts also get the meme cues: a boom, a record
   scratch, an air horn, a rimshot, a sad trombone, a drumroll, a ding and
   a buzzer, message pings, typing, a camera shutter, a ka-ching, a glitch,
-  and a sub drop.
+  and a sub drop. Pixel art gets 8-bit ones: a coin, a jump, a power-up,
+  a dialog-box blip, and a hit.
 - **No licensing:** it's all synthesized from scratch, so there's nothing
   to license, and it works when posting through an API, where in-app
   trending sounds can't be added.
@@ -263,6 +268,8 @@ in `scripts/video/templates/`:
 | `announcement.html` | 18s | Launches, plus event, webinar, and live-stream promos | house |
 | `team.html` | 18s | Meet the team, the people side of a company profile | acoustic |
 | `narrated.html` | per script | A voiceover over one background per line, with captions synced to the voice: explainers, tips, text-led brand stories (built by `compose.js`) | the identity, energy −1 |
+| `3d.html` | per script | The same, over 3D scenes in the brand's colors: explainers, launches, a product reveal with your screenshot (`compose.js`, `style: 3d`) | the identity, energy −1 |
+| `pixel.html` | per script | The same, over pixel-art game scenes with a dialog box for captions: playful explainers, tips, brand stories (`compose.js`, `style: pixel`) | `chiptune` |
 
 The skill swaps each template's default sound for your sonic identity.
 
@@ -301,13 +308,73 @@ doesn't fake real people or events. The testimonial and team templates
 ship with bracketed placeholders, which the skill replaces only with real,
 permissioned material from you.
 
+### 3D and pixel-art animation
+
+Two templates draw their own frames instead of showing photos: `3d.html`
+with WebGL (three.js) and `pixel.html` on a canvas. Both are narrated like
+`narrated.html`: a voiceover line by line, word-by-word captions synced to
+the voice, the hook on screen from the first frame. The text stays on top
+as ordinary page text, so the QA pass, sound cues, and captions work the
+same as on every other template.
+
+Behind each line is a **shot**, from a small library in each template:
+
+| Style | Shots | Sound |
+|---|---|---|
+| `3d` | `shapes` (glossy shapes floating), `hero` (a phone turning to camera, with your screenshot on it), `cards` (your points flying in as cards), `chart` (bars growing to your real numbers), `coin` (a coin or badge with your logo spinning in), `rings` (flying through a tunnel of rings), `globe` (a dotted globe with arcs between places) | Your sonic identity |
+| `pixel` | `walk` (a robot walking through a scrolling landscape, by day, sunset, or night), `boss` (the robot beating a slime: the problem, defeated), `coins` (a chest bursting with coins), `levelup` (a burst of light), `city` (a night city), `space` (a rocket through the stars), `photo` (your image, pixelated) | `chiptune`, in your identity's key and hook |
+
+Both take their colors from your Visual Identity: the 3D scenes are lit in
+your accent color, and the pixel robot wears it. The robot is an original
+character; nothing is borrowed from a real game.
+
+The quickest way to make one is a script with a style:
+
+```
+---
+title: late invoices
+style: pixel                     # or 3d
+hook: freelancing is basically a video game
+cta: one money habit a week
+---
+1. Every freelancer starts at level one.
+2. The first boss? Invoices paid late. [shot: boss]
+3. Send yours the day the work ends, and the coins roll in. [shot: coins]
+4. Follow for one money habit a week.
+```
+
+`compose.js` voices it, gives every line a shot (the ones named, the rest
+in turn), times everything to the voice, and writes the page.
+`[shot: hero src=assets/app.png]`, `[shot: cards items="Plan,Film,Post"]`,
+`[shot: chart values=12,30,85]`, and `[shot: walk time=night]` set a shot's
+details. Each template's comment lists every shot and what it takes.
+
+- **Your material only:** a screenshot on the 3D phone, a logo on the coin,
+  numbers on the chart, and a pixelated photo must be the real ones. Without
+  them, the phone shows a generic interface and the chart a plain rising
+  icon, never made-up data.
+- **Render time:** pixel art renders as fast as any template. 3D is
+  fastest on a computer with a graphics card; without one (most cloud
+  machines) it's drawn in software, at about 3 frames a second on a 4-core
+  machine: around 3 minutes for a 15-second video.
+- **Other styles** (cartoon characters, anime, claymation, a 3D animated
+  character): those need a video model, through a connected tool such as
+  Higgsfield or Figma Weave (see the start of this guide), with the style in
+  the prompt. That spends the tool's credits. The local renderer doesn't
+  draw characters beyond the pixel robot.
+
+### How a page works
+
 A comment at the top of `promo.html` documents how a page works: CSS
 animations timed with `animation-delay` (the renderer seeks every one
 frame by frame, so output is frame-exact on any machine), the background
-slots, the music settings on `<body>`, and `data-sfx` cues. The templates
-are built from one shared base by `templates/build.py` (the everyday ones
-are defined in `templates/fyp.py`); edit those and run `python3 build.py`
-rather than hand-editing 29 copies.
+slots, the music settings on `<body>`, and `data-sfx` cues. A page that
+draws its own frames defines `window.renderFrame(t)`, which the renderer
+calls with each frame's time (see `3d.html` and `pixel.html`). The
+templates are built from one shared base by `templates/build.py` (the
+everyday ones are defined in `templates/fyp.py`, and the drawn ones in
+`scene3d.py` and `pixel.py`); edit those and run `python3 build.py`
+rather than hand-editing 31 copies.
 
 The skill saves its pages and renders under `state/videos/`, with media in
 `state/videos/assets/`. Rendered MP4s and downloaded media are git-ignored;

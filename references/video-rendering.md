@@ -8,13 +8,14 @@ plugin folder, resolved the way the skill describes.
 ## What it makes
 
 Motion graphics (kinetic text, shapes, UI mockups) over stock photos, stock
-video clips, or AI images, with an original soundtrack in the project's
-sonic identity and sound effects synced to what's on screen. It's not
-filmed footage of the user's product or people, and the only voiceover is
-one the user records or supplies (or a free generated one, below). It
-suits the types `video-types.md` marks Render or Render + your assets, not
-anything that needs real people or places on camera. It costs nothing to
-run.
+video clips, or AI images, or narrated animation drawn in 3D or pixel art
+(below), with an original soundtrack in the project's sonic identity and
+sound effects synced to what's on screen. It's not filmed footage of the
+user's product or people, and the only voiceover is one the user records
+or supplies (or a free generated one, below). It suits the types
+`video-types.md` marks Render, Narrate, Animate, or Render + your assets,
+not anything that needs real people or places on camera. It costs nothing
+to run.
 
 Check it's usable with `node --version` (18+), `ffmpeg -version`, and
 `node -e "require('playwright')"` run from `scripts/video`. If anything is
@@ -58,16 +59,68 @@ To change a line, edit the script and run `compose.js` again: the timing is
 measured from the voice, so don't hand-edit it in the page. Send the user
 the voice (`--audio-only`) or a render to check, since you can't hear it.
 
+## 3D or pixel-art animation: a style
+
+When the user asks for a 3D animation, pixel art, an 8-bit or retro game
+look, or "an animated video" with no footage, write the same numbered
+script and add `style: 3d` or `style: pixel` to its frontmatter. Each line
+then gets a drawn shot instead of a photo: `compose.js` picks them in turn,
+or a line names one, with its settings as key=value pairs:
+
+```
+---
+title: launch week
+style: 3d
+hook: we rebuilt invoicing from scratch
+cta: try it free · link in bio
+---
+1. Invoicing used to take a whole afternoon. [shot: shapes]
+2. Now it's three steps. [shot: cards items="Track,Send,Get paid"]
+3. Here's the new app. [shot: hero src=assets/app-screen.png]
+4. Try it free this week. [shot: coin src=assets/logo.png]
+```
+
+- **3d** (`templates/3d.html`): `shapes`, `hero` (a phone; `src=` the
+  user's real screenshot), `cards` (`items=` short labels), `chart`
+  (`values=` the user's real numbers only), `coin` (`src=` their logo),
+  `rings`, `globe`. Lit in the Visual Identity's accent, under the sonic
+  identity.
+- **pixel** (`templates/pixel.html`): `walk` (`time=day`, `sunset`, or
+  `night`), `boss` (the problem, beaten), `coins` (a payoff), `levelup` (a
+  result), `city`, `space`, `photo` (`src=` the user's image, pixelated).
+  The robot hero wears the accent color, captions sit in a game dialog box,
+  and the music is `chiptune` in the identity's key and hook (say so to the
+  user, and offer `music: identity` if they'd rather keep their usual genre).
+- Pick shots that match each line's meaning: `boss` under the problem,
+  `coins` or `levelup` under the payoff, `hero` when the user's product
+  screen is the point, `chart` only with real numbers, `space` or `coin`
+  under the CTA. Never pass a screenshot, logo, photo, or number the user
+  didn't supply; the shots fall back to generic artwork without them.
+- Each template's comment lists every shot, its settings, and the events
+  a sound can be cued on (`data-sfx="coin:open"`); `compose.js` adds one
+  fitting sound per shot.
+- Look at `--slides` before rendering, as always. 3D renders slowly on a
+  machine without a graphics card (about 3 frames a second in software),
+  so tell the user to expect a few minutes; pixel art is as quick as any
+  template.
+- **Other animation styles** (cartoon or anime characters, claymation, a
+  3D animated mascot) can't be drawn locally. They need a connected video
+  model (Higgsfield or Figma Weave, step 3 of the skill) with the style in
+  the prompt, which spends the user's credits; offer 3D or pixel art as
+  the free alternative.
+
 ## Start the page
 
 For everything else, copy the template `video-types.md` or `fyp-formats.md` names, from
 `${CLAUDE_PLUGIN_ROOT}/scripts/video/templates/`, to
 `${CLAUDE_PLUGIN_ROOT}/state/videos/<date>-<slug>.html`. There are seven
 marketing templates (`promo`, `how-to`, `testimonial`, `faq`,
-`announcement`, `team`, and `narrated`, which `compose.js` uses) and 22
+`announcement`, `team`, and `narrated`, which `compose.js` uses), 22
 everyday ones (`pov`, `tier-list`,
-`text-chat`, `storytime`, and the rest listed in `fyp-formats.md`). Put any
-images the user supplied in `state/videos/assets/`.
+`text-chat`, `storytime`, and the rest listed in `fyp-formats.md`), and the
+two drawn ones, `3d` and `pixel`, which are easiest made with `compose.js`
+and a style (above). Put any images the user supplied in
+`state/videos/assets/`.
 
 Rewrite its scenes to the script: one scene per beat, the hook readable
 within the first second, and every line of text inside the `.scene` box
@@ -84,6 +137,9 @@ Set the `<body>` music attributes from the Sonic Identity in
 `data-energy`, `data-motif`.
 - Testimonials and sensitive topics use `data-music="calm"`, keeping the
   project's key and hook.
+- Pixel art uses `data-music="chiptune"`, keeping the project's key and
+  hook; its 8-bit cues (`coin`, `jump`, `powerup`, `blip`, `hurt`) go on
+  the shots' events.
 - An announcement can raise energy one step.
 - An everyday post can take its template's genre (`phonk` under a
   "nobody: / me:", `lofi` under a text skit), keeping the identity's key

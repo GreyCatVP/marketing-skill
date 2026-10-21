@@ -355,7 +355,11 @@ Trigger on requests like:
 - "Make a 3D animated video / a pixel-art or 8-bit video with a voiceover about..."
 - "We need something memeable / relatable for the feed this week"
 
-**Do not** trigger on a request for a long-form video brief, a static
+**Do not** trigger when the user hands over their own photos or clips of
+a property, a room, or a product to be made into the video (a listing
+video, a property tour, a product montage) — that's `montage-video`,
+which keeps a profile per client and edits the montage with them. **Do
+not** trigger on a request for a long-form video brief, a static
 image brief, or a platform other than these three — that's
 `visual-brief-generator`'s job. Do not trigger on "post this to
 Instagram" with no video involved (a photo/carousel/text-adjacent post) —

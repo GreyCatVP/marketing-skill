@@ -33,6 +33,10 @@ For a longer survey of the formats, see Sparkhouse's
   captions, the hook, your music, and your end card.
 - **Cut-down:** a long-form format. The short is a promo or a highlight of
   it, not the thing itself.
+- **Montage:** the user's own photos or clips of a place or a product,
+  each moving and cut on the beat, with labels, facts, and a contact end
+  card (`montage.html`, built by `scripts/video/montage.js`; the
+  `montage-video` skill runs it).
 
 Template names refer to `scripts/video/templates/`.
 
@@ -46,6 +50,7 @@ Template names refer to `scripts/video/templates/`.
 | Build trust before a purchase | Testimonial, case study, UGC, meet the team |
 | Launch something / fill a date | Announcement, event or webinar promo, live promo |
 | Humanize the brand | Meet the team, behind the scenes, vlog, brand story |
+| Sell a home or a product from its photos | Property tour, product showcase (below; the `montage-video` skill) |
 
 When the goal doesn't settle it, offer the user two or three fitting
 types with a line on each rather than picking silently.
@@ -170,6 +175,22 @@ and has to work with the sound off.
 - **Goal:** reach and engagement; the memeable, comment-driven posts that fill a feed between campaigns.
 - **Made by:** Render, from 22 templates for the formats that last (POV, nobody / me, expectation vs reality, tier list, this or that, hot take, text-message skit, notifications, storytime, top-5 countdown, and more). Film for a dance or a trend that needs people on camera.
 - **Beats:** each format's own, in `fyp-formats.md`, which also covers the weekly mix, rotating formats, and writing the copy in the brand's voice. A trend that's peaking this week is checked in the app before making it; this plugin can't see trends live.
+
+## Made from the user's photos (montage-video)
+
+When the user brings their own photos or clips of a place or a product,
+the `montage-video` skill makes the video instead of `short-form-video`.
+Its shot order, moves, music, and wording rules are in `montage-guide.md`.
+
+### Property tour / listing video
+- **Goal:** showings and inquiries for a home for sale or rent, or bookings for a stay.
+- **Made by:** Montage (`montage.html`), from the listing's own photos and clips.
+- **Beats:** the strongest shot with the hook and any status ("just listed") → the way in → living spaces → main suite → outdoor space or view → the price, specs, and CTA → the agent's contact end card. Describe the home, never who should live there.
+
+### Product showcase
+- **Goal:** consideration to purchase, for a physical product.
+- **Made by:** Montage (`montage.html`), from the product's own photos and clips; a packshot on white sits on a soft backdrop (`fit: card`).
+- **Beats:** the hero shot with the hook → the problem or the moment of use → details and callouts → in use → options → the price, any real offer, and the CTA.
 
 ## Backgrounds and sound by type (for local renders)
 

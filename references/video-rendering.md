@@ -59,6 +59,14 @@ To change a line, edit the script and run `compose.js` again: the timing is
 measured from the voice, so don't hand-edit it in the page. Send the user
 the voice (`--audio-only`) or a render to check, since you can't hear it.
 
+## A montage of the user's photos: montage.js
+
+When the user's own photos or clips of a home or a product are the video,
+that's the `montage-video` skill, which follows its own steps with
+`scripts/video/montage.js` (`inspect` to bring the photos in, then a
+script of one shot per photo) and `templates/montage.html`. Render the page
+it writes the same way as below.
+
 ## 3D or pixel-art animation: a style
 
 When the user asks for a 3D animation, pixel art, an 8-bit or retro game
@@ -113,9 +121,10 @@ cta: try it free · link in bio
 
 For everything else, copy the template `video-types.md` or `fyp-formats.md` names, from
 `${CLAUDE_PLUGIN_ROOT}/scripts/video/templates/`, to
-`${CLAUDE_PLUGIN_ROOT}/state/videos/<date>-<slug>.html`. There are seven
+`${CLAUDE_PLUGIN_ROOT}/state/videos/<date>-<slug>.html`. There are eight
 marketing templates (`promo`, `how-to`, `testimonial`, `faq`,
-`announcement`, `team`, and `narrated`, which `compose.js` uses), 22
+`announcement`, `team`, `narrated`, which `compose.js` uses, and
+`montage`, which `montage.js` uses), 22
 everyday ones (`pov`, `tier-list`,
 `text-chat`, `storytime`, and the rest listed in `fyp-formats.md`), and the
 two drawn ones, `3d` and `pixel`, which are easiest made with `compose.js`

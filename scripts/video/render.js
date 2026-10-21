@@ -354,11 +354,17 @@ async function prepareMedia(page) {
 
   const images = await page.evaluate(async () => Promise.all([...document.images].map(async (img) => {
     try { await img.decode(); } catch { /* reported below */ }
-    return { src: img.getAttribute('src'), w: img.naturalWidth, h: img.naturalHeight, bg: !!img.closest('.bg') };
+    return { src: img.getAttribute('src'), w: img.naturalWidth, h: img.naturalHeight, bg: !!img.closest('.bg'),
+             fit: getComputedStyle(img).objectFit, blurred: /blur\(/.test(getComputedStyle(img).filter) };
   })));
   for (const img of images) {
     if (!img.w) problems.push(`image didn't load: ${img.src}`);
-    else if (img.bg && (img.w < 1080 || img.h < 1920)) problems.push(`background ${img.src} is ${img.w}x${img.h}, under 1080x1920; it will look soft`);
+    else if (img.bg && !img.blurred) {
+      // how much the frame enlarges it: a photo that fills the frame (cover) until it covers both
+      // sides, one shown whole (contain) until it reaches one
+      const fit = img.fit === 'contain' ? Math.min(WIDTH / img.w, HEIGHT / img.h) : Math.max(WIDTH / img.w, HEIGHT / img.h);
+      if (fit > 1.25) problems.push(`background ${img.src} is ${img.w}x${img.h}, shown at ${fit.toFixed(1)}x its size; it will look soft`);
+    }
   }
   return problems;
 }
@@ -1308,7 +1314,7 @@ if (require.main === module) {
 }
 
 module.exports = {
-  WIDTH, HEIGHT, loadPlaywright, launchBrowser, openPage, prepareMedia, readPage, checkMusic, checkMix, mixVoice, seek,
+  WIDTH, HEIGHT, meanLuma, loadPlaywright, launchBrowser, openPage, prepareMedia, readPage, checkMusic, checkMix, mixVoice, seek,
   lintLayout, lintTimeline, describeLint, lintLabel, slideTimes, textSnapshot, retentionProblems, writeSoundtrack, measureAudio, muxSoundtrack,
   prepareVoice, prepareVoices, describeVoices, probeDuration, variantsOf, applyVariant, coverProblems,
   renderFrames, preparePage, defaultWorkers,

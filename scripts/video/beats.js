@@ -334,6 +334,31 @@ function analyseTrack(file) {
 const round = (v, d = 3) => Math.round(v * 10 ** d) / 10 ** d;
 const clock = (t) => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, '0')}`;
 
+// Where the music starts in the video, and the rhythm in video time: with `align`, the start that
+// lands the track's biggest lift at that many seconds into the video; with `start`, the one given.
+// Sets r.musicStart and r.video (beats, bars, and lifts in video time) and returns notes.
+function alignTrack(r, { align, start, duration } = {}) {
+  const notes = [];
+  if (!Number.isFinite(start)) start = undefined;
+  if (Number.isFinite(align)) {
+    const lift = r.lifts[0];
+    if (!lift) notes.push('no clear lift in this track to align; starting it at 0');
+    start = lift ? lift.time - align : 0;
+    if (start < 0) {
+      notes.push(`the lift is at ${lift.time}s, so it can't land at ${align}s; it lands at ${round(lift.time, 2)}s with the track starting at 0`);
+      start = 0;
+    }
+  }
+  if (start !== undefined) {
+    const d = Number.isFinite(duration) ? duration : r.duration - start;
+    if (start + d > r.duration) notes.push(`the track has only ${round(r.duration - start, 1)}s from ${round(start, 2)}s, less than the ${d}s video; the music will stop early`);
+    const inVideo = (ts) => ts.map((t) => round(t - start)).filter((t) => t >= 0 && t <= d);
+    r.musicStart = round(start, 2);
+    r.video = { beats: inVideo(r.beats), bars: inVideo(r.bars), lifts: r.lifts.map((l) => ({ ...l, time: round(l.time - start) })).filter((l) => l.time >= 0 && l.time <= d) };
+  }
+  return notes;
+}
+
 function parseArgs(argv) {
   const args = { positional: [] };
   for (let i = 0; i < argv.length; i++) {
@@ -355,26 +380,7 @@ function main() {
   }
   if (!fs.existsSync(file)) fail(`No track at ${file}`);
   const r = analyseTrack(file);
-  const notes = [];
-
-  // where the music starts in the video, and the rhythm in video time
-  let start = Number.isFinite(args.start) ? args.start : undefined;
-  if (Number.isFinite(args.align)) {
-    const lift = r.lifts[0];
-    if (!lift) notes.push('no clear lift in this track to align; starting it at 0');
-    start = lift ? lift.time - args.align : 0;
-    if (start < 0) {
-      notes.push(`the lift is at ${lift.time}s, so it can't land at ${args.align}s; it lands at ${round(lift.time, 2)}s with the track starting at 0`);
-      start = 0;
-    }
-  }
-  if (start !== undefined) {
-    const d = Number.isFinite(args.duration) ? args.duration : r.duration - start;
-    if (start + d > r.duration) notes.push(`the track has only ${round(r.duration - start, 1)}s from ${round(start, 2)}s, less than the ${d}s video; the music will stop early`);
-    const inVideo = (ts) => ts.map((t) => round(t - start)).filter((t) => t >= 0 && t <= d);
-    r.musicStart = round(start, 2);
-    r.video = { beats: inVideo(r.beats), bars: inVideo(r.bars), lifts: r.lifts.map((l) => ({ ...l, time: round(l.time - start) })).filter((l) => l.time >= 0 && l.time <= d) };
-  }
+  const notes = alignTrack(r, args);
   if (r.confidence < 0.5) notes.push('low confidence: this track has no steady beat to cut on; time scenes to the voiceover or reading pace instead');
   else if (r.barConfidence < 0.15) notes.push('the beats are clear but which beat starts a bar is a guess; cut on any beat rather than relying on bar starts');
   r.notes = notes;
@@ -397,4 +403,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { analyseTrack };
+module.exports = { analyseTrack, alignTrack };

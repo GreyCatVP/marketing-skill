@@ -126,6 +126,8 @@ node voice.js script.md --out assets --voice af_heart     # a free voiceover, on
 node voice.js --audition samples "One line to try."       # the same line in four voices, to pick one
 node compose.js script.md                                 # a narrated video page from a script: voice, backgrounds, synced captions
 node compose.js script.md --style 3d                      # the same, drawn as 3D scenes (or --style pixel, as pixel art)
+node montage.js inspect photos/ --slug maple             # copy a client's photos in: upright, sized, metadata stripped, contact sheet
+node montage.js state/videos/2026-10-21-maple.md         # a montage page from them: moves, beat-synced cuts, labels, end card
 node render.js page.html --voice-lengths                  # each voice line's start, length, and room in its scene
 node captions.js assets/voice-1.wav --text "the line"     # when each word of a line is said
 node brand.js page.html                                   # the Visual Identity: colors, font, a logo end card
@@ -270,6 +272,7 @@ in `scripts/video/templates/`:
 | `narrated.html` | per script | A voiceover over one background per line, with captions synced to the voice: explainers, tips, text-led brand stories (built by `compose.js`) | the identity, energy −1 |
 | `3d.html` | per script | The same, over 3D scenes in the brand's colors: explainers, launches, a product reveal with your screenshot (`compose.js`, `style: 3d`) | the identity, energy −1 |
 | `pixel.html` | per script | The same, over pixel-art game scenes with a dialog box for captions: playful explainers, tips, brand stories (`compose.js`, `style: pixel`) | `chiptune` |
+| `montage.html` | per script | A client's own photos or clips of a home or a product, each moving, cut on the beat, with labels, price and specs, and a contact end card (built by `montage.js`, for `montage-video`) | the client's identity |
 
 The skill swaps each template's default sound for your sonic identity.
 
@@ -363,6 +366,53 @@ details. Each template's comment lists every shot and what it takes.
   the prompt. That spends the tool's credits. The local renderer doesn't
   draw characters beyond the pixel robot.
 
+### A montage from your photos (property and product)
+
+The `montage-video` skill makes a vertical reel from a client's own photos
+or phone clips: a home for sale or rent, a single room, or a product.
+`montage.js` does the work in two steps:
+
+```
+node montage.js inspect ~/Desktop/maple-photos --slug maple
+node montage.js state/videos/2026-10-21-maple.md
+```
+
+- **inspect** copies every photo and clip into `state/videos/assets/`
+  (`maple-01.jpg`, ...). Photos come out upright, sized for the frame,
+  and with their metadata stripped, a phone photo's GPS location
+  included. iPhone HEIC photos are converted when the machine has a
+  converter. It prints each file's size, shape, and brightness, flags
+  dark or low-resolution ones, and writes a numbered contact sheet and a
+  starter script.
+- **The script** lists one shot per line: the file, a label, and tags
+  for the move (`pan-left`, `push-in focus=40%,55%`, ...), the fit
+  (`contain` shows a whole photo, `card` sets a packshot on a soft
+  backdrop), a voiceover line (`[say: ...]`), a hold, a transition, a
+  "Virtually staged" badge, a callout, or a before/after wipe. The
+  frontmatter sets the hook, a status sticker, the price, the specs, the
+  CTA, the music (the client's sound, a genre, or a licensed track), the
+  voice (none, a free local voice, or your recordings), and the pace or
+  target length. Every option is listed at the top of
+  `scripts/video/montage.js`.
+- **The page** shows the photos bright, without the darkening other
+  templates use behind text. Wide photos pan across the 9:16 frame so the
+  whole room is seen. Every cut lands on the music's beat (a licensed
+  track's beats are read with `beats.js`), or follows the voice. A shot is
+  held longer when its label needs time to be read. It ends on an end
+  card with the client's logo, handle, contact lines, and fine print.
+  Render it like any page.
+- **Clients:** each one has a profile in `state/clients/<slug>.md` with
+  their colors, font, logo, sound, contact details, and the preferences
+  they've asked for (`state/clients/README.md`). A script picks one with
+  `client: <slug>`. Profiles are kept out of git.
+- **Editing:** change the script and run `montage.js` again. The timing is
+  recomputed, so "faster", "kitchen first", or "different music" is a
+  one-line edit. Render each round as a new version (`maple-v2.mp4`).
+
+The skill's shot order, moves, music by mood, and the wording rules for
+property ads (describe the home, never who should live there) are in
+[`references/montage-guide.md`](../references/montage-guide.md).
+
 ### How a page works
 
 A comment at the top of `promo.html` documents how a page works: CSS
@@ -374,7 +424,7 @@ calls with each frame's time (see `3d.html` and `pixel.html`). The
 templates are built from one shared base by `templates/build.py` (the
 everyday ones are defined in `templates/fyp.py`, and the drawn ones in
 `scene3d.py` and `pixel.py`); edit those and run `python3 build.py`
-rather than hand-editing 31 copies.
+rather than hand-editing 32 copies.
 
 The skill saves its pages and renders under `state/videos/`, with media in
 `state/videos/assets/`. Rendered MP4s and downloaded media are git-ignored;

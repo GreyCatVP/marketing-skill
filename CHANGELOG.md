@@ -5,6 +5,50 @@ Skills that read "our changelog" for source material read this file too.
 
 ## 0.8.0 (unreleased)
 
+- **Montages from a client's own photos: `montage-video`, a thirteenth
+  skill.** Hand over photos or phone clips of a home, a room, or a
+  product, and get a finished vertical reel:
+  - each photo moving with purpose (a pan across a wide room, so a 3:2
+    photo is seen whole in a 9:16 frame; a push in on a detail; a pull
+    out to reveal), each move the other way from the one before;
+  - cuts on the music's beat, or timed to a voiceover;
+  - a label on every shot, the hook on the first, and a status sticker
+    ("just listed", "20% off");
+  - the price, specs, and CTA;
+  - a "Virtually staged" badge, callouts on a product's details, and
+    before/after wipes;
+  - the client's logo, contact lines, and fine print on the end card.
+
+  The skill looks at every photo to choose and order the shots, then keeps
+  editing the video on request ("faster", "kitchen first", "calmer
+  music"), saving each version. `references/montage-guide.md` holds its
+  shot order, moves, music by mood, and the wording rules for property
+  ads (describe the home, never who should live there).
+- `scripts/video/montage.js`:
+  - `inspect <folder>` copies the photos in, upright and sized for the
+    frame, with their metadata (GPS location included) stripped, and
+    converts iPhone HEIC photos where the machine can. It writes a
+    numbered contact sheet and a starter script.
+  - `montage.js <script.md>` writes the page from a script of one shot
+    per photo. It reads a licensed track's beats with `beats.js` and cuts
+    on its bars. It holds a shot longer when its text needs the time to
+    be read.
+  - The new `montage.html` template shows photos bright, without the
+    darkening behind text. It adds `panX`, `shiftX`, `shiftY`, `pushIn`,
+    `pullOut`, and `drift` moves, `contain` and `card` fits, and cut,
+    slide, zoom, wipe, and flash transitions.
+- **Client profiles** in `state/clients/<slug>.md` (format in its
+  README). Each holds a client's colors, font, logo, sound, contact
+  details, and the preferences they've asked for. They're kept out of
+  git. A client's video never falls back to your own brand.
+- `brand.js` end cards take contact lines, fine print, and a length.
+  `compose.js`'s `sonicIdentity()` reads a client's profile. `beats.js`
+  exports its track alignment (`alignTrack`). A frontmatter value can hold
+  a `#` ("lot #12"), since a comment now starts at ` # `.
+- The renderer warns that a background will look soft when the frame
+  enlarges it more than 1.25x, filling the frame or shown whole, rather
+  than whenever it's under 1080x1920. Blurred backdrops are skipped.
+
 - **3D and pixel-art animation, with voice.** Two templates that draw their
   own frames: `3d.html` (three.js, lit in the brand's colors: floating
   shapes, a phone with your screenshot, feature cards, a bar chart, a coin

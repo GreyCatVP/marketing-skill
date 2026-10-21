@@ -9,6 +9,9 @@ stills/
 state/videos/assets/*
 !state/videos/assets/CREDITS.md
 !state/videos/assets/credits.json
+# client profiles hold their contact details and logos; kept out of git (and any public fork)
+state/clients/*
+!state/clients/README.md
 .media-cache/
 slides/
 scripts/video/check-report/

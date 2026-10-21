@@ -1,8 +1,8 @@
 'use strict';
 /*
  * Synthesizes an original soundtrack for a rendered video: music in one of
- * eleven genres, built around the project's signature hook, plus sound effects
- * (UI sounds and meme cues) placed on the page's own animation cues. It's all generated from scratch
+ * twelve genres, built around the project's signature hook, plus sound effects
+ * (UI sounds, meme cues, and 8-bit game sounds) placed on the page's own animation cues. It's all generated from scratch
  * and deterministic: the same page always sounds the same, there's nothing
  * to license, and it works when posting through an API, where in-app sounds
  * can't be added.
@@ -10,7 +10,7 @@
  * The music, from <body data-*> (references/sound-guide.md explains how to
  * pick these per project):
  * - data-music: pop, house, hiphop, acoustic, cinematic, tech, lofi, calm, phonk,
- *   jersey, funk, or none
+ *   jersey, funk, chiptune, or none
  * - data-bpm, data-key (C, F#, Bb, ...), data-mode (major or minor), data-energy (1-5)
  * - data-motif: the project's signature hook, two bars of scale degrees,
  *   e.g. "1 3 5 6 | 5 3 2 -". Each bar's tokens share it equally; ' and ,
@@ -32,6 +32,8 @@ const SOUNDS = [
   'pop', 'swish', 'tick', 'whoosh', 'click', 'chime',
   // meme sounds, all synthesized here (no samples)
   'boom', 'scratch', 'horn', 'rimshot', 'fail', 'drumroll', 'ding', 'buzzer', 'ping', 'typing', 'shutter', 'cash', 'glitch', 'bass',
+  // 8-bit game sounds, for pixel art
+  'coin', 'jump', 'powerup', 'blip', 'hurt',
 ];
 // average level of the music bed, relative to the sound effects (about -19 dBFS RMS)
 const MUSIC_RMS = 0.11;
@@ -258,8 +260,10 @@ function organ(notes, dur) {
   return scale(out, adsr(n, 0.003, 0.12, 0.5, 0.05, dur));
 }
 
-// Bass: a clean sine with harmonics (audible on phone speakers), or a filtered saw.
+// Bass: a clean sine with harmonics (audible on phone speakers), a filtered saw, or (chiptune)
+// the console's stepped triangle, an octave up so phone speakers can play it.
 function bass(freq, dur, type = 'sine') {
+  if (type === 'triangle') return chipTriangle(freq * 2, dur);
   const n = len(dur + 0.05);
   if (type === 'saw') {
     const x = new Float64Array(n);
@@ -674,6 +678,167 @@ function subDrop() {
   return out;
 }
 
+// ---------- 8-bit: the voices of an old game console (chiptune and pixel-art sounds) ----------
+
+// Band-limited pulse wave at a duty cycle (0.5 a hollow square; 0.25 and 0.125 the thinner,
+// nasal tones of chiptune leads), with its DC offset removed. `freq` can be a function of time.
+function pulse(n, freq, duty = 0.5) {
+  const out = new Float64Array(n);
+  let p = 0;
+  for (let i = 0; i < n; i++) {
+    const dt = (typeof freq === 'function' ? freq(i / SR) : freq) / SR;
+    let q = p + 1 - duty;
+    if (q >= 1) q -= 1;
+    out[i] = (p < duty ? 1 : -1) + blep(p, dt) - blep(q, dt) - (2 * duty - 1);
+    p += dt;
+    if (p >= 1) p -= 1;
+  }
+  return out;
+}
+
+// The console's 4-bit volume, updated once a frame (60 times a second): stepped, not smooth.
+const frameStep = (v, t) => Math.round(v(Math.floor(t * 60) / 60) * 15) / 15;
+
+// The hardware's noise channel: a 15-bit shift register clocked at `rate` Hz (short mode, the
+// 6-bit tap, is the metallic, pitched noise).
+function lfsr(n, rate, short = false) {
+  const out = new Float64Array(n);
+  let reg = 1;
+  let acc = 0;
+  let v = 1;
+  for (let i = 0; i < n; i++) {
+    acc += rate / SR;
+    while (acc >= 1) {
+      acc -= 1;
+      reg = (reg >> 1) | (((reg ^ (reg >> (short ? 6 : 1))) & 1) << 14);
+      v = reg & 1 ? 1 : -1;
+    }
+    out[i] = v;
+  }
+  return out;
+}
+
+// Lead: a 25% pulse with a little delayed vibrato, its volume stepping down to a sustain.
+function chipLead(freq, dur, { duty = 0.25, vibrato = 0.006 } = {}) {
+  const n = len(dur + 0.05);
+  const out = pulse(n, (t) => freq * (1 + vibrato * Math.sin(TAU * 6 * t) * Math.min(1, Math.max(0, (t - 0.15) / 0.1))), duty);
+  const env = (t) => (t < 0.01 ? 1 : 0.6 + 0.4 * Math.exp(-t / 0.1)) * (t > dur ? Math.max(0, 1 - (t - dur) / 0.05) : 1);
+  for (let i = 0; i < n; i++) out[i] *= frameStep(env, i / SR);
+  return out;
+}
+
+// Bass: the 4-bit stepped triangle, with no volume control, as on the hardware.
+function chipTriangle(freq, dur) {
+  const n = len(dur + 0.01);
+  const out = new Float64Array(n);
+  let p = 0;
+  for (let i = 0; i < n; i++) {
+    const tri = p < 0.5 ? 4 * p - 1 : 3 - 4 * p;
+    out[i] = (Math.round(tri * 7.5) / 7.5) * Math.min(1, (n - i) / len(0.01));
+    p = (p + freq / SR) % 1;
+  }
+  return out;
+}
+
+// A chord as one thin pulse voice cycling through its notes 30 times a second: the arpeggio
+// that stands in for a chord when the console has no voices to spare.
+function chipArp(notes, dur, { duty = 0.125, rate = 30 } = {}) {
+  const n = len(dur);
+  const out = pulse(n, (t) => mtof(notes[Math.floor(t * rate) % notes.length]), duty);
+  const env = (t) => (0.55 + 0.45 * Math.exp(-t / 0.15)) * Math.min(1, (dur - t) / 0.03);
+  for (let i = 0; i < n; i++) out[i] *= frameStep(env, i / SR);
+  return out;
+}
+
+// Drums on the noise and triangle channels.
+function chipKick() {
+  const n = len(0.2);
+  const out = new Float64Array(n);
+  const hiss = lfsr(len(0.012), 18000);
+  let p = 0;
+  for (let i = 0; i < n; i++) {
+    const t = i / SR;
+    p = (p + (55 + 330 * Math.exp(-t / 0.022)) / SR) % 1;
+    out[i] = (Math.round((p < 0.5 ? 4 * p - 1 : 3 - 4 * p) * 7.5) / 7.5) * Math.exp(-t / 0.08) + (hiss[i] || 0) * 0.35;
+  }
+  return out;
+}
+
+function chipSnare() {
+  const n = len(0.22);
+  const out = lfsr(n, 11000);
+  const tone = pulse(n, (t) => 240 * Math.exp(-t / 0.08) + 120, 0.5);
+  for (let i = 0; i < n; i++) {
+    const t = i / SR;
+    out[i] = out[i] * frameStep((u) => Math.exp(-u / 0.07), t) * 0.7 + tone[i] * Math.exp(-t / 0.025) * 0.35;
+  }
+  return out;
+}
+
+function chipHat(rng, open = false) {
+  const n = len(open ? 0.25 : 0.05);
+  const out = lfsr(n, 44000, true);
+  for (let i = 0; i < n; i++) out[i] *= Math.exp(-i / SR / (open ? 0.08 : 0.012)) * 0.35;
+  return out;
+}
+
+function chipCrash(rng, dur = 0.9) {
+  const n = len(dur);
+  const out = lfsr(n, 30000);
+  for (let i = 0; i < n; i++) out[i] *= frameStep((u) => Math.exp(-u / 0.25), i / SR) * 0.3;
+  return out;
+}
+
+// Coin: two quick square notes, the second ringing out.
+function chipCoin() {
+  const n = len(0.42);
+  const out = pulse(n, (t) => (t < 0.06 ? 1046.5 : 1568), 0.5);
+  for (let i = 0; i < n; i++) {
+    const t = i / SR;
+    out[i] *= frameStep((u) => (u < 0.06 ? 1 : Math.exp(-(u - 0.06) / 0.11)), t) * 0.5;
+  }
+  return out;
+}
+
+// Jump: a thin pulse sweeping up.
+function chipJump() {
+  const n = len(0.24);
+  const out = pulse(n, (t) => 280 + 2600 * t, 0.25);
+  for (let i = 0; i < n; i++) out[i] *= frameStep((u) => 1 - u / 0.24, i / SR) * 0.45;
+  return out;
+}
+
+// Hurt: a pulse sliding down through noise, its volume fluttering.
+function chipHurt() {
+  const n = len(0.36);
+  const tone = pulse(n, (t) => 620 * Math.exp(-t / 0.12) + 90, 0.5);
+  const hiss = lfsr(n, 9000);
+  for (let i = 0; i < n; i++) {
+    const t = i / SR;
+    const flutter = Math.floor(t * 30) % 2 ? 0.55 : 1;
+    tone[i] = (tone[i] * 0.6 + hiss[i] * 0.4) * frameStep((u) => Math.max(0, 1 - u / 0.36), t) * flutter * 0.5;
+  }
+  return tone;
+}
+
+// Power-up: the chord's notes racing up two octaves (in the music's key; see buildSoundtrack).
+function chipPowerup(midis) {
+  const step = 0.045;
+  const n = len(step * midis.length + 0.3);
+  const out = pulse(n, (t) => mtof(midis[Math.min(midis.length - 1, Math.floor(t / step))]), 0.25);
+  const total = step * midis.length;
+  for (let i = 0; i < n; i++) out[i] *= frameStep((u) => (u < total ? 0.9 : 0.9 * Math.exp(-(u - total) / 0.1)), i / SR) * 0.5;
+  return out;
+}
+
+// Blip: the tick of a dialog box printing text, or a menu cursor moving.
+function chipBlip(midi) {
+  const n = len(0.05);
+  const out = pulse(n, mtof(midi), 0.5);
+  for (let i = 0; i < n; i++) out[i] *= frameStep((u) => (u < 0.033 ? 1 : 0), i / SR) * 0.4;
+  return out;
+}
+
 // cue name -> [synth, gain, start offset in seconds]
 // (gains balanced so punchline hits land a little above the existing effects and small UI
 // sounds a little below, all within about 8 dB)
@@ -682,6 +847,7 @@ const MEME = {
   fail: [fail, 0.55, 0], drumroll: [drumroll, 1.29, 0], ding: [ding, 0.6, 0], buzzer: [buzzer, 0.5, 0],
   ping: [ping, 0.85, 0], typing: [typing, 1.38, 0], shutter: [shutter, 1.44, 0], cash: [cash, 0.73, 0],
   glitch: [glitch, 0.67, 0], bass: [subDrop, 0.5, 0],
+  coin: [chipCoin, 0.69, 0], jump: [chipJump, 0.71, 0], hurt: [chipHurt, 0.93, 0],
 };
 
 // ---------- mixing ----------
@@ -841,6 +1007,16 @@ const GENRES = {
     chords: { sound: 'stab', pattern: 'x.....x.....x...', size: 3 }, pad: 0,
     lead: 'cowbell', duck: 0.3, verb: 0.1,
   },
+  // chiptune: an old game console's voices, a pulse-wave lead, a fast arpeggio standing in for
+  // chords, a bouncing triangle bass, and noise-channel drums; made for pixel art
+  chiptune: {
+    bpm: 150, mode: 'major', motif: '1 5 3 5 | 4 6 5 -', swing: 0,
+    progressions: [[0, 5, 3, 4], [0, 3, 4, 0], [0, 4, 5, 3]],
+    drums: { kick: 'x.......x.x.....', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.' },
+    bass: { type: 'triangle', pattern: 'R.O.R.O.R.O.R.O.' },
+    chords: { sound: 'chiparp', pattern: 'x.......x.......', size: 3 }, pad: 0,
+    lead: 'pulse', duck: 0, verb: 0.05, chip: true,
+  },
 };
 
 // Picks the progression whose chords contain the most hook notes on strong beats.
@@ -912,16 +1088,19 @@ function buildMusic(opts, key) {
   const stepTime = (b, s) => drop + b * bar + s * stepDur + (s % 2 === 1 ? g.swing * stepDur * 2 : 0);
   const hit = (pattern, s) => (pattern ? pattern[s % pattern.length] : '.');
   const vel = (c) => (c === 'x' ? 1 : c === 'o' ? 0.55 : 0);
+  // a chip genre plays everything on the console's voices: noise drums, and an arpeggio for pads
+  const kit = g.chip ? { kick: chipKick, snare: chipSnare, clap: chipSnare, hat: chipHat, crash: chipCrash } : { kick, snare, clap, hat, crash };
+  const padOf = (notes, dur, opts) => (g.chip ? chipArp(notes, dur, { rate: 15 }) : strings(rng, notes, dur, opts));
 
   // ---- intro: the chord before the drop, plus a riser into it
   if (drop > 0) {
     const introChord = key.chord(progression[progression.length - 1], 4, 0);
-    const pad = strings(rng, introChord, drop, { cutoff: 1000, attack: 0.35 });
-    harm.add(pad, 0, 0.35);
+    const pad = padOf(introChord, drop, { cutoff: 1000, attack: 0.35 });
+    harm.add(pad, 0, g.chip ? 0.18 : 0.35);
     send.add(pad, 0, 0.35);
-    if (drop >= 1.5) drums.add(riser(rng, 1.5), drop - 1.5, 0.55);
+    if (drop >= 1.5 && !g.chip) drums.add(riser(rng, 1.5), drop - 1.5, 0.55);
     if (drop >= 0.5) {
-      drums.add(g.impact ? impact(rng) : crash(rng), drop, g.impact ? 0.8 : 0.6);
+      drums.add(g.impact ? impact(rng) : kit.crash(rng), drop, g.impact ? 0.8 : 0.6);
     }
   }
 
@@ -935,8 +1114,8 @@ function buildMusic(opts, key) {
 
     // pad under everything (or alone, in a break)
     if (g.pad || broken) {
-      const p = strings(rng, key.chord(chordDeg, 4, 0), bar, { cutoff: broken ? 900 : 1600, attack: 0.25 });
-      harm.add(p, barStart, (broken ? 0.4 : g.pad) * 0.6);
+      const p = padOf(key.chord(chordDeg, 4, 0), bar, { cutoff: broken ? 900 : 1600, attack: 0.25 });
+      harm.add(p, barStart, (broken ? 0.4 : g.pad) * (g.chip ? 0.3 : 0.6));
       send.add(p, barStart, 0.4);
     }
 
@@ -946,30 +1125,30 @@ function buildMusic(opts, key) {
       const d = g.drums;
       if (broken) {
         // a break keeps only a soft pulse
-        if (s % 4 === 0 && d.hat) drums.add(hat(rng), t, 0.25, 0.2);
+        if (s % 4 === 0 && d.hat) drums.add(kit.hat(rng), t, 0.25, 0.2);
         continue;
       }
       const lastBar = b % 4 === 3;
       // drums
-      if (vel(hit(d.kick, s))) { drums.add(kick(rng, g === GENRES.house || g === GENRES.tech ? { decay: 0.18 } : {}), t, vel(hit(d.kick, s))); kicks.push(t); }
-      if (vel(hit(d.clap, s))) { const c = clap(rng); drums.add(c, t, 0.55 * vel(hit(d.clap, s))); send.add(c, t, 0.15); }
-      if (vel(hit(d.snare, s))) { const c = snare(rng); drums.add(c, t, 0.6 * vel(hit(d.snare, s))); send.add(c, t, 0.12); }
+      if (vel(hit(d.kick, s))) { drums.add(kit.kick(rng, g === GENRES.house || g === GENRES.tech ? { decay: 0.18 } : {}), t, vel(hit(d.kick, s))); kicks.push(t); }
+      if (vel(hit(d.clap, s))) { const c = kit.clap(rng); drums.add(c, t, 0.55 * vel(hit(d.clap, s))); send.add(c, t, 0.15); }
+      if (vel(hit(d.snare, s))) { const c = kit.snare(rng); drums.add(c, t, 0.6 * vel(hit(d.snare, s))); send.add(c, t, 0.12); }
       if (vel(hit(d.snap, s))) drums.add(clap(rng), t, 0.3);
       if (d.hat && energy >= 2) {
         let v = vel(hit(d.hat, s));
         if (energy >= 4 && !v) v = 0.35;
-        if (v) drums.add(hat(rng), t, 0.32 * v, 0.25);
+        if (v) drums.add(kit.hat(rng), t, 0.32 * v, 0.25);
         if (d.roll && lastBar && s >= 12) { // trap-style hat roll into the next phrase
-          for (let r = 1; r < 3; r++) drums.add(hat(rng), t + r * stepDur / 3, 0.18, 0.25);
+          for (let r = 1; r < 3; r++) drums.add(kit.hat(rng), t + r * stepDur / 3, 0.18, 0.25);
         }
       }
-      if (vel(hit(d.open, s)) && energy >= 3) drums.add(hat(rng, true), t, 0.22, -0.2);
+      if (vel(hit(d.open, s)) && energy >= 3) drums.add(kit.hat(rng, true), t, 0.22, -0.2);
       if (vel(hit(d.shaker, s))) drums.add(shaker(rng), t, 0.35 * vel(hit(d.shaker, s)), 0.3);
       if (vel(hit(d.boom, s))) { drums.add(kick(rng, { pitch: 38, punch: 60, decay: 0.5 }), t, 0.9); kicks.push(t); }
       if (vel(hit(d.tom, s)) && energy >= 2) drums.add(tom(rng, [110, 98, 82][s % 3]), t, 0.45, s % 2 ? 0.3 : -0.3);
       if (g.toms && lastBar && s >= 10 && s % 2 === 0) drums.add(tom(rng, [196, 165, 147, 131][(s - 10) / 2 % 4]), t, 0.45, s % 4 ? 0.3 : -0.3);
       // a small fill closing every fourth bar
-      if (lastBar && energy >= 3 && s >= 13 && (d.snare || d.clap)) drums.add(snare(rng, { decay: 0.07 }), t, 0.25 + 0.1 * (s - 13));
+      if (lastBar && energy >= 3 && s >= 13 && (d.snare || d.clap)) drums.add(kit.snare(rng, { decay: 0.07 }), t, 0.25 + 0.1 * (s - 13));
 
       // bass
       const bc = g.bass.pattern[s];
@@ -1019,6 +1198,7 @@ function buildMusic(opts, key) {
             break;
           }
           case 'stab': sig = supersaw(rng, key.chord(chordDeg, 3, 1), Math.min(dur, beat * 0.4), { bright: 7000, dark: 500, fall: 0.05, voices: 5 }); gain = 0.4; break;
+          case 'chiparp': sig = chipArp(chordNotes, dur + 0.03); gain = 0.16; break; // rings into the next chord, so no gap
           default: sig = new Float64Array(1);
         }
         harm.add(sig, t, gain, s % 2 ? 0.15 : -0.15);
@@ -1050,17 +1230,17 @@ function buildMusic(opts, key) {
   });
   const homeTop = key.midi(0, 1) + (key.midi(opening[opening.length - 1]?.deg ?? 0, 1) - key.midi(0, 1) > 6 ? 12 : 0);
   playLead(lead, send, rng, g.lead, homeTop, 1.0, end, energy);
-  const b1 = bell(mtof(homeTop + 12), 1.0);
-  lead.add(b1, end, 0.2);
+  const b1 = g.chip ? chipLead(mtof(homeTop + 12), 0.5, { duty: 0.125 }) : bell(mtof(homeTop + 12), 1.0);
+  lead.add(b1, end, g.chip ? 0.12 : 0.2);
   send.add(b1, end, 0.3);
-  const finalChord = strings(rng, key.chord(0, 4, 0), opts.duration - end, { cutoff: 1800, attack: 0.02 });
-  harm.add(finalChord, end, 0.35);
+  const finalChord = padOf(key.chord(0, 4, 0), opts.duration - end, { cutoff: 1800, attack: 0.02 });
+  harm.add(finalChord, end, g.chip ? 0.16 : 0.35);
   send.add(finalChord, end, 0.4);
-  low.add(g.bass.type === '808' ? sub808(mtof(key.midi(0) - 24), 0.9, g.bass.drive) : bass(mtof(key.midi(0) - 24), 0.9, 'sine'), end, 0.5);
+  low.add(g.bass.type === '808' ? sub808(mtof(key.midi(0) - 24), 0.9, g.bass.drive) : bass(mtof(key.midi(0) - 24), 0.9, g.chip ? 'triangle' : 'sine'), end, 0.5);
   if (end > drop) {
-    drums.add(kick(rng), end, 0.9);
+    drums.add(kit.kick(rng), end, 0.9);
     kicks.push(end);
-    drums.add(crash(rng, 1.0), end, 0.5);
+    drums.add(kit.crash(rng, 1.0), end, 0.5);
   }
 
   if (g.vinyl) drums.add(vinyl(rng, opts.duration), 0, 1);
@@ -1096,6 +1276,7 @@ function playLead(lead, send, rng, sound, midi, dur, t, energy) {
     case 'harp': sig = pluckString(rng, mtof(midi), Math.max(dur, 0.25) + 0.6, { bright: 0.75, decay: 0.997 }); gain = 0.5; break;
     case 'strings': sig = strings(rng, [midi], dur, { cutoff: 2600, attack: 0.12 }); gain = 0.42; break;
     case 'cowbell': sig = cowbell(mtof(midi), Math.max(dur, 0.12)); gain = 0.5; break;
+    case 'pulse': sig = chipLead(mtof(midi), Math.max(dur * 0.9, 0.08)); gain = 0.2; break;
     default: return;
   }
   lead.add(sig, t, gain);
@@ -1181,6 +1362,10 @@ function buildSoundtrack(cues, opts) {
     } else if (sound === 'chime') {
       sfx.add(bell(mtof(key.midi(4, 1))), time, 0.3);
       sfx.add(bell(mtof(key.midi(7, 1))), time + 0.09, 0.34);
+    } else if (sound === 'powerup') {
+      sfx.add(chipPowerup([0, 2, 4, 7, 9, 11, 14].map((d) => key.midi(d, 1))), time, 0.54);
+    } else if (sound === 'blip') {
+      sfx.add(chipBlip(key.midi(4, 2)), time, 0.65);
     } else if (MEME[sound]) {
       const [make, gain, offset] = MEME[sound];
       sfx.add(make(rng), time + offset, gain);

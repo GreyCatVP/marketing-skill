@@ -1,11 +1,12 @@
 {
   "name": "marketing-skill-video-renderer",
   "private": true,
-  "description": "Renders an animated HTML page into a vertical MP4 with an original soundtrack, for the short-form-video skill.",
+  "description": "Renders an animated HTML page (CSS, canvas, or WebGL) into a vertical MP4 with an original soundtrack, for the short-form-video skill.",
   "license": "MIT",
   "bin": { "render-video": "render.js" },
   "engines": { "node": ">=18" },
   "dependencies": {
-    "playwright": "^1.56.0"
+    "playwright": "^1.56.0",
+    "three": "0.186.1"
   }
 }

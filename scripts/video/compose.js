@@ -3,12 +3,12 @@
 /*
  * Builds a narrated video page from a script, in one step: a voiceover line by line, one
  * background per line, word-by-word captions synced to the voice, the hook on screen from the
- * first frame, and the project's sound. The page is templates/narrated.html's look, timed to
- * the voice; render.js turns it into the MP4.
+ * first frame, and the project's sound. The page is templates/narrated.html's look (or, with a
+ * style, 3d.html's or pixel.html's), timed to the voice; render.js turns it into the MP4.
  *
  * Usage:
  *   node compose.js <script.md> [--out <page.html>] [--voice af_heart] [--speed 1]
- *                   [--no-media] [--no-check]
+ *                   [--style photo|3d|pixel] [--no-media] [--no-check]
  *
  * The script is Markdown: optional frontmatter, then numbered lines, one per scene. A line can
  * end with a background: [bg: a search query] fetches a stock photo for it (media.js), and
@@ -27,6 +27,15 @@
  *   1. Most freelancers lose money on invoices they send late. [bg: stressed laptop night]
  *   2. Clients pay fastest when the invoice lands the day the work ends.
  *
+ * Animated styles: "style: 3d" draws each line's background as a 3D scene (templates/3d.html)
+ * and "style: pixel" as pixel art (templates/pixel.html, with chiptune music in the identity's
+ * key and hook). Each line gets a shot instead of a photo, picked in turn unless the line names
+ * one, with the shot's settings as key=value pairs:
+ *   1. Every freelancer starts at level one. [shot: walk time=sunset]
+ *   2. We built it for this screen. [shot: hero src=assets/app-screen.png]
+ *   3. Plan it, film it, post it. [shot: cards items="Plan,Film,Post"]
+ * The shots and their settings are listed at the top of each template.
+ *
  * Voices come from voice.js (Kokoro, free and local; `npm install kokoro-js` once) unless
  * `recordings` points at the user's own files. The music follows the Sonic Identity saved in
  * references/brand-voice.md, one energy step lower so it sits under the voice, with scene
@@ -42,12 +51,41 @@ const { prepareVoice } = require('./render');
 const { visualIdentity, applyIdentity } = require('./brand');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const TEMPLATE = path.join(__dirname, 'templates', 'narrated.html');
 const LEAD = 0.15; // the first line starts almost at once; the hook is already on screen
 const GAP = 0.35; // a beat between one line ending and the next scene
 const TAIL = 1.2; // after the last line, room for the sonic logo
 const MEDIA_EXT = /\.(jpe?g|png|webp|gif|mp4|mov|webm|m4v)$/i;
 const VIDEO_EXT = /\.(mp4|mov|webm|m4v)$/i;
+
+// The looks a script can take: photo backgrounds, or a background drawn per line. A drawn style
+// opens on `first`, closes on `last`, and takes the middle lines' shots from `cycle` in turn,
+// each with the sound it lands on (one per shot, so effects don't crowd the voice). The cycles
+// leave out shots that would claim something: a chart without the user's numbers, or a product
+// screen without their screenshot.
+const STYLES = {
+  photo: { template: 'narrated.html' },
+  '3d': {
+    template: '3d.html', canvas: '<canvas class="art" width="1080" height="1920" data-lint="off"></canvas>',
+    shots: ['shapes', 'hero', 'cards', 'chart', 'coin', 'rings', 'globe'],
+    first: 'shapes', last: 'coin', cycle: ['globe', 'rings', 'cards', 'shapes'],
+    sfx: { cards: 'swish:card-1', coin: 'ding:land' },
+  },
+  pixel: {
+    template: 'pixel.html', canvas: '<canvas class="art" width="135" height="240" data-lint="off"></canvas>',
+    shots: ['walk', 'boss', 'coins', 'levelup', 'city', 'space', 'photo'],
+    first: 'walk', last: 'space', cycle: ['boss', 'coins', 'levelup', 'city'],
+    sfx: { boss: 'hurt:hit', coins: 'coin:open', levelup: 'powerup:up' },
+    music: 'chiptune', // in the identity's key and hook, the way everyday posts borrow a genre
+  },
+};
+
+// "[shot: hero src=assets/screen.png]" -> { name: 'hero', attrs: { src: 'assets/screen.png' } }
+function parseShot(text) {
+  const [name, ...rest] = text.trim().split(/\s+/);
+  const attrs = {};
+  for (const m of rest.join(' ').matchAll(/([\w-]+)=(?:"([^"]*)"|'([^']*)'|(\S+))/g)) attrs[m[1].toLowerCase()] = m[2] ?? m[3] ?? m[4];
+  return { name: name.toLowerCase(), attrs };
+}
 
 function fail(message) {
   console.error(message);
@@ -60,7 +98,7 @@ function parseArgs(argv) {
     const a = argv[i];
     if (a === '--no-media') args.noMedia = true;
     else if (a === '--no-check') args.noCheck = true;
-    else if (['--out', '--voice', '--speed'].includes(a)) args[a.slice(2)] = argv[++i];
+    else if (['--out', '--voice', '--speed', '--style'].includes(a)) args[a.slice(2)] = argv[++i];
     else if (a === '-h' || a === '--help') args.help = true;
     else args.positional.push(a);
   }
@@ -149,17 +187,41 @@ async function main() {
   }
   if (!fs.existsSync(scriptFile)) fail(`No script at ${scriptFile}`);
   const { meta, body } = parseFrontmatter(fs.readFileSync(scriptFile, 'utf8'));
+  const styleName = String(args.style || meta.style || 'photo').toLowerCase();
+  const style = STYLES[styleName];
+  if (!style) fail(`Unknown style "${styleName}" (use ${Object.keys(STYLES).join(', ')}).`);
   const lines = parseScript(body).map(({ n, text }) => {
     const bg = /\[bg:\s*([^\]]+)\]/i.exec(text);
-    return { n, text: text.replace(/\s*\[bg:[^\]]*\]/gi, '').trim(), bg: bg ? bg[1].trim() : meta.bg || '' };
+    const shot = /\[shot:\s*([^\]]+)\]/i.exec(text);
+    return {
+      n, text: text.replace(/\s*\[(bg|shot):[^\]]*\]/gi, '').trim(),
+      bg: bg ? bg[1].trim() : meta.bg || '', shot: shot ? parseShot(shot[1]) : null,
+    };
   }).filter((l) => l.text);
   if (!lines.length) fail(`No lines in ${scriptFile}; number them "1. ...", one per scene.`);
+  if (style.shots) {
+    if (lines.some((l) => l.bg)) console.warn(`Note: [bg: ...] and bg: are for photo backgrounds; style ${styleName} draws each line's background, so they're ignored (use [shot: ...]).`);
+    const bad = lines.filter((l) => l.shot && !style.shots.includes(l.shot.name));
+    if (bad.length) fail(`Unknown shot${bad.length > 1 ? 's' : ''} for style ${styleName}: ${bad.map((l) => `"${l.shot.name}" (line ${l.n})`).join(', ')}. The shots are ${style.shots.join(', ')}.`);
+    let k = 0;
+    lines.forEach((l, i) => {
+      if (l.shot) return;
+      const name = i === 0 ? style.first : i === lines.length - 1 && lines.length > 1 ? style.last : style.cycle[k++ % style.cycle.length];
+      l.shot = { name, attrs: {} };
+    });
+  } else if (lines.some((l) => l.shot)) {
+    console.warn('Note: [shot: ...] needs "style: 3d" or "style: pixel" in the frontmatter; ignored for photo backgrounds.');
+  }
 
   const slug = slugify(meta.title || path.basename(scriptFile, path.extname(scriptFile)));
   const page = path.resolve(args.out || path.join(ROOT, 'state', 'videos', `${new Date().toISOString().slice(0, 10)}-${slug}.html`));
   const dir = path.dirname(page);
   const assets = path.join(dir, 'assets');
   fs.mkdirSync(assets, { recursive: true });
+  for (const l of lines) {
+    const src = l.shot && l.shot.attrs.src;
+    if (src && !fs.existsSync(path.join(dir, src))) console.warn(`Note: ${src} (line ${l.n}'s ${l.shot.name} shot) not found next to the page; put it in assets/`);
+  }
 
   // ---- the voice: the user's recordings, or a generated voice
   let clips;
@@ -191,7 +253,7 @@ async function main() {
   }
 
   // ---- timing: each scene is its line plus a beat, with cuts on the music's beat
-  const html = fs.readFileSync(TEMPLATE, 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, 'templates', style.template), 'utf8');
   const defaults = templateDefaults(html);
   const identity = sonicIdentity();
   const music = (meta.music || 'identity').trim();
@@ -202,6 +264,7 @@ async function main() {
       energy: Number.isFinite(identity.energy) ? Math.max(1, identity.energy - 1) : undefined, motif: identity.motif,
     }).filter(([, v]) => v !== undefined && v !== '' && !Number.isNaN(v))));
   }
+  if (style.music && !meta.music) sound.music = style.music; // an explicit music: line, identity included, wins
   let musicSrc = '';
   if (music === 'none') sound.music = 'none';
   else if (MEDIA_EXT.test(music) || /\.(mp3|m4a|wav|aac|ogg|flac)$/i.test(music)) musicSrc = music;
@@ -224,9 +287,9 @@ async function main() {
   const duration = r2(scenes[scenes.length - 1].start + scenes[scenes.length - 1].length + TAIL);
   scenes[scenes.length - 1].end = duration;
 
-  // ---- backgrounds
+  // ---- backgrounds (a drawn style draws its own)
   for (const s of scenes) {
-    if (!s.bg) continue;
+    if (!s.bg || style.shots) continue;
     if (MEDIA_EXT.test(s.bg)) {
       if (!fs.existsSync(path.join(dir, s.bg))) console.warn(`Note: background ${s.bg} not found next to the page`);
       s.media = s.bg;
@@ -237,8 +300,9 @@ async function main() {
 
   // ---- the page
   const head = html.slice(html.indexOf('<html>'), html.indexOf('</head>') + '</head>'.length);
+  const bodyClass = (/<body[^>]*\bclass="([^"]*)"/.exec(html.slice(html.indexOf('</head>'))) || [])[1] || 'fyp';
   const attrs = [
-    'class="fyp"', `data-duration="${duration}"`, `data-drop="${drop}"`,
+    `class="${bodyClass}"`, `data-duration="${duration}"`, `data-drop="${drop}"`,
     ...(musicSrc ? [`data-music-src="${esc(musicSrc)}"`, 'data-music="none"'] : [`data-music="${sound.music}"`]),
     ...['bpm', 'key', 'mode', 'energy', 'motif'].filter((k) => sound[k] !== undefined).map((k) => `data-${k}="${esc(String(sound[k]))}"`),
   ].join(' ');
@@ -250,18 +314,26 @@ async function main() {
     parts.push(`    <div class="say auto" data-voice="${esc(s.clip)}" style="--voice:${s.start}s">${esc(s.text)}</div>`);
     return `  <!-- line ${s.n}, ${s.start}–${s.end}s -->\n  <div class="scene narr center"${last ? '' : ` style="--out:${r2(s.end - 0.15)}s"`}>\n${parts.join('\n')}\n  </div>`;
   }).join('\n\n');
+  // what's behind the text: a drawn style's canvas and one shot per line, or a photo slot per line
+  const layers = style.shots
+    ? [`  ${style.canvas}`, '  <div class="art-scrim" data-lint="off"></div>', '',
+      ...scenes.map((s, i) => {
+        const settings = Object.entries(s.shot.attrs).map(([k, v]) => ` data-${k}="${esc(v)}"`).join('');
+        const sfx = style.sfx[s.shot.name] ? ` data-sfx="${style.sfx[s.shot.name]}"` : '';
+        return `  <div class="shot" data-shot="${s.shot.name}" style="--in:${i === 0 ? 0 : s.start}s"${settings}${sfx}></div>`;
+      })].join('\n')
+    : ['  <div class="glow g1"></div>', '  <div class="glow g2"></div>',
+      ...scenes.map((s, i) => bgSlot(i, i === 0 ? 0 : scenes[i - 1].end, s.end, i === scenes.length - 1, s.media))].join('\n');
   const doc = `<!doctype html>
 <!--
   Narrated video, written by scripts/video/compose.js from ${path.relative(dir, path.resolve(scriptFile))}.
   Edit the script and run compose.js again rather than editing the timing here; it's
   measured from the voice. Page conventions: see the comment at the top of
-  templates/promo.html, and templates/narrated.html for this layout.
+  templates/promo.html, and templates/${style.template} for this layout${style.shots ? ' and its shots' : ''}.
 -->
 ${head}
 <body ${attrs}>
-  <div class="glow g1"></div>
-  <div class="glow g2"></div>
-${scenes.map((s, i) => bgSlot(i, i === 0 ? 0 : scenes[i - 1].end, s.end, i === scenes.length - 1, s.media)).join('\n')}
+${layers}
 
 ${sceneHtml}
 </body>
@@ -273,7 +345,8 @@ ${sceneHtml}
   fs.writeFileSync(page, branded.html);
 
   console.log(`Wrote ${page}: ${scenes.length} lines, ${duration}s`);
-  for (const s of scenes) console.log(`  ${String(s.n).padStart(2)}. ${s.start.toFixed(2)}–${s.end.toFixed(2)}s  ${s.clip}${s.media ? `  bg ${s.media}` : ''}  ${s.text.slice(0, 48)}${s.text.length > 48 ? '...' : ''}`);
+  for (const s of scenes) console.log(`  ${String(s.n).padStart(2)}. ${s.start.toFixed(2)}–${s.end.toFixed(2)}s  ${s.clip}${s.media ? `  bg ${s.media}` : ''}${s.shot && style.shots ? `  shot ${s.shot.name}` : ''}  ${s.text.slice(0, 48)}${s.text.length > 48 ? '...' : ''}`);
+  if (style.shots) console.log(`  style: ${styleName} (templates/${style.template})`);
   console.log(`  sound: ${musicSrc ? `licensed track ${musicSrc}` : `${sound.music}${sound.music !== 'none' ? `, ${sound.bpm} BPM, ${sound.key} ${sound.mode || ''}, energy ${sound.energy}, cuts on the beat` : ''}`}${identity ? ' (the Sonic Identity)' : ' (the template default; no Sonic Identity saved yet)'}`);
   console.log(`  look: ${branded.changes.length ? branded.changes.join('; ') : 'the template default; no Visual Identity saved yet'}`);
   for (const p of branded.problems) console.warn(`Note: ${p}`);

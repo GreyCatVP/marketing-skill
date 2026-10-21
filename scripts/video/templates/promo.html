@@ -11,6 +11,8 @@
   - Animate with CSS animations only. render.js pauses and seeks every
     animation frame by frame, so time each one with animation-delay. Here the
     delays come from per-element custom properties like style="--in:3.4s".
+    (3d.html and pixel.html draw their backgrounds with a script instead,
+    through window.renderFrame(t); their own comments explain how.)
   - Backgrounds: every scene has an empty <div class="bg"> slot already timed
     to it. Put one photo or clip inside and it fills the frame with a slow
     zoom, a scrim that keeps text readable, and one shared color grade:
@@ -23,8 +25,8 @@
     color. An empty slot shows the gradient glow instead. scripts/video/
     media.js finds stock photos and clips and writes their credits.
   - Music comes from <body data-*>: data-music is the genre (pop, house,
-    hiphop, acoustic, cinematic, tech, lofi, calm, phonk, jersey, funk) or
-    none; data-bpm, data-key (C, F#, ...), data-mode (major or minor),
+    hiphop, acoustic, cinematic, tech, lofi, calm, phonk, jersey, funk,
+    chiptune) or none; data-bpm, data-key (C, F#, ...), data-mode (major or minor),
     data-energy (1-5), and data-motif, the project's signature hook in
     scale degrees, e.g. "1 3 5 6 | 5 3 2 -" (references/sound-guide.md).
     data-drop is when the beat comes in; data-break="8.5-13.5" thins it
@@ -43,7 +45,8 @@
     click, chime, and the meme cues: boom, scratch (record scratch), horn
     (air horn), rimshot, fail (sad trombone, 2s), drumroll (1.5s, so cue it
     1.5s before the hit), ding (right answer), buzzer (wrong), ping (a
-    message), typing, shutter, cash (ka-ching), glitch, and bass (sub drop).
+    message), typing, shutter, cash (ka-ching), glitch, and bass (sub drop);
+    and 8-bit ones for pixel art: coin, jump, powerup, blip, and hurt.
   - Everyday / FYP pieces (every page has them; the templates in
     references/fyp-formats.md show each one in use). <body class="fyp">
     switches to TikTok Sans, the platform's own caption font.

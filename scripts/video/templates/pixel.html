@@ -1,0 +1,896 @@
+<!doctype html>
+<!--
+  Template: pixel art, narrated (references/video-types.md: explainer,
+  educational, brand story; and everyday posts that play like a game). 15.5
+  seconds: a voiceover over pixel-art scenes with an original robot hero,
+  captions in a game dialog box synced to the voice, chiptune music, and the
+  hook on screen from the very first frame.
+
+  Usually made by scripts/video/compose.js with "style: pixel" in the
+  script's frontmatter: it voices the script, gives each line a shot
+  ([shot: boss] on a line picks one), times everything to the voice, and
+  writes this page. By hand, it works like 3d.html: a scene per line with
+  <div class="say auto" data-voice="..." style="--voice:...">, and an empty
+  <div class="shot" data-shot="..." style="--in:...">, usually one per line.
+
+  Shots (data-shot), each running from its --in until the next shot starts:
+    walk     the robot walking through a scrolling landscape.
+             data-time="day" (default), "sunset", or "night".
+    boss     the robot fighting a slime with a health bar: the problem being
+             beaten. Events: --hit, --hit-2, --hit-3, --ko.
+    coins    the robot opening a chest of coins: a payoff, a saving, a win.
+             Events: --open, --jump.
+    levelup  the robot leveling up in a burst of light: a result, an upgrade.
+             Event: --up.
+    city     a night city with windows switching on: calm, a story, time passing.
+    space    a rocket flying through stars: a launch, a hook, a CTA.
+    photo    the user's own image (data-src="assets/photo.jpg"), pixelated into
+             the palette and sharpening into view: a product, a logo, a place.
+             Event: --sharp. Never a stand-in for a real person or result.
+  data-sfx on a shot cues a sound on one of its events, e.g. data-sfx="coin:open";
+  the 8-bit sounds (coin, jump, powerup, blip, hurt) suit them best.
+
+  How it draws: window.renderFrame(t) paints the frame for time t on a
+  135x240 canvas, scaled up 8x with hard pixel edges, so it's frame-exact.
+  The robot's suit takes --accent, so brand.js recolors it. The copy is a
+  playful default for a fictional invoicing app; rewrite it in the brand's
+  voice. The text uses Pixelify Sans, a pixel font from Google Fonts.
+  Page conventions (canvas, safe area, timing vars, backgrounds, data-sfx
+  cues, music, assets): see the comment at the top of promo.html.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=JetBrains+Mono:wght@500&family=TikTok+Sans:wght@500..900&family=Noto+Color+Emoji&display=block">
+<style>
+  :root {
+    --bg: #0f0f13;
+    --card: #1b1b22;
+    --line: #2b2b35;
+    --text: #f3f2ee;
+    --muted: #9a99a4;
+    --accent: #e07a55;
+    --ok: #3fbf7f;
+    --bad: #e0605a;
+    --warn: #e8b04a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); }
+  body { font-family: "Inter", "Liberation Sans", "Noto Color Emoji", sans-serif; color: var(--text); position: relative; }
+
+  .glow { position: absolute; border-radius: 50%; filter: blur(120px); opacity: .55; }
+  .g1 { width: 900px; height: 900px; background: #000; left: -300px; top: -200px; animation: drift1 24s linear 0s both; }
+  .g2 { width: 800px; height: 800px; background: #000; right: -320px; bottom: -160px; animation: drift2 24s linear 0s both; }
+  @keyframes drift1 { from { transform: translate(0,0); } to { transform: translate(260px, 520px); } }
+  @keyframes drift2 { from { transform: translate(0,0); } to { transform: translate(-220px, -600px); } }
+
+  /* scenes: content kept inside the platform-UI safe zone */
+  .scene { position: absolute; left: 90px; right: 150px; top: 330px; bottom: 470px;
+           display: flex; flex-direction: column; justify-content: center;
+           animation: sceneOut .35s ease-in var(--out, 999s) forwards; }
+  @keyframes sceneOut { to { opacity: 0; transform: translateY(-60px); } }
+
+  /* entrances; .gone also leaves at its own --out */
+  .pop   { animation: popIn .5s cubic-bezier(.2,.9,.3,1.25) var(--in) both; }
+  .rise  { animation: riseIn .45s cubic-bezier(.2,.8,.2,1) var(--in) both; }
+  .slide { animation: slideIn .4s cubic-bezier(.2,.8,.2,1) var(--in) both; }
+  .fade  { animation: fadeIn .4s ease-out var(--in) both; }
+  .gone  { animation: fadeIn .35s ease-out var(--in) both, fadeOut .3s ease-in var(--out) forwards; }
+  @keyframes popIn   { from { opacity: 0; transform: scale(.6) translateY(40px); } to { opacity: 1; transform: none; } }
+  @keyframes riseIn  { from { opacity: 0; transform: translateY(70px); } to { opacity: 1; transform: none; } }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(160px); } to { opacity: 1; transform: none; } }
+  @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeOut { to { opacity: 0; } }
+
+  .huge { font-size: 132px; font-weight: 800; line-height: 1.02; letter-spacing: -4px; }
+  .big  { font-size: 104px; font-weight: 800; line-height: 1.04; letter-spacing: -3px; }
+  .mid  { font-size: 64px;  font-weight: 700; line-height: 1.12; letter-spacing: -1.5px; }
+  .small{ font-size: 42px;  font-weight: 500; line-height: 1.3; color: var(--muted); }
+  .label{ font-size: 34px;  font-weight: 700; letter-spacing: 4px; text-transform: uppercase; }
+  .accent { color: var(--accent); }
+  .center { text-align: center; align-items: center; }
+
+  /* counts up from 0 to --to, starting at --in: <span class="count" style="--in:3s; --to:40"></span>
+     (--for and --ease change its pace; add class "pct" for a % sign) */
+  @property --n { syntax: '<integer>'; inherits: false; initial-value: 0; }
+  .count { counter-reset: n var(--n); animation: countUp var(--for, 1.2s) var(--ease, cubic-bezier(.2,.8,.2,1)) var(--in) both; }
+  .pct::after { content: '%'; }
+  .count::before { content: counter(n); }
+  @keyframes countUp { from { --n: 0; } to { --n: var(--to); } }
+
+  /* background media: one photo or clip per scene, behind the text (see promo.html) */
+  .bg { position: absolute; inset: 0; overflow: hidden; isolation: isolate; background: #000;
+        animation: fadeIn .45s ease-out var(--in) both, fadeOut .45s ease-in var(--out, 999s) forwards; }
+  .bg.now { animation: fadeOut .45s ease-in var(--out, 999s) forwards; }
+  .bg:empty { display: none; }
+  .bg-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;
+              filter: var(--grade, saturate(.9) contrast(1.05) brightness(.9));
+              animation: var(--kb, kbIn) var(--dur, 8s) linear var(--in) both; }
+  .bg.blur .bg-media { filter: var(--grade, saturate(.9) contrast(1.05) brightness(.9)) blur(var(--blur, 10px)); }
+  @keyframes kbIn    { from { transform: scale(1.02); } to { transform: scale(1.14); } }
+  @keyframes kbOut   { from { transform: scale(1.14); } to { transform: scale(1.02); } }
+  @keyframes kbLeft  { from { transform: scale(1.14) translateX(3%); } to { transform: scale(1.14) translateX(-3%); } }
+  @keyframes kbRight { from { transform: scale(1.14) translateX(-3%); } to { transform: scale(1.14) translateX(3%); } }
+  .bg.tint::before { content: ''; position: absolute; inset: 0; z-index: 1; background: var(--accent); mix-blend-mode: soft-light; opacity: .5; }
+  .bg::after { content: ''; position: absolute; inset: 0; z-index: 2;
+               background: linear-gradient(to bottom, rgba(10,10,14,.72), rgba(10,10,14,.12) 30%, rgba(10,10,14,.22) 62%, rgba(10,10,14,.88)),
+                           rgba(10,10,14,var(--shade, .35)); }
+  body:has(.bg-media) { --muted: #d2d1d8; }
+  body:has(.bg-media) .scene, body:has(.bg-media) .stage { text-shadow: 0 2px 6px rgba(0,0,0,.35), 0 4px 30px rgba(0,0,0,.55); }
+
+  /* on screen from the very first frame, with a small settle instead of an entrance: for the
+     hook, since the first frame is the default cover and the moment a viewer decides to stay */
+  .now { animation: nowIn .5s cubic-bezier(.2,.8,.2,1) 0s both, fadeOut .3s ease-in var(--out, 999s) forwards; }
+  @keyframes nowIn { from { transform: scale(1.05); } to { transform: none; } }
+
+  /* the end card brand.js adds: the logo and handle, landing on the sonic logo */
+  .endcard { position: absolute; left: 90px; right: 150px; top: 330px; bottom: 470px; z-index: 5;
+             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 34px; text-align: center;
+             animation: fadeIn .35s ease-out var(--in, 999s) both; }
+  .endcard .logo { max-width: 380px; max-height: 300px; object-fit: contain; animation: popIn .55s cubic-bezier(.2,.9,.3,1.25) var(--in, 999s) both; }
+  .endcard .handle { font-size: 60px; font-weight: 800; letter-spacing: -1px; animation: riseIn .45s cubic-bezier(.2,.8,.2,1) calc(var(--in, 999s) + .15s) both; }
+
+  /* ---- everyday / FYP kit ---- */
+  body.fyp { font-family: "TikTok Sans", "Inter", "Liberation Sans", "Noto Color Emoji", sans-serif; text-wrap: pretty; }
+  .fyp .huge, .fyp .big { letter-spacing: -2px; }
+  .fyp .glow { opacity: .9; }
+  .scene.top { justify-content: flex-start; }
+  .scene.bottom { justify-content: flex-end; }
+  .stack { display: grid; place-items: center; text-align: center; }
+  .stack > * { grid-area: 1 / 1; }
+  .swap { animation: popIn .45s cubic-bezier(.2,.9,.3,1.25) var(--in) both, fadeOut .25s ease-in var(--out, 999s) forwards; }
+  body:has(.bg-media) :is(.cap, .sticker, .stamp, .say, .chat, .post, .reply, .notif, .popup, .cell, .tiers, .pane, .side) { text-shadow: none; }
+
+  /* captions in the platforms' own style, each wrapped line boxed */
+  .cap { font-size: 64px; font-weight: 700; line-height: 1.44; letter-spacing: -.5px; text-align: center; text-wrap: balance; }
+  .cap > span { background: #fff; color: #121212; padding: .05em .32em; border-radius: .2em;
+                -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  .cap.dark > span { background: rgba(0,0,0,.76); color: #fff; }
+  .cap.hl > span { background: var(--accent); color: #fff; }
+  .cap.out { font-size: 82px; font-weight: 900; line-height: 1.12; color: #fff; paint-order: stroke fill; -webkit-text-stroke: 14px #000; }
+  .cap.out > span { background: none; color: inherit; padding: 0; }
+  .cap.left { text-align: left; }
+
+  /* word-by-word captions: each <i> pops at its own --in, highlighted while it's the newest */
+  .say { font-size: 80px; font-weight: 900; line-height: 1.16; text-align: center; color: #fff; text-wrap: balance;
+         paint-order: stroke fill; -webkit-text-stroke: 14px #000; }
+  .say i { font-style: normal; display: inline-block; color: var(--hi, #ffd23f);
+           animation: wordIn .22s cubic-bezier(.2,1.5,.4,1) var(--in) both, wordDone .12s linear calc(var(--in) + .4s) forwards; }
+  @keyframes wordIn { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+  @keyframes wordDone { to { color: #fff; } }
+
+  /* labels and reactions */
+  .sticker { width: fit-content; background: var(--accent); color: #fff; font-size: 44px; font-weight: 800; line-height: 1.2;
+             padding: 10px 28px 12px; border-radius: 16px; rotate: -3deg; box-shadow: 0 12px 34px rgba(0,0,0,.35); }
+  .sticker.yellow { background: #ffd23f; color: #121212; }
+  .sticker.light { background: #fff; color: #121212; }
+  .sticker.dark { background: #121212; color: #fff; }
+  .stamp { width: fit-content; color: var(--accent); border: 12px solid currentColor; border-radius: 30px; background: rgba(10,10,14,.35);
+           font-size: 124px; font-weight: 900; line-height: 1.12; letter-spacing: -2px; padding: 4px 36px 10px; rotate: -7deg;
+           animation: stampIn .32s cubic-bezier(.3,1.5,.5,1) var(--in) both; }
+  .stamp.ok { color: var(--ok); }
+  .stamp.bad { color: var(--bad); }
+  @keyframes stampIn { from { opacity: 0; transform: scale(2.4); } 50% { opacity: 1; } to { opacity: 1; transform: none; } }
+  .emoji { width: fit-content; font-size: 190px; line-height: 1.12;
+           animation: emojiIn .55s cubic-bezier(.2,1.5,.4,1) var(--in) both, sway 1.6s ease-in-out calc(var(--in) + .55s) infinite; }
+  @keyframes emojiIn { from { opacity: 0; transform: scale(.2) rotate(-25deg); } to { opacity: 1; transform: none; } }
+  @keyframes sway { 0%, 100% { rotate: -5deg; } 50% { rotate: 5deg; } }
+
+  /* timers: a 3-2-1 ring and a draining bar, both running --for (default 3s) from --in */
+  @property --sweep { syntax: '<angle>'; inherits: false; initial-value: 360deg; }
+  @property --left { syntax: '<integer>'; inherits: false; initial-value: 3; }
+  .ring { width: 270px; height: 270px; border-radius: 50%; display: grid; place-items: center;
+          background: radial-gradient(closest-side, var(--bg) 84%, transparent 85%), conic-gradient(var(--accent) var(--sweep), rgba(255,255,255,.18) 0);
+          animation: popIn .4s cubic-bezier(.2,.9,.3,1.25) var(--in) both, sweep var(--for, 3s) linear var(--in) both; }
+  .ring b { font-size: 130px; font-weight: 900; line-height: 1; counter-reset: left var(--left);
+            animation: left var(--for, 3s) steps(3, jump-none) var(--in) both; }
+  .ring b::before { content: counter(left); }
+  @keyframes sweep { from { --sweep: 360deg; } to { --sweep: 0deg; } }
+  @keyframes left { from { --left: 3; } to { --left: 1; } }
+  .timerbar { height: 20px; border-radius: 10px; background: rgba(255,255,255,.18); overflow: hidden; animation: fadeIn .2s ease-out var(--in) both; }
+  .timerbar::after { content: ''; display: block; height: 100%; border-radius: inherit; background: var(--accent); transform-origin: left;
+                     animation: drain var(--for, 3s) linear var(--in) both; }
+  @keyframes drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+  /* bars: poll options grow to --pct, a progress bar fills to --pct over --for */
+  .poll { display: flex; flex-direction: column; gap: 22px; }
+  .opt { position: relative; display: flex; justify-content: space-between; align-items: center; height: 124px; padding: 0 38px;
+         border-radius: 28px; background: rgba(255,255,255,.13); overflow: hidden; font-size: 52px; font-weight: 800;
+         animation: fadeIn .3s ease-out var(--in) both; }
+  .opt::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--pct, 50) * 1%); background: var(--accent);
+                 animation: grow 1.2s cubic-bezier(.2,.8,.2,1) var(--in) both; }
+  .opt.alt::before { background: #5c5b68; }
+  .opt > * { position: relative; }
+  @keyframes grow { from { width: 0; } }
+  .progress { height: 70px; border-radius: 35px; background: rgba(255,255,255,.13); border: 3px solid rgba(255,255,255,.28); overflow: hidden;
+              animation: fadeIn .3s ease-out var(--in) both; }
+  .progress::before { content: ''; display: block; height: 100%; width: calc(var(--pct, 100) * 1%);
+                      background: repeating-linear-gradient(-45deg, var(--accent) 0 26px, color-mix(in srgb, var(--accent) 78%, #fff) 26px 52px);
+                      animation: grow var(--for, 3s) var(--ease, cubic-bezier(.15,.85,.25,1)) var(--in) both; }
+
+  /* layouts: two stacked panes, a starter-pack grid, a tier list */
+  .split { flex: 1; display: flex; flex-direction: column; gap: 24px; }
+  .pane, .side { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center;
+                 gap: 14px; text-align: center; padding: 100px 40px 44px; background: var(--card); }
+  .pane { flex: 1; border-radius: 36px; border: 2px solid var(--line); }
+  :is(.pane, .side) > .sticker { position: absolute; left: 30px; top: 28px; z-index: 3; }
+  :is(.pane, .side, .cell) > :not(.bg-media, .sticker) { position: relative; z-index: 2; }
+  :is(.pane, .side):has(> .bg-media)::after { content: ''; position: absolute; inset: 0; z-index: 1;
+                                              background: linear-gradient(rgba(0,0,0,.15), rgba(0,0,0,.55)); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .cell { position: relative; overflow: hidden; background: #fff; color: #121212; border-radius: 28px; padding: 22px 18px 24px; text-align: center;
+          font-size: 38px; font-weight: 700; line-height: 1.15; box-shadow: 0 16px 40px rgba(0,0,0,.3); rotate: -1.5deg; }
+  .cell:nth-child(even) { rotate: 1.5deg; }
+  .cell .e { font-size: 104px; line-height: 1.2; }
+  .cell, .popup b { text-wrap: balance; }
+  .tiers { display: flex; flex-direction: column; gap: 10px; }
+  .tier { display: flex; min-height: 128px; background: rgba(22,22,28,.9); border-radius: 18px; overflow: hidden; }
+  .tier > b { flex: none; width: 124px; display: grid; place-items: center; font-size: 64px; font-weight: 900; color: #121212; background: var(--t); }
+  .tier.s { --t: #ff7f7f; } .tier.a { --t: #ffbf7f; } .tier.b { --t: #ffdf7f; } .tier.c { --t: #bfff7f; } .tier.d { --t: #7fbfff; }
+  .items { flex: 1; display: flex; flex-wrap: wrap; align-content: center; gap: 12px; padding: 14px 16px; }
+  .item { background: #fff; color: #121212; border-radius: 16px; padding: 10px 20px; font-size: 40px; font-weight: 700; white-space: nowrap; }
+
+  /* a fictional chat: .msg.them / .msg.me, each a .bub, with .typing dots between --in and --out */
+  .chat { background: #f4f3ef; color: #121212; border-radius: 44px; overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,.5); }
+  .chat-head { display: flex; align-items: center; gap: 22px; padding: 26px 32px; background: #fff; border-bottom: 2px solid #e6e3dc; }
+  .chat-head b, .post-head b { display: block; font-size: 40px; font-weight: 800; line-height: 1.2; }
+  .chat-head small, .post-head small { display: block; font-size: 28px; font-weight: 600; color: #8a8994; }
+  .av { width: 84px; height: 84px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 46px; font-style: normal;
+        background: linear-gradient(135deg, var(--accent), #6b3b4b); }
+  .chat-body { display: flex; flex-direction: column; gap: 16px; padding: 30px 30px 40px; }
+  .msg { display: grid; }
+  .msg > * { grid-area: 1 / 1; }
+  .msg.me { justify-items: end; }
+  .msg.them { justify-items: start; }
+  .bub { max-width: 600px; padding: 20px 30px 22px; border-radius: 36px; font-size: 42px; font-weight: 600; line-height: 1.25;
+         animation: bubIn .35s cubic-bezier(.2,.9,.3,1.3) var(--in) both; }
+  .them .bub { background: #e4e2dc; border-bottom-left-radius: 10px; transform-origin: 0 100%; }
+  .me .bub { background: var(--accent); color: #fff; border-bottom-right-radius: 10px; transform-origin: 100% 100%; }
+  @keyframes bubIn { from { opacity: 0; transform: scale(.5); } to { opacity: 1; transform: none; } }
+  .typing { display: flex; gap: 10px; padding: 28px 30px; border-radius: 36px; background: #e4e2dc; width: fit-content;
+            animation: fadeIn .2s ease-out var(--in) both, fadeOut .15s linear var(--out) forwards; }
+  .typing i { width: 16px; height: 16px; border-radius: 50%; background: #8a8994; animation: dot 1s ease-in-out infinite; }
+  .typing i:nth-child(2) { animation-delay: .15s; }
+  .typing i:nth-child(3) { animation-delay: .3s; }
+  @keyframes dot { 30% { transform: translateY(-10px); opacity: .5; } }
+
+  /* a lock screen: .notif cards slide in at --in, newest on top, pushing the rest down */
+  .lock { display: flex; flex-direction: column; align-items: center; }
+  .clock { font-size: 180px; font-weight: 700; letter-spacing: -6px; line-height: 1; }
+  .date { font-size: 42px; font-weight: 600; margin: 8px 0 26px; }
+  .notifs { align-self: stretch; display: flex; flex-direction: column-reverse; justify-content: flex-end; }
+  .notif { display: flex; gap: 22px; align-items: flex-start; padding: 24px 28px; border-radius: 34px; overflow: hidden; text-align: left;
+           background: rgba(246,245,241,.9); color: #121212; box-shadow: 0 16px 40px rgba(0,0,0,.25);
+           animation: notifIn .5s cubic-bezier(.2,.9,.3,1.1) var(--in) both; }
+  @keyframes notifIn { from { max-height: 0; padding-top: 0; padding-bottom: 0; margin-top: 0; opacity: 0; transform: scale(.9); }
+                       to { max-height: 320px; margin-top: 18px; opacity: 1; transform: none; } }
+  .app { width: 76px; height: 76px; flex: none; border-radius: 20px; display: grid; place-items: center; font-size: 44px; font-style: normal; background: #fff; }
+  .notif > div { flex: 1; min-width: 0; }
+  .n-head { display: flex; justify-content: space-between; font-size: 30px; font-weight: 800; }
+  .n-head time { font-weight: 600; color: #6a6a74; }
+  .notif p { font-size: 38px; font-weight: 600; line-height: 1.25; margin-top: 4px; }
+
+  /* a generic social post (no real app's look) with a .heart that fills at --like, and .reply comments */
+  .post { background: #fff; color: #121212; border-radius: 40px; padding: 34px 36px 26px; box-shadow: 0 40px 120px rgba(0,0,0,.45); }
+  .post-head { display: flex; align-items: center; gap: 20px; margin-bottom: 22px; }
+  .post-text { font-size: 52px; font-weight: 700; line-height: 1.2; }
+  .post-bar { display: flex; gap: 44px; align-items: center; margin-top: 28px; padding-top: 22px; border-top: 2px solid #ecebe6;
+              font-size: 34px; font-weight: 700; color: #6a6a74; }
+  .post-bar > span { display: flex; align-items: center; gap: 12px; }
+  .post-bar svg { width: 46px; height: 46px; }
+  .heart { animation: beat .45s cubic-bezier(.2,1.6,.4,1) var(--like, 999s) both; }
+  .heart path { fill: none; stroke: #6a6a74; stroke-width: 2.2; animation: liked .2s ease-out var(--like, 999s) forwards; }
+  @keyframes beat { 40% { transform: scale(1.45); } }
+  @keyframes liked { to { fill: #ff3b5c; stroke: #ff3b5c; } }
+  .reply { display: flex; gap: 18px; align-items: flex-start; width: fit-content; max-width: 100%; margin-top: 18px; padding: 22px 28px;
+           border-radius: 30px; background: rgba(255,255,255,.94); color: #121212; }
+  .reply .av { width: 64px; height: 64px; font-size: 34px; }
+  .reply b { display: block; font-size: 28px; color: #6a6a74; }
+  .reply p { font-size: 38px; font-weight: 700; line-height: 1.22; }
+
+  /* a generic system dialog */
+  .popup { background: #f4f3ef; color: #121212; border-radius: 40px; padding: 40px 40px 32px; text-align: center; box-shadow: 0 40px 140px rgba(0,0,0,.6); }
+  .popup .e { font-size: 100px; line-height: 1.15; }
+  .popup b { display: block; font-size: 52px; font-weight: 800; line-height: 1.15; margin-top: 8px; }
+  .popup p { font-size: 38px; font-weight: 600; color: #4a4a54; line-height: 1.3; margin-top: 12px; }
+  .btns { display: flex; gap: 18px; margin-top: 30px; }
+  .btns span { flex: 1; height: 96px; border-radius: 24px; display: grid; place-items: center; font-size: 36px; font-weight: 800; background: #e4e2dc; }
+  .btns span:last-child { background: var(--accent); color: #fff; }
+
+  /* before/after: the second .side wipes over the first at --at */
+  .wipe { position: relative; flex: 1; border-radius: 40px; overflow: hidden; }
+  .side { position: absolute; inset: 0; border-radius: inherit; }
+  .side + .side { background: #2a2a34; clip-path: inset(0 100% 0 0);
+                  animation: wipe .9s cubic-bezier(.7,0,.25,1) var(--at) both, show .01s linear var(--at) both; }
+  .side:first-child { animation: fadeOut .01s linear calc(var(--at) + .9s) forwards; }
+  .wipe::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 10px; margin-left: -5px; z-index: 5; background: #fff;
+                 box-shadow: 0 0 30px rgba(0,0,0,.5); opacity: 0; animation: seam .9s cubic-bezier(.7,0,.25,1) var(--at) both; }
+  @keyframes wipe { to { clip-path: inset(0 0 0 0); } }
+  @keyframes show { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes seam { from { left: 0; opacity: 0; } 3% { opacity: 1; } 97% { opacity: 1; } to { left: 100%; opacity: 0; } }
+
+  /* hits: a white flash over the frame at --in; a zoom-and-shake on whatever .hit wraps, at --hit */
+  .flash { position: absolute; inset: 0; z-index: 20; background: #fff; pointer-events: none; animation: flash .45s ease-out var(--in) both; }
+  @keyframes flash { 0% { opacity: 0; } 12% { opacity: .9; } 100% { opacity: 0; } }
+  .hit { display: flex; flex-direction: column; align-items: inherit; animation: hit .5s linear var(--hit) both; }
+  @keyframes hit { 0% { transform: none; } 12% { transform: scale(1.12) translate(-10px, 6px); } 24% { transform: scale(1.1) translate(12px, -8px); }
+                   36% { transform: scale(1.09) translate(-8px, -4px); } 48% { transform: scale(1.07) translate(6px, 6px); } 100% { transform: scale(1.05); } }
+
+
+  .glow { display: none; }
+  .art { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+  .shot { display: none; }
+  .scene.narr { justify-content: flex-end; padding-bottom: 30px; }
+  .narr > .hook, .narr > .end { margin-bottom: auto; }
+  .hook { font-size: 70px; line-height: 1.4; }
+  .narr .say { min-height: 220px; }
+  .art { image-rendering: pixelated; }
+  .art-scrim { display: none; }
+  html body.pixel { font-family: "Pixelify Sans", "Noto Color Emoji", monospace; }
+  .pixel .cap { font-weight: 700; }
+  .pixel .cap > span { background: #f4f4f4; color: #1a1c2c; border-radius: 0; padding: .04em .3em; box-shadow: 0 8px 0 #1a1c2c; }
+  .pixel .cap.hl > span { background: var(--accent); color: #fff; }
+  .pixel .hook { font-size: 64px; line-height: 1.5; }
+  /* captions in a game dialog box */
+  .pixel .say { font-size: 64px; font-weight: 700; line-height: 1.25; -webkit-text-stroke: 0; paint-order: normal;
+                text-shadow: 5px 5px 0 #1a1c2c; --hi: #ffcd75; }
+  .pixel .narr .say { background: rgba(26, 28, 44, .92); border: 6px solid #f4f4f4; box-shadow: 0 0 0 6px #1a1c2c, 0 14px 0 6px rgba(26, 28, 44, .5);
+                      align-self: stretch; padding: 20px 28px; min-height: 220px; animation: fadeIn .15s steps(3) var(--voice, 0s) both; }
+
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=block">
+<script type="module">
+// ---- canvas, palette, helpers
+const PW = 135, PH = 240, GROUND = 150; // 135x240 pixels, each 8x8 on screen; the ground line
+const cv = document.querySelector('canvas.art');
+const g = cv.getContext('2d', { willReadFrequently: true });
+g.imageSmoothingEnabled = false;
+const PAL = {
+  night: '#1a1c2c', purple: '#5d275d', red: '#b13e53', orange: '#ef7d57', yellow: '#ffcd75', lime: '#a7f070',
+  green: '#38b764', teal: '#257179', navy: '#29366f', blue: '#3b5dc9', sky: '#41a6f6', cyan: '#73eff7',
+  white: '#f4f4f4', grey: '#94b0c2', slate: '#566c86', dark: '#333c57',
+};
+const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const toHex = (c) => `#${c.map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('')}`;
+const mix = (a, b, k) => toHex(rgb(a).map((v, i) => v + (rgb(b)[i] - v) * k));
+const accentCss = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+PAL.accent = /^#[0-9a-f]{6}$/i.test(accentCss) ? accentCss : '#e07a55';
+PAL.accentDark = mix(PAL.accent, '#000000', 0.38);
+PAL.accentLight = mix(PAL.accent, '#ffffff', 0.4);
+const clamp = (x) => Math.min(1, Math.max(0, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const out3 = (x) => 1 - (1 - clamp(x)) ** 3;
+const hash = (a, b = 0, c = 0) => { let h = Math.imul(a | 0, 374761393) + Math.imul(b | 0, 668265263) + Math.imul(c | 0, 2147483647); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+const rect = (c, x, y, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); };
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+const bayer = (x, y) => (BAYER[(y & 3) * 4 + (x & 3)] + 0.5) / 16;
+// an offscreen canvas, painted once
+function layer(w, h, paint) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const x = c.getContext('2d');
+  x.imageSmoothingEnabled = false;
+  paint(x, w, h);
+  return c;
+}
+const dot = (x, c, px, py, w = 1, h = 1) => { x.fillStyle = c; x.fillRect(px, py, w, h); };
+// A vertical gradient through palette colors, dithered rather than blended, the way the hardware did it.
+function gradient(stops, h, w = PW) {
+  return layer(w, h, (x) => {
+    for (let py = 0; py < h; py++) {
+      const t = py / Math.max(1, h - 1);
+      let i = 0;
+      while (i + 2 < stops.length && t > stops[i + 1][0]) i++;
+      const [t0, c0] = stops[i];
+      const [t1, c1] = stops[i + 1];
+      const k = (t - t0) / Math.max(1e-6, t1 - t0);
+      for (let px = 0; px < w; px++) dot(x, k > bayer(px, py) ? c1 : c0, px, py);
+    }
+  });
+}
+// A scrolling strip that wraps: drawn twice, at whole-pixel offsets.
+function scroll(img, speed, lt, y = 0) {
+  const off = Math.floor((speed * lt) % img.width);
+  g.drawImage(img, -off, y);
+  g.drawImage(img, img.width - off, y);
+}
+// A ridge of hills or mountains whose outline repeats every `w` pixels.
+function ridge(w, base, amp, seed, fill, edge) {
+  return layer(w, PH, (x) => {
+    for (let px = 0; px < w; px++) {
+      const a = (px / w) * Math.PI * 2;
+      const top = Math.round(base - amp * (0.6 * Math.sin(2 * a + seed) + 0.3 * Math.sin(5 * a + seed * 2) + 0.15 * Math.sin(11 * a + seed * 3)));
+      dot(x, fill, px, top, 1, PH - top);
+      if (edge) dot(x, edge, px, top, 1, 1);
+    }
+  });
+}
+function clouds(w, seed, count, y0, y1) {
+  return layer(w, PH, (x) => {
+    for (let k = 0; k < count; k++) {
+      const cx = Math.floor(hash(seed, k) * w), cy = Math.floor(lerp(y0, y1, hash(seed, k, 1)));
+      const r = 4 + Math.floor(hash(seed, k, 2) * 4);
+      const puffs = [[0, 0, r], [-r, 2, r - 1], [r, 2, r - 2], [-2 * r + 2, 4, r - 3], [2 * r - 2, 4, r - 3]];
+      for (let px = -3 * r; px <= 3 * r; px++) {
+        for (let py = -r; py <= 6; py++) {
+          const inside = (dx, dy) => puffs.some(([ox, oy, rr]) => rr > 0 && (dx - ox) ** 2 + (dy - oy) ** 2 <= rr * rr) && dy <= 5;
+          if (!inside(px, py)) continue;
+          const c = !inside(px, py + 2) ? PAL.grey : PAL.white;
+          dot(x, c, (cx + px + w) % w, cy + py);
+        }
+      }
+    }
+  });
+}
+// The ground: a grass edge over dark soil flecked with stones; repeats every 32 pixels.
+function ground(w, grass = PAL.lime, turf = PAL.green, soil = PAL.dark) {
+  return layer(w, PH - GROUND, (x) => {
+    dot(x, soil, 0, 0, w, PH - GROUND);
+    for (let px = 0; px < w; px++) {
+      dot(x, grass, px, 0);
+      dot(x, turf, px, 1, 1, 2 + (hash(px % 32, 7) > 0.7 ? 1 : 0));
+      for (let py = 5; py < PH - GROUND; py += 1) if (hash(px % 32, py, 3) > 0.94) dot(x, PAL.slate, px, py);
+    }
+  });
+}
+function disc(cx, cy, r, c, shadeC) {
+  for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) {
+    if (x * x + y * y > r * r + r * 0.5) continue;
+    rect(shadeC && x + y > r * 0.5 ? shadeC : c, cx + x, cy + y);
+  }
+}
+
+// ---- the robot: an original mascot, 14x18, drawn from rows of letters
+const ROBOT_TOP = [
+  '......aa......',
+  '......gg......',
+  '...wwwwwwww...',
+  '..wwwwwwwwww..',
+  '..wkkkkkkkkw..',
+  '..wkcckkcckw..',
+  '..wkcckkcckw..',
+  '..wkkkkkkkkw..',
+  '..wwwwwwwwww..',
+  '...gwwwwwwg...',
+  '....aaaaaa....',
+  '..gaaayyaaag..',
+  '..gaaaaaaaag..',
+  '..w.aaaaaa.w..',
+  '....AAAAAA....',
+];
+const ROBOT_LEGS = {
+  stand: ['....dd..dd....', '....dd..dd....', '...ddd..ddd...'],
+  stride: ['...dd....dd...', '..dd......dd..', '..dd......dd..'],
+  pass: ['.....dddd.....', '.....d..d.....', '....dd..dd....'],
+  jump: ['...dd....dd...', '...d......d...', '..............'],
+};
+// Draws rows of letters at `scale` canvas pixels per sprite pixel; '.' is see-through.
+function sprite(rows, colors, x, y, scale = 2) {
+  rows.forEach((row, r) => {
+    for (let c = 0; c < row.length; c++) if (row[c] !== '.') rect(colors[row[c]], x + c * scale, y + r * scale, scale, scale);
+  });
+}
+const SPRITE_COLORS = () => ({ a: PAL.accent, A: PAL.accentDark, g: PAL.grey, w: PAL.white, k: PAL.night, c: PAL.cyan, y: PAL.yellow, d: PAL.dark });
+// The robot is drawn at 2x (28x36 canvas pixels, 224x288 on screen) so it reads on a phone;
+// x, y is its top left, so it stands on the ground at y = GROUND - 36.
+const robot = (x, y, pose = 'stand') => sprite([...ROBOT_TOP, ...ROBOT_LEGS[pose]], SPRITE_COLORS(), Math.round(x), Math.round(y));
+const CHEST_SHUT = ['kkkkkkkkkkkk', 'kaaaaaaaaaak', 'kaaaaaaaaaak', 'kyyyyyyyyyyk', 'kAAAAyyAAAAk', 'kAAAAyyAAAAk', 'kAAAAAAAAAAk', 'kAAAAAAAAAAk', 'kkkkkkkkkkkk'];
+const CHEST_OPEN = ['.kkkkkkkkkk.', 'kaaaaaaaaaak', 'kyyyyyyyyyyk', 'kkkkkkkkkkkk', 'kyyyyyyyyyyk', 'kAAAAyyAAAAk', 'kAAAAAAAAAAk', 'kAAAAAAAAAAk', 'kAAAAAAAAAAk', 'kkkkkkkkkkkk'];
+const walkPose = (lt, rate = 8) => ['stride', 'stand', 'pass', 'stand'][Math.floor(lt * rate) % 4];
+
+// ---- the shots
+const SHOTS = {};
+const SKIES = {
+  day: [[0, PAL.blue], [0.55, PAL.sky], [1, PAL.cyan]],
+  sunset: [[0, PAL.purple], [0.45, PAL.red], [0.8, PAL.orange], [1, PAL.yellow]],
+  night: [[0, PAL.night], [0.6, PAL.navy], [1, PAL.blue]],
+};
+
+// A landscape scrolling past the walking robot.
+SHOTS.walk = async (el) => {
+  const time = SKIES[el.dataset.time] ? el.dataset.time : 'day';
+  const sky = gradient(SKIES[time], GROUND);
+  const far = ridge(270, 112, 16, 1.3, time === 'night' ? PAL.navy : time === 'sunset' ? PAL.purple : PAL.slate, null);
+  const near = ridge(270, 132, 9, 4.1, time === 'night' ? PAL.dark : PAL.teal, time === 'night' ? PAL.slate : PAL.green);
+  const sky2 = clouds(270, 3, 4, 26, 70);
+  const soil = ground(270, time === 'night' ? PAL.teal : PAL.lime, time === 'night' ? PAL.dark : PAL.green, time === 'night' ? PAL.night : PAL.dark);
+  return {
+    draw(lt) {
+      g.drawImage(sky, 0, 0);
+      if (time === 'night') {
+        for (let k = 0; k < 40; k++) if (hash(k, Math.floor(lt * 3 + k)) > 0.25) rect(PAL.white, hash(k, 1) * PW, hash(k, 2) * 100);
+        disc(100, 34, 9, PAL.white, PAL.grey);
+      } else disc(time === 'sunset' ? 67 : 104, time === 'sunset' ? 104 : 30, time === 'sunset' ? 16 : 10, PAL.yellow, time === 'sunset' ? PAL.orange : null);
+      if (time !== 'night') scroll(sky2, 3, lt);
+      scroll(far, 5, lt);
+      scroll(near, 13, lt);
+      scroll(soil, 30, lt, GROUND);
+      const pose = walkPose(lt);
+      robot(53, GROUND - 36 - (pose === 'pass' ? 2 : 0), pose);
+    },
+  };
+};
+
+// The robot beating a slime, its health bar dropping hit by hit: the problem, defeated.
+SHOTS.boss = async () => {
+  const sky = gradient([[0, PAL.night], [0.7, PAL.purple], [1, PAL.red]], GROUND);
+  const far = ridge(270, 120, 14, 2.2, PAL.dark, PAL.purple);
+  const soil = ground(270, PAL.slate, PAL.dark, PAL.night);
+  const HITS = [0.7, 1.3, 1.9], KO = 2.3;
+  const BX = 96, BW = 22;
+  const slime = (lt, flash) => {
+    const squash = 1 + 0.06 * Math.sin(lt * 7);
+    const rw = Math.round(BW * squash), rh = Math.round(30 / squash);
+    for (let y = -rh; y <= 0; y++) for (let x = -rw; x <= rw; x++) {
+      const e = (x / rw) ** 2 + ((y + 2) / rh) ** 2;
+      if (e > 1) continue;
+      let c = e > 0.82 || x > rw * 0.55 ? PAL.purple : PAL.red;
+      if ((x + rw * 0.45) ** 2 + (y + rh * 0.6) ** 2 < 20) c = PAL.orange;
+      rect(flash ? PAL.white : c, BX + x, GROUND + y);
+    }
+    if (flash) return;
+    const ey = GROUND - Math.round(rh * 0.62);
+    for (const ex of [-9, 4]) {
+      rect(PAL.white, BX + ex, ey, 5, 5);
+      rect(PAL.night, BX + ex + (ex < 0 ? 0 : 2), ey + 2, 3, 3);
+      for (let i = 0; i < 5; i++) rect(PAL.night, BX + ex + i, ey - 3 + (ex < 0 ? Math.floor(i / 2) : 2 - Math.floor(i / 2)));
+    }
+    rect(PAL.night, BX - 8, ey + 9, 17, 4);
+    for (let i = 0; i < 4; i++) rect(PAL.white, BX - 7 + i * 4, ey + 9, 2, 2);
+  };
+  return {
+    events: { hit: HITS[0], 'hit-2': HITS[1], 'hit-3': HITS[2], ko: KO },
+    draw(lt) {
+      g.drawImage(sky, 0, 0);
+      scroll(far, 0, lt);
+      g.drawImage(soil, 0, GROUND);
+      // the robot dashes in for each hit and back
+      let rx = 8;
+      for (const h of HITS) {
+        if (lt > h - 0.15 && lt < h) rx = lerp(8, 46, (lt - (h - 0.15)) / 0.15);
+        else if (lt >= h && lt < h + 0.25) rx = lerp(46, 8, (lt - h) / 0.25);
+      }
+      robot(rx, GROUND - 36, rx > 10 ? 'stride' : 'stand');
+      const hitsTaken = HITS.filter((h) => lt >= h).length;
+      if (lt < KO) {
+        slime(lt, HITS.some((h) => lt >= h && lt < h + 0.1));
+        // health bar: white frame, red fill, and the lost part flashing as it drains
+        const hp = 1 - hitsTaken / HITS.length;
+        const last = HITS[hitsTaken - 1];
+        const drain = hitsTaken ? clamp((lt - last) / 0.35) : 1;
+        const shown = hp + (1 - drain) / HITS.length;
+        rect(PAL.white, BX - 21, GROUND - 46, 42, 6);
+        rect(PAL.night, BX - 20, GROUND - 45, 40, 4);
+        rect(PAL.yellow, BX - 20, GROUND - 45, Math.round(40 * shown), 4);
+        rect(PAL.red, BX - 20, GROUND - 45, Math.round(40 * hp), 4);
+      } else {
+        const k = (lt - KO) / 0.6;
+        for (let i = 0; i < 26 && k < 1; i++) {
+          const a = hash(i, 9) * 6.28, d = out3(k) * (14 + hash(i, 8) * 20);
+          rect(i % 3 ? PAL.red : PAL.white, BX + Math.cos(a) * d, GROUND - 14 + Math.sin(a) * d - k * 10, 2, 2);
+        }
+      }
+      // a slash on each hit
+      for (const h of HITS) {
+        const k = (lt - h) / 0.18;
+        if (k < 0 || k > 1) continue;
+        for (let i = 0; i < 12; i++) rect(PAL.white, BX - 14 + i * 2, GROUND - 34 + i * 2 - Math.round(k * 4), 2, 1);
+      }
+    },
+  };
+};
+
+// The robot walking up to a chest that bursts with coins.
+SHOTS.coins = async (el, shot) => {
+  const sky = gradient(SKIES.day, GROUND);
+  const hills = ridge(270, 130, 10, 0.7, PAL.teal, PAL.green);
+  const sky2 = clouds(270, 8, 4, 24, 66);
+  const soil = ground(270);
+  const OPEN = 1.0, JUMP = 1.25, CX = 92;
+  const coins = Array.from({ length: 14 }, (_, i) => ({ t0: OPEN + i * 0.07, vx: (hash(i, 1) - 0.5) * 150, vy: -110 - hash(i, 2) * 60 }));
+  const coin = (x, y, lt) => {
+    const w = [6, 4, 2, 4][Math.floor(lt * 14) % 4];
+    for (let py = 0; py < 6; py++) for (let px = 0; px < w; px++) {
+      const edge = py === 0 || py === 5 || px === 0 || px === w - 1;
+      rect(edge ? PAL.orange : px === 1 && py === 1 && w > 2 ? PAL.white : PAL.yellow, x - w / 2 + px, y + py);
+    }
+  };
+  return {
+    events: { open: OPEN, jump: JUMP },
+    draw(lt) {
+      g.drawImage(sky, 0, 0);
+      scroll(sky2, 3, lt);
+      scroll(hills, 0, lt);
+      g.drawImage(soil, 0, GROUND);
+      // the chest: shut until OPEN, then its lid flips up
+      const open = lt >= OPEN;
+      sprite(open ? CHEST_OPEN : CHEST_SHUT, SPRITE_COLORS(), CX - 12, GROUND - (open ? 20 : 18));
+      const arrive = shot.first ? 0 : 0.8;
+      const rx = lerp(-24, CX - 44, clamp(lt / Math.max(arrive, 0.001)));
+      const jt = (lt - JUMP) / 0.45;
+      const jy = jt > 0 && jt < 1 ? Math.round(-28 * 4 * jt * (1 - jt)) : 0;
+      robot(rx, GROUND - 36 + jy, jt > 0 && jt < 1 ? 'jump' : lt < arrive ? walkPose(lt) : 'stand');
+      for (const c of coins) {
+        const t = lt - c.t0;
+        if (t < 0 || t > 1.6) continue;
+        const y = GROUND - 22 + c.vy * t + 170 * t * t;
+        if (y > GROUND + 4) continue;
+        coin(CX + c.vx * t, y, lt + c.t0);
+      }
+    },
+  };
+};
+
+// The robot leveling up: rays, rising sparkles, a flash.
+SHOTS.levelup = async (el, shot) => {
+  const sky = gradient([[0, PAL.night], [0.6, PAL.navy], [1, PAL.purple]], GROUND);
+  const UP = shot.first ? 0.3 : 0.6;
+  const CX = 67, CY = 100;
+  return {
+    events: { up: UP },
+    draw(lt) {
+      g.drawImage(sky, 0, 0);
+      // rotating rays behind, as a sparse dither of the accent
+      const spin = lt * 0.6;
+      for (let y = 20; y < GROUND; y++) for (let x = 0; x < PW; x++) {
+        const a = Math.atan2(y - CY, x - CX) + spin;
+        if (Math.floor(((a + 6.2832) % 6.2832) / (Math.PI / 8)) % 2 === 0 && bayer(x, y) < 0.22) rect(PAL.accentDark, x, y);
+      }
+      rect(PAL.dark, 0, GROUND, PW, PH - GROUND);
+      rect(PAL.night, 40, GROUND, 55, 6);
+      rect(PAL.accent, 40, GROUND, 55, 1);
+      const jt = (lt - UP) / 0.4;
+      const jy = jt > 0 && jt < 1 ? Math.round(-24 * 4 * jt * (1 - jt)) : 0;
+      robot(53, GROUND - 36 + jy, jt > 0 && jt < 1 ? 'jump' : 'stand');
+      for (let i = 0; i < 22; i++) {
+        const p = (lt * (0.35 + hash(i, 4) * 0.4) + hash(i, 5)) % 1;
+        const x = 30 + hash(i, 6) * 75, y = GROUND - p * 120;
+        const c = i % 3 ? PAL.yellow : PAL.white;
+        rect(c, x, y);
+        if (hash(i, Math.floor(lt * 6)) > 0.5) { rect(c, x - 1, y); rect(c, x + 1, y); rect(c, x, y - 1); rect(c, x, y + 1); }
+      }
+      const f = (lt - UP) / 0.25;
+      if (f > 0 && f < 1) { g.globalAlpha = 1 - f; rect(PAL.white, 0, 0, PW, PH); g.globalAlpha = 1; }
+    },
+  };
+};
+
+// A night city scrolling slowly, its windows switching on and off.
+SHOTS.city = async () => {
+  const sky = gradient([[0, PAL.night], [0.7, PAL.navy], [1, PAL.purple]], GROUND + 10);
+  const blocks = (seed, minH, maxH) => {
+    const out = [];
+    for (let x = 0, i = 0; x < 270; i++) {
+      const w = 10 + Math.floor(hash(seed, i) * 14);
+      out.push({ x, w, h: Math.floor(lerp(minH, maxH, hash(seed, i, 1))) });
+      x += w + 1;
+    }
+    return out;
+  };
+  const far = blocks(1, 30, 70), near = blocks(2, 20, 55);
+  const drawBlocks = (list, speed, lt, color, windows) => {
+    const off = Math.floor((speed * lt) % 270);
+    for (const b of list) for (const shift of [0, 270]) {
+      const x = b.x - off + shift;
+      if (x > PW || x + b.w < 0) continue;
+      rect(color, x, GROUND - b.h, b.w, b.h);
+      if (!windows) continue;
+      for (let wy = GROUND - b.h + 3; wy < GROUND - 3; wy += 4) for (let wx = x + 2; wx < x + b.w - 2; wx += 3) {
+        if (hash(b.x + wx - x, wy, Math.floor(lt * 0.8 + hash(b.x, wy) * 5)) > 0.55) rect(PAL.yellow, wx, wy);
+      }
+    }
+  };
+  return {
+    draw(lt) {
+      g.drawImage(sky, 0, 0);
+      for (let k = 0; k < 45; k++) if (hash(k, Math.floor(lt * 2 + k * 0.37)) > 0.2) rect(k % 5 ? PAL.grey : PAL.white, hash(k, 1) * PW, hash(k, 2) * 90);
+      disc(98, 40, 10, PAL.white, PAL.grey);
+      rect(PAL.grey, 94, 37, 2, 2); rect(PAL.grey, 100, 44, 3, 2);
+      drawBlocks(far, 3, lt, PAL.navy, false);
+      drawBlocks(near, 8, lt, PAL.dark, true);
+      rect(PAL.night, 0, GROUND, PW, PH - GROUND);
+      const dash = Math.floor((lt * 30) % 12);
+      for (let x = -dash; x < PW; x += 12) rect(PAL.slate, x, GROUND + 8, 6, 1);
+    },
+  };
+};
+
+// A rocket flying up through streaming stars, past a ringed planet.
+SHOTS.space = async () => {
+  const sky = gradient([[0, PAL.night], [1, PAL.navy]], PH);
+  const stars = Array.from({ length: 90 }, (_, i) => ({ x: hash(i, 1) * PW, y: hash(i, 2) * PH, speed: [12, 30, 70][i % 3] }));
+  const RX = 61, RY = 60;
+  return {
+    draw(lt) {
+      g.drawImage(sky, 0, 0);
+      for (const s of stars) {
+        const y = (s.y + s.speed * lt) % PH;
+        rect(s.speed > 60 ? PAL.white : s.speed > 20 ? PAL.grey : PAL.slate, s.x, y, 1, s.speed > 60 ? 3 : 1);
+      }
+      // the planet, lit from the upper right, with a ring
+      const py = 128 + lt * 5;
+      for (let y = -20; y <= 20; y++) for (let x = -20; x <= 20; x++) {
+        if (x * x + y * y > 400) continue;
+        const light = (x - y) / 40 + 0.5;
+        rect(light > 0.7 ? PAL.accentLight : light > 0.35 || bayer(x + 40, y + 40) < light ? PAL.accent : PAL.accentDark, 30 + x, py + y);
+      }
+      for (let x = -32; x <= 32; x++) { const y = Math.round(x * 0.22); if (Math.abs(x) > 19 || y > 0) rect(PAL.cyan, 30 + x, py + y); }
+      // the rocket
+      const bob = Math.round(Math.sin(lt * 3) * 2);
+      const x0 = RX, y0 = RY + bob;
+      const flame = Math.floor(lt * 14) % 3;
+      for (let i = 0; i < 6 + flame * 2; i++) rect(i < 3 ? PAL.yellow : i < 6 ? PAL.orange : PAL.red, x0 + 3 + (i % 2), y0 + 30 + i, 4 - (i > 5 ? 2 : 0), 1);
+      for (let y = 0; y < 30; y++) {
+        const half = y < 8 ? Math.ceil((y + 1) * 0.75) : 6;
+        for (let x = -half; x < half; x++) rect(x > 2 ? PAL.grey : PAL.white, x0 + 5 + x, y0 + y);
+      }
+      disc(x0 + 5, y0 + 13, 3, PAL.cyan, PAL.blue);
+      rect(PAL.accent, x0 - 4, y0 + 22, 3, 9); rect(PAL.accent, x0 + 12, y0 + 22, 3, 9);
+      rect(PAL.accent, x0 - 1, y0 + 26, 12, 3);
+    },
+  };
+};
+
+// The user's own image, pixelated into the palette with ordered dithering, sharpening into view.
+SHOTS.photo = async (el, shot) => {
+  const bg = gradient([[0, PAL.night], [1, PAL.navy]], PH);
+  const SHARP = shot.first ? 0 : 0.9;
+  const colors = Object.values(PAL).map(rgb);
+  let pic = null;
+  if (el.dataset.src) {
+    const img = await new Promise((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = () => reject(new Error(`image didn't load: ${el.dataset.src}`));
+      im.src = el.dataset.src;
+    });
+    const k = Math.min(100 / img.width, 110 / img.height);
+    const w = Math.max(8, Math.round(img.width * k)), h = Math.max(8, Math.round(img.height * k));
+    pic = layer(w, h, (x) => {
+      x.imageSmoothingEnabled = true;
+      x.drawImage(img, 0, 0, w, h);
+      let data;
+      try { data = x.getImageData(0, 0, w, h); } catch { return; } // a browser preview may refuse a local file
+      const d = data.data;
+      for (let i = 0; i < w * h; i++) {
+        const t = (bayer(i % w, Math.floor(i / w)) - 0.5) * 48;
+        const p = [d[i * 4] + t, d[i * 4 + 1] + t, d[i * 4 + 2] + t];
+        let best = colors[0], bd = Infinity;
+        for (const c of colors) { const e = (c[0] - p[0]) ** 2 * 0.3 + (c[1] - p[1]) ** 2 * 0.59 + (c[2] - p[2]) ** 2 * 0.11; if (e < bd) { bd = e; best = c; } }
+        d[i * 4] = best[0]; d[i * 4 + 1] = best[1]; d[i * 4 + 2] = best[2]; d[i * 4 + 3] = 255;
+      }
+      x.putImageData(data, 0, 0);
+    });
+  }
+  if (!pic) { // a framed landscape icon in its place: nothing real is implied
+    pic = layer(80, 60, (x) => {
+      dot(x, PAL.sky, 0, 0, 80, 60);
+      for (let px = 0; px < 80; px++) { const top = 34 - Math.round(14 * Math.max(0, 1 - Math.abs(px - 30) / 22)); dot(x, PAL.teal, px, top, 1, 60 - top); }
+      for (let px = 0; px < 80; px++) { const top = 44 - Math.round(10 * Math.max(0, 1 - Math.abs(px - 60) / 20)); dot(x, PAL.green, px, top, 1, 60 - top); }
+      for (let y = -6; y <= 6; y++) for (let px = -6; px <= 6; px++) if (px * px + y * y <= 36) dot(x, PAL.yellow, 62 + px, 14 + y);
+    });
+  }
+  const w = pic.width, h = pic.height;
+  const x0 = Math.round((PW - w) / 2), y0 = Math.round(95 - h / 2);
+  const small = document.createElement('canvas');
+  return {
+    events: { sharp: SHARP },
+    draw(lt) {
+      g.drawImage(bg, 0, 0);
+      rect(PAL.night, x0 - 3, y0 - 3 + 4, w + 6, h + 6);
+      rect(PAL.white, x0 - 3, y0 - 3, w + 6, h + 6);
+      rect(PAL.accent, x0 - 2, y0 - 2, w + 4, h + 4);
+      const block = SHARP ? [16, 8, 4, 2, 1][Math.min(4, Math.floor((lt / SHARP) * 5))] : 1;
+      if (block === 1) g.drawImage(pic, x0, y0);
+      else {
+        small.width = Math.ceil(w / block); small.height = Math.ceil(h / block);
+        const s = small.getContext('2d');
+        s.imageSmoothingEnabled = false;
+        s.drawImage(pic, 0, 0, small.width, small.height);
+        g.save();
+        g.beginPath();
+        g.rect(x0, y0, w, h); // the last row and column of blocks overhang the picture
+        g.clip();
+        g.drawImage(small, 0, 0, small.width, small.height, x0, y0, small.width * block, small.height * block);
+        g.restore();
+      }
+    },
+  };
+};
+
+// Cuts between shots dissolve through the night color in 3x3 blocks, in dither order.
+const FADE = 0.2;
+const draw = (view, lt, shot) => {
+  view.draw(lt);
+  const k = Math.max(shot.first ? 0 : 1 - lt / FADE, 1 - (shot.dur - lt) / FADE, 0);
+  if (k <= 0) return;
+  g.fillStyle = PAL.night;
+  for (let y = 0; y < PH; y += 3) for (let x = 0; x < PW; x += 3) if (bayer(x / 3, y / 3) < k) g.fillRect(x, y, 3, 3);
+};
+
+// ---- the timeline: one .shot element per shot, each running until the next one starts
+const seconds = (v) => { v = (v || '').trim(); return v.endsWith('ms') ? parseFloat(v) / 1000 : parseFloat(v); };
+const total = parseFloat(document.body.dataset.duration) || 0;
+const timeline = [...document.querySelectorAll('.shot')]
+  .map((el) => ({ el, type: el.dataset.shot, in: seconds(getComputedStyle(el).getPropertyValue('--in')) || 0 }))
+  .sort((a, b) => a.in - b.in);
+timeline.forEach((s, i) => {
+  s.dur = Math.max(0.1, (timeline[i + 1] ? timeline[i + 1].in : total) - s.in);
+  s.first = s.in <= 0.001; // on screen at frame 0, the cover: shown settled, without an entrance
+});
+let ready = false;
+window.renderReady = (async () => {
+  const problems = [];
+  for (const s of timeline) {
+    if (!SHOTS[s.type]) { problems.push(`unknown shot "${s.type}" (known: ${Object.keys(SHOTS).join(', ')})`); continue; }
+    try {
+      s.view = await SHOTS[s.type](s.el, s);
+      for (const [name, at] of Object.entries(s.view.events || {})) s.el.style.setProperty(`--${name}`, `${(s.in + at).toFixed(2)}s`);
+    } catch (e) {
+      problems.push(`shot "${s.type}" at ${s.in}s: ${e.message || e}`);
+    }
+  }
+  ready = true;
+  if (problems.length) throw new Error(problems.join('; '));
+})();
+window.renderFrame = (t) => {
+  if (!ready || !timeline.length) return;
+  let i = 0;
+  while (i + 1 < timeline.length && timeline[i + 1].in <= t + 1e-6) i++;
+  document.body.dataset.shot = String(i);
+  if (timeline[i].view) draw(timeline[i].view, Math.max(0, t - timeline[i].in), timeline[i]);
+};
+// Opened in a browser rather than rendered (render.js drives the page through WebDriver), it
+// plays in real time alongside the CSS animations.
+if (!navigator.webdriver) {
+  window.renderReady.catch((e) => console.warn(e.message)).then(() => {
+    const tick = () => { window.renderFrame(Math.min(total, (document.timeline.currentTime || 0) / 1000)); requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  });
+}
+</script>
+</head>
+<body class="pixel" data-duration="15.5" data-drop="3.0" data-music="chiptune" data-bpm="150" data-key="C" data-mode="major" data-energy="2" data-motif="1 5 3 5 | 4 6 5 -">
+  <div class="glow g1"></div>
+  <div class="glow g2"></div>
+
+  <canvas class="art" width="135" height="240" data-lint="off"></canvas>
+  <div class="art-scrim" data-lint="off"></div>
+
+  <!-- the shots: what's drawn, and from when (see the comment above) -->
+  <div class="shot" data-shot="walk" style="--in:0s"></div>
+  <div class="shot" data-shot="boss" style="--in:3.0s" data-sfx="hurt:hit hurt:ko"></div>
+  <div class="shot" data-shot="coins" style="--in:6.2s" data-sfx="coin:open"></div>
+  <div class="shot" data-shot="levelup" style="--in:9.8s" data-sfx="powerup:up"></div>
+  <div class="shot" data-shot="space" style="--in:12.3s"></div>
+
+  <!-- line 1, 0.2–3.0s -->
+  <div class="scene narr center" style="--out:2.85s">
+    <div class="cap hook"><span>freelancing is basically a video game</span></div>
+    <div class="say auto" style="--voice:0.2s"><span class="cc" style="--in:0.20s; --out:0.68s"><i style="--in:0.20s; --done:0.44s">Every</i> <i style="--in:0.44s; --done:0.68s">freelancer</i></span> <span class="cc" style="--in:0.68s; --out:2.14s"><i style="--in:0.68s; --done:0.92s">starts</i> <i style="--in:0.92s; --done:1.16s">at</i> <i style="--in:1.16s; --done:1.40s">level</i> <i style="--in:1.40s; --done:1.64s">one.</i></span></div>
+  </div>
+
+  <!-- line 2, 3.0–6.2s -->
+  <div class="scene narr center" style="--out:6.05s">
+    <div class="say auto" style="--voice:3.0s"><span class="cc" style="--in:3.00s; --out:3.72s"><i style="--in:3.00s; --done:3.24s">The</i> <i style="--in:3.24s; --done:3.48s">first</i> <i style="--in:3.48s; --done:3.72s">boss?</i></span> <span class="cc" style="--in:3.72s; --out:4.94s"><i style="--in:3.72s; --done:3.96s">Invoices</i> <i style="--in:3.96s; --done:4.20s">paid</i> <i style="--in:4.20s; --done:4.44s">late.</i></span></div>
+  </div>
+
+  <!-- line 3, 6.2–9.8s -->
+  <div class="scene narr center" style="--out:9.65s">
+    <div class="say auto" style="--voice:6.2s"><span class="cc" style="--in:6.20s; --out:7.16s"><i style="--in:6.20s; --done:6.44s">Send</i> <i style="--in:6.44s; --done:6.68s">yours</i> <i style="--in:6.68s; --done:6.92s">the</i> <i style="--in:6.92s; --done:7.16s">day</i></span> <span class="cc" style="--in:7.16s; --out:7.88s"><i style="--in:7.16s; --done:7.40s">the</i> <i style="--in:7.40s; --done:7.64s">work</i> <i style="--in:7.64s; --done:7.88s">ends,</i></span> <span class="cc" style="--in:7.88s; --out:8.84s"><i style="--in:7.88s; --done:8.12s">and</i> <i style="--in:8.12s; --done:8.36s">the</i> <i style="--in:8.36s; --done:8.60s">coins</i> <i style="--in:8.60s; --done:8.84s">roll</i></span> <span class="cc" style="--in:8.84s; --out:9.58s"><i style="--in:8.84s; --done:9.08s">in.</i></span></div>
+  </div>
+
+  <!-- line 4, 9.8–12.3s -->
+  <div class="scene narr center" style="--out:12.15s">
+    <div class="say auto" style="--voice:9.8s"><span class="cc" style="--in:9.80s; --out:10.28s"><i style="--in:9.80s; --done:10.04s">One</i> <i style="--in:10.04s; --done:10.28s">habit,</i></span> <span class="cc" style="--in:10.28s; --out:11.50s"><i style="--in:10.28s; --done:10.52s">one</i> <i style="--in:10.52s; --done:10.76s">level</i> <i style="--in:10.76s; --done:11.00s">up.</i></span></div>
+  </div>
+
+  <!-- line 5, 12.3s–end -->
+  <div class="scene narr center">
+    <div class="end"><div class="cap hl pop" style="--in:12.3s" data-sfx="chime"><span>one money habit a week</span></div></div>
+    <div class="say auto" style="--voice:12.3s"><span class="cc" style="--in:12.30s; --out:13.26s"><i style="--in:12.30s; --done:12.54s">Follow</i> <i style="--in:12.54s; --done:12.78s">for</i> <i style="--in:12.78s; --done:13.02s">one</i> <i style="--in:13.02s; --done:13.26s">money</i></span> <span class="cc" style="--in:13.26s; --out:14.48s"><i style="--in:13.26s; --done:13.50s">habit</i> <i style="--in:13.50s; --done:13.74s">a</i> <i style="--in:13.74s; --done:13.98s">week.</i></span></div>
+  </div>
+
+</body>
+</html>

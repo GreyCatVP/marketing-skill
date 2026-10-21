@@ -9,7 +9,7 @@ the way a jingle works.
 
 ## The genres
 
-The renderer composes original music in eleven genres (`<body data-music>`).
+The renderer composes original music in twelve genres (`<body data-music>`).
 
 | Genre | What it sounds like | Tempo (default) | Mode | Fits |
 |---|---|---|---|---|
@@ -24,6 +24,7 @@ The renderer composes original music in eleven genres (`<body data-music>`).
 | `phonk` | Cowbell hook, distorted 808 slides, hard hats with rolls, dark strings | 130–150 (140) | minor | Gen Z and Gen Alpha feeds, gaming, cars, fitness, meme edits |
 | `jersey` | Jersey club's bouncing kick, chopped synth stabs, tom fills | 135–145 (140) | minor | Dance and trend formats, fashion, beauty, nightlife, Gen Z |
 | `funk` | Brazilian funk's tamborzão groove, booming 808, synth stabs, cowbell | 125–135 (130) | minor | High-energy trend formats, sports, streetwear, Gen Z and Alpha |
+| `chiptune` | An old game console: a pulse-wave lead, a fast arpeggio for chords, a bouncing triangle bass, noise drums | 130–160 (150) | major | Pixel-art videos (`pixel.html`), gaming, apps and indie products with a playful voice |
 
 `data-music="none"` keeps only the sound effects.
 
@@ -42,6 +43,7 @@ the project's README) and match them:
 | Trust-first (health, money, care) or a reassuring tone | `calm`, energy 2 |
 | Relaxed, cozy, or creator-focused | `lofi`, energy 2 |
 | Mission-driven, or a big moment | `cinematic`, energy 3 |
+| Gaming, retro, or a playful product whose look is already pixel art | `chiptune`, energy 3 |
 
 - **Mode:** major reads upbeat and warm; minor reads serious, driven, or
   edgy. Use the genre's default unless the tone clearly says otherwise.
@@ -97,6 +99,7 @@ A library to start from (each genre's default is marked):
 | `1 1 3 1 \| 4 3 1 5,` | Menacing, chant-like (`phonk` default) |
 | `1 . 1 3 \| 5 . 4 3` | Bouncy, call-and-response (`jersey` default) |
 | `1 3 1 . \| 5, 1 3 .` | Punchy, stop-start (`funk` default) |
+| `1 5 3 5 \| 4 6 5 -` | Upbeat, adventurous, game-like (`chiptune` default) |
 | `1 1 5 5 \| 6 6 5 -` | Playful, sing-song (kids, games) |
 | `5 6 5 3 \| 2 3 1 -` | Confident, jingle-like (retail, food) |
 | `3 5 6 1' \| 6 5 3 -` | Soaring, aspirational (education, travel) |
@@ -115,6 +118,11 @@ sounds like the brand. Stay inside what the brand voice allows: a
 trust-first brand keeps `calm`, `lofi`, or `acoustic` even on a meme
 format, and `phonk`, `jersey`, and `funk` only suit a voice that already
 welcomes memes.
+
+Pixel-art videos (`pixel.html`, or `compose.js` with `style: pixel`) take
+`chiptune` the same way, in the identity's key and hook, so even an
+8-bit video ends on the brand's sonic logo. A 3D video keeps the identity
+as it is.
 
 ## Sound effects
 
@@ -143,6 +151,11 @@ originals, so there's nothing to license.
 | `shutter` | A camera shutter | Timestamps in a day-in-the-life, photo dumps |
 | `cash` | A ka-ching | Getting paid, a sale, a price |
 | `glitch` | A digital stutter | An error, a crash, a "system overload" bit |
+| `coin` | Two quick 8-bit notes | A pixel-art payoff: coins, a saving, a sale |
+| `jump` | A rising 8-bit sweep | The pixel robot jumping, something launching |
+| `powerup` | The chord racing up two octaves, 8-bit, in the music's key | Leveling up, an upgrade, a result |
+| `blip` | A tiny 8-bit tick | Text appearing in a dialog box, a menu choice; quiet, so a run of them works |
+| `hurt` | An 8-bit hit sliding down through noise | The pixel boss taking a hit: the problem being beaten |
 
 One or two meme cues per video is plenty; the rest should be the quiet
 ones (`pop`, `swish`, `tick`). Under a voiceover, use fewer still: scene

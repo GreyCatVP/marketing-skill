@@ -8,6 +8,10 @@
  * The page animates with CSS animations (or the Web Animations API). This
  * script pauses every animation and seeks it frame by frame in headless
  * Chromium, so the output is frame-exact no matter how slow the machine is.
+ * A page that draws its own frames (WebGL or a canvas, like templates/3d.html
+ * and templates/pixel.html) defines window.renderFrame(t), which is called with
+ * the time in seconds on every seek, and can set window.renderReady to a promise
+ * that resolves once its assets are loaded.
  * See templates/promo.html for the page conventions, and docs/video.md,
  * "Rendering a short-form video locally".
  *
@@ -108,55 +112,100 @@ function loadPlaywright() {
   );
 }
 
+// WebGL pages (templates/3d.html) need a GL context even on machines without a GPU, where newer
+// Chromium only falls back to its software renderer when allowed to. Pages drawing the user's
+// images into WebGL or a canvas (a screenshot on a 3D phone, a pixelated photo) need those local
+// files treated as the page's own, which Chromium refuses for file:// pages unless told otherwise.
+const BROWSER_ARGS = ['--enable-unsafe-swiftshader', '--allow-file-access-from-files'];
+
 async function launchBrowser(chromium) {
   try {
-    return await chromium.launch();
+    return await chromium.launch({ args: BROWSER_ARGS });
   } catch (e) {
     // no Playwright-managed Chromium downloaded: try the user's own Chrome before giving up
     try {
-      return await chromium.launch({ channel: 'chrome' });
+      return await chromium.launch({ channel: 'chrome', args: BROWSER_ARGS });
     } catch {
       fail(`Couldn't start a browser: ${e.message.split('\n')[0]}\nRun \`npx playwright install chromium\` in scripts/video, or install Google Chrome.`);
     }
   }
 }
 
-// Web fonts (Google Fonts) are fetched by Node and cached, not by the browser: renders then
-// work offline after the first run, and behind proxies the bundled Chromium doesn't trust.
+// Web fonts (Google Fonts) and script libraries pinned on jsDelivr (three.js, for 3d.html) are
+// fetched by Node and cached, not by the browser: renders then work offline after the first
+// run, and behind proxies the bundled Chromium doesn't trust. A library installed in this
+// folder's node_modules at the pinned version is served from there, with no download at all.
 const FONT_HOSTS = /^https:\/\/fonts\.(googleapis|gstatic)\.com\//;
+const LIB_URL = /^https:\/\/cdn\.jsdelivr\.net\/npm\/((?:@[^/@]+\/)?[^/@]+)@([^/]+)\/([^?#]+)/;
 const FONT_CACHE = path.join(os.homedir(), '.cache', 'marketing-skill', 'fonts');
+const LIB_CACHE = path.join(os.homedir(), '.cache', 'marketing-skill', 'lib');
+const LIB_TYPES = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.wasm': 'application/wasm' };
 
-async function routeFonts(page) {
-  await page.route(FONT_HOSTS, async (route) => {
+// A file from a library installed here, if the installed version is the one the URL pins.
+function localLibrary(url) {
+  const m = LIB_URL.exec(url);
+  if (!m) return null;
+  const dir = path.join(__dirname, 'node_modules', m[1]);
+  try {
+    if (JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8')).version !== m[2]) return null;
+  } catch {
+    return null;
+  }
+  const file = path.resolve(dir, m[3]);
+  if (!file.startsWith(dir + path.sep) || !fs.existsSync(file)) return null;
+  return { body: fs.readFileSync(file), contentType: LIB_TYPES[path.extname(file)] || 'application/octet-stream' };
+}
+
+async function fetchCached(url, userAgent, dir) {
+  const file = path.join(dir, crypto.createHash('sha1').update(url).digest('hex'));
+  if (!fs.existsSync(file)) {
+    const res = await fetch(url, { headers: { 'user-agent': userAgent } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const body = Buffer.from(await res.arrayBuffer());
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(`${file}.type`, res.headers.get('content-type') || 'application/octet-stream');
+    fs.writeFileSync(file, body);
+  }
+  return { body: fs.readFileSync(file), contentType: fs.readFileSync(`${file}.type`, 'utf8') };
+}
+
+async function routeCached(page) {
+  const serve = (dir, local) => async (route) => {
     const url = route.request().url();
-    const file = path.join(FONT_CACHE, crypto.createHash('sha1').update(url).digest('hex'));
     try {
-      if (!fs.existsSync(file)) {
-        const res = await fetch(url, { headers: { 'user-agent': route.request().headers()['user-agent'] } });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const body = Buffer.from(await res.arrayBuffer());
-        fs.mkdirSync(FONT_CACHE, { recursive: true });
-        fs.writeFileSync(`${file}.type`, res.headers.get('content-type') || 'application/octet-stream');
-        fs.writeFileSync(file, body);
-      }
-      await route.fulfill({
-        body: fs.readFileSync(file),
-        contentType: fs.readFileSync(`${file}.type`, 'utf8'),
-        headers: { 'access-control-allow-origin': '*' },
-      });
+      const hit = (local && local(url)) || await fetchCached(url, route.request().headers()['user-agent'], dir);
+      await route.fulfill({ ...hit, headers: { 'access-control-allow-origin': '*' } });
     } catch {
       await route.continue();
     }
-  });
+  };
+  await page.route(FONT_HOSTS, serve(FONT_CACHE));
+  await page.route(LIB_URL, serve(LIB_CACHE, localLibrary));
 }
 
-// Opens a page at the frame size with its fonts loaded. Returns the page and any fonts that
-// failed, since a fallback font changes every line break the layout lint checks.
+// Opens a page at the frame size with its fonts loaded, and its frame-drawing script (if it
+// has one) ready. Returns the page and any problems: fonts that failed, since a fallback font
+// changes every line break the layout lint checks, and scripts that failed or threw.
 async function openPage(browser, pagePath) {
   const page = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT }, deviceScaleFactor: 1 });
-  await routeFonts(page);
+  const scriptProblems = [];
+  const scriptFailed = (url) => {
+    const lib = LIB_URL.exec(url);
+    scriptProblems.push(lib
+      ? `${lib[1]}@${lib[2]} didn't load, so the page's animation can't draw; run \`npm install\` in scripts/video, or connect to the internet once so it caches`
+      : `script ${url} didn't load`);
+  };
+  page.on('pageerror', (e) => scriptProblems.push(`page script error: ${String(e.message || e).split('\n')[0]}`));
+  page.on('requestfailed', (req) => { if (req.resourceType() === 'script') scriptFailed(req.url()); });
+  page.on('response', (res) => { if (res.request().resourceType() === 'script' && res.status() >= 400) scriptFailed(res.url()); });
+  await routeCached(page);
   await page.goto('file://' + path.resolve(pagePath), { waitUntil: 'networkidle' });
   await page.evaluate(() => document.fonts.ready);
+  const ready = await page.evaluate(() => Promise.race([
+    Promise.resolve(window.renderReady).then(() => ''),
+    new Promise((resolve) => setTimeout(() => resolve('window.renderReady took over 60s'), 60000)),
+  ]).catch((e) => `window.renderReady failed: ${e && e.message ? e.message : e}`));
+  if (ready) scriptProblems.push(ready);
   const failed = await page.evaluate(() => {
     const out = new Set();
     for (const f of document.fonts) if (f.status === 'error') out.add(f.family.replace(/"/g, ''));
@@ -168,7 +217,7 @@ async function openPage(browser, pagePath) {
   const problems = failed.length
     ? [`web fonts didn't load (${failed.join(', ')}), so text uses a fallback font; connect to the internet once so they cache`]
     : [];
-  return { page, problems };
+  return { page, problems: [...problems, ...new Set(scriptProblems)] };
 }
 
 function requireFfmpeg() {
@@ -187,7 +236,8 @@ function ffmpeg(args) {
 // Pause every animation on the page and jump it to `seconds`. Background
 // videos (swapped for frame sequences by prepareMedia) jump too: a clip
 // starts at its --in time, inherited from its .bg layer, from data-offset
-// seconds into the clip, and loops unless data-loop="false".
+// seconds into the clip, and loops unless data-loop="false". A page that
+// draws its own frames draws the one for `seconds` (window.renderFrame).
 async function seek(page, seconds) {
   await page.evaluate(async (t) => {
     for (const a of document.getAnimations()) {
@@ -211,6 +261,7 @@ async function seek(page, seconds) {
       }
     }
     await Promise.all(decodes);
+    if (typeof window.renderFrame === 'function') await window.renderFrame(t);
     return new Promise(requestAnimationFrame);
   }, seconds);
 }
@@ -417,10 +468,11 @@ async function lintLayout(page, seconds) {
 
 // What text is readable right now, and whether anything is moving: each visible text element
 // (an id that stays with it across seeks, its word count, and whether it's a caption synced to
-// a voice), and `active` if any finite animation outside the background is mid-flight.
+// a voice), and `active` if any finite animation outside the background is mid-flight. A page
+// that draws its own frames names the shot on screen in <body data-shot>; a new shot is a change.
 async function textSnapshot(page) {
   return page.evaluate(() => {
-    const out = { texts: [], active: false };
+    const out = { texts: [], active: false, shot: document.body.dataset.shot || '' };
     const opacity = (el) => {
       let o = 1;
       for (let e = el; e && e !== document.documentElement; e = e.parentElement) {
@@ -486,7 +538,7 @@ function retentionProblems(samples, duration, step, breaks) {
   let since = 0;
   let prev = null;
   for (const x of samples) {
-    const sig = x.texts.map((tx) => tx.id).sort().join(',');
+    const sig = `${x.texts.map((tx) => tx.id).sort().join(',')}|${x.shot || ''}`;
     if (x.active || sig !== prev) {
       if (x.t - since > STATIC_LIMIT && since < duration - 1.5 && !inBreak(since, x.t)) {
         problems.push({ t: since, kind: 'nothing changes on screen', text: '', advice: true, detail: `${since.toFixed(2)}–${x.t.toFixed(2)}s; fine for a punchline or a list to scan, otherwise add a beat (a new line, a cue, a background change)` });

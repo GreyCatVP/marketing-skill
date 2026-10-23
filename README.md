@@ -41,7 +41,7 @@ brand's own sound. Each frame below is one template, mid-video:
 
 **3D and pixel-art animation**, narrated, with captions synced to the voice.
 The 3D videos star your brand's mascot: it walks, waves, holds up your
-product, points at your screen, cheers, and lip-syncs to the voice
+product, points at your screen, cheers, and lip-syncs to the voice.
 
 ![3D and pixel-art templates](docs/gallery/animation.jpg)
 
@@ -303,6 +303,32 @@ node compose.js script.md                    # a narrated video page from a scri
 node montage.js inspect clips/ --slug maple  # bring in a client's clips or photos; then montage.js <script.md>
 node render.js page.html out.mp4 --cover 0   # the video, its captions (.srt), and its cover
 ```
+
+**A mascot video or the bold cover, step by step.** Ask Claude in plain
+words, for example "make a 3D mascot video about our new invoicing app,
+here's a screenshot", or "make a TikTok with the big bold captions,
+here's a photo of me holding my laptop and a screenshot of the app". It
+writes a script like this one, voices it, and renders it:
+
+```
+---
+style: 3d              # the mascot; leave it out for photo backgrounds
+captions: bold         # big boxed captions; *words* in asterisks turn yellow
+hook: we made invoicing *one tap*
+series: week 2         # a tag in the top corner
+---
+1. We made invoicing *one tap*. [shot: mascot do=talk prop=laptop src=assets/app.png]
+2. It took a year of late nights. [shot: desk src=assets/app.png]
+3. Here's the new app. [shot: mascot do=point prop=screen src=assets/app.png]
+4. Try it *free* this week. [shot: mascot do=cheer]
+```
+
+To make it by hand, put your screenshot in `state/videos/assets/`, save
+the script as `script.md`, and run the commands above. Every action,
+prop, and scene the mascot has:
+[3D and pixel-art animation](docs/video.md#3d-and-pixel-art-animation).
+The bold look, and putting your app on the screen in a photo of you:
+[The bold look](docs/video.md#the-bold-look-a-cover-that-stops-the-scroll).
 
 Everything else, from backgrounds and sound to templates and connected
 video tools: **[docs/video.md](docs/video.md)**.

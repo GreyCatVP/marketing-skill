@@ -56,6 +56,20 @@
     title   big 3D letters dropping onto the studio floor one by one:
             data-text (one to three short words), with the mascot beside it
             unless data-mascot="no". Events: --letter-1, --letter-2..., --done.
+    icons   app tiles dropping into a grid, one per item, a small mascot
+            waving in the last cell: data-items="🔍 Research,📅 Calendar"
+            (an emoji, then a short label; up to 8, or 9 with
+            data-mascot="no"). For a product's features, a plugin's skills,
+            the tools it works with. Events: --tile-1, --tile-2..., --done.
+    notes   sticky notes floating in the dark, the camera drifting through
+            them: data-items="a launch video,a week of posts" (up to 8,
+            handwritten). Ideas, requests, a week's plan; never quotes from
+            people who didn't say them. data-set="studio" for a light room.
+            Events: --note-1, --note-2...
+    button  a big button a cursor clicks, the label changing from data-text
+            to data-done ("☆ Star" to "★ Starred", "+ Follow" to
+            "Following") under confetti, the mascot pointing up at it then
+            cheering. The call to action. Event: --click.
   data-sfx on a shot cues a sound on one of its events, e.g. data-sfx="ding:land"
   (the events are set when the page loads, so render.js finds them).
 
@@ -73,7 +87,7 @@
 <head>
 <meta charset="utf-8">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=JetBrains+Mono:wght@500&family=TikTok+Sans:wght@500..900&family=Noto+Color+Emoji&display=block">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=JetBrains+Mono:wght@500&family=TikTok+Sans:wght@500..900&family=Noto+Color+Emoji&family=Caveat:wght@700&display=block">
 <style>
   :root {
     --bg: #0f0f13;
@@ -896,6 +910,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 // framings: world heights (feet to antenna) to pixel rows; the low ones leave room for a hook or CTA at the top
 const SPAN = { full: [-0.02, 2.3, 430, 1330], low: [-0.02, 2.3, 620, 1390], mid: [0.55, 2.3, 400, 1290], midLow: [0.55, 2.3, 560, 1400], wide: [-0.02, 2.3, 520, 1300] };
+const HAND = '"Caveat", cursive'; // the handwriting on the notes
 const PAL_EYE = new THREE.Color().setHSL((hsl.h + 0.5) % 1, 0.95, 0.74, SRGB);
 const plastic = (c, rough = 0.3) => new THREE.MeshPhysicalMaterial({ color: c, roughness: rough, metalness: 0, clearcoat: 0.9, clearcoatRoughness: 0.18 });
 const smooth = (x, a, b) => { const k = clamp((x - a) / (b - a)); return k * k * (3 - 2 * k); };
@@ -1519,7 +1534,7 @@ function studio({ night = false } = {}) {
   const floor = night ? PAL.bg.clone().lerp(PAL.accent, 0.12).multiplyScalar(2.2) : new THREE.Color('#ece6dd').lerp(PAL.accent, 0.07);
   const far = floor.clone().multiplyScalar(night ? 0.12 : 0.8);
   scene.background = far;
-  scene.fog = new THREE.Fog(far, 10, 28);
+  scene.fog = new THREE.Fog(far, 16, 40);
   scene.add(cyclorama(floor, { night }));
   const catcher = new THREE.Mesh(new THREE.PlaneGeometry(7, 5), new THREE.ShadowMaterial({ color: night ? 0x000000 : floor.clone().multiplyScalar(0.25), opacity: night ? 0.5 : 0.32 }));
   catcher.rotation.x = -Math.PI / 2;
@@ -2071,6 +2086,229 @@ SHOTS.title = async (el, shot) => {
       }
       const k = inOut(lt / shot.dur);
       frameSpan(camera, jumpRoom(raised(topText ? [-0.02, 2.3, 600, 1200] : [-0.02, 2.3, 420, 1170]), withMascot), { x: withMascot ? 0.15 : 0, push: lerp(1.05, 0.97, k), orbit: 0.08 * Math.sin(lt * 0.3) });
+    },
+  };
+};
+
+// ---- app tiles dropping into a grid, one per item ("🔍 Research"), the mascot in the last cell
+const EMOJI_FONT = '"Noto Color Emoji"';
+const splitIcon = (item) => {
+  const m = /^\s*(\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]*)\s*(.*)$/u.exec(item);
+  return m ? { glyph: m[1], label: m[2].trim() } : { glyph: '', label: item.trim() };
+};
+SHOTS.icons = async (el, shot) => {
+  const withMascot = (el.dataset.mascot || '').toLowerCase() !== 'no';
+  const items = (el.dataset.items || '').split(',').map((s) => s.trim()).filter(Boolean).slice(0, withMascot ? 8 : 9).map(splitIcon);
+  if (!items.length) throw new Error('icons needs data-items, e.g. data-items="🔍 Research,📅 Calendar"');
+  const night = (el.dataset.set || '').toLowerCase() === 'night';
+  const { scene, camera } = studio({ night });
+  await document.fonts.load(`800 72px ${FONT}`);
+  for (const it of items) if (it.glyph) await document.fonts.load(`150px ${EMOJI_FONT}`, it.glyph);
+  const cells = items.length + (withMascot ? 1 : 0);
+  const cols = cells === 4 ? 2 : Math.min(3, cells);
+  const rows = Math.ceil(cells / cols);
+  const [SX, SY, T] = [1.0, 1.08, 0.66]; // column and row spacing, tile size
+  const tileMat = plastic(night ? PAL.pearl : PAL.ink, 0.32);
+  const tiles = items.map((it, i) => {
+    const g = new THREE.Group();
+    const box = new THREE.Mesh(new RoundedBoxGeometry(T, T, 0.2, 5, 0.14), tileMat);
+    box.castShadow = true;
+    const [fc, fg] = canvas2d(256, 256);
+    if (it.glyph) { fg.font = `150px ${EMOJI_FONT}`; fg.textAlign = 'center'; fg.textBaseline = 'middle'; fg.fillText(it.glyph, 128, 140); }
+    else { fg.fillStyle = hex(PAL.accent); fg.font = `900 150px ${FONT}`; fg.textAlign = 'center'; fg.textBaseline = 'middle'; fg.fillText((it.label[0] || '').toUpperCase(), 128, 140); }
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(T * 0.78, T * 0.78), new THREE.MeshBasicMaterial({ map: texture(fc), transparent: true, toneMapped: false }));
+    face.position.z = 0.101;
+    const [lc, lg] = canvas2d(512, 112);
+    let size = 76;
+    do { lg.font = `800 ${size}px ${FONT}`; size -= 4; } while (lg.measureText(it.label).width > 500 && size > 40);
+    lg.fillStyle = night ? '#f3f2ee' : hex(PAL.ink); lg.textAlign = 'center'; lg.textBaseline = 'middle';
+    lg.fillText(it.label, 256, 58);
+    const label = new THREE.Mesh(new THREE.PlaneGeometry(SX * 0.98, SX * 0.98 * 112 / 512), new THREE.MeshBasicMaterial({ map: texture(lc), transparent: true, depthWrite: false }));
+    label.position.y = -T / 2 - 0.15;
+    g.add(box, face, label);
+    scene.add(g);
+    const r = rng(i * 7 + 3);
+    return { g, box, col: i % cols, row: Math.floor(i / cols), delay: (shot.first ? 0 : 0.15) + i * 0.13, tilt: [(r() - 0.5) * 0.6, (r() - 0.5) * 0.8] };
+  });
+  const CY = (rows * SY) / 2 + 0.35; // the grid's middle, its bottom row clear of the floor
+  const slot = (col, row) => [((col - (cols - 1) / 2) * SX), CY + ((rows - 1) / 2 - row) * SY];
+  const rig = withMascot ? buildMascot() : null;
+  const last = { col: items.length % cols, row: Math.floor(items.length / cols) };
+  if (rig) { rig.root.scale.setScalar(0.36); scene.add(rig.root); }
+  const ctx = { words: [], t: 0, bpm: 112, drop: 0, propSide: 0, side: 1 };
+  const span = [CY - (rows * SY) / 2 - 0.2, CY + (rows * SY) / 2];
+  const total = parseFloat(document.body.dataset.duration) || 0;
+  const topText = (shot.first && document.querySelector('.hook')) || (shot.in + shot.dur >= total - 0.05 && document.querySelector('.end'));
+  const FALL = 0.45;
+  const mascotIn = (shot.first ? 0 : 0.15) + items.length * 0.13;
+  return {
+    scene, camera, tone: night ? 'dark' : 'light',
+    events: { ...Object.fromEntries(tiles.map((t, i) => [`tile-${i + 1}`, shot.first ? 0 : t.delay + FALL])), done: shot.first ? 0 : mascotIn + FALL },
+    update(lt) {
+      for (const t of tiles) {
+        const u = shot.first ? 9 : lt - t.delay;
+        const k = clamp(u / FALL);
+        const squash = u > FALL ? pulse(u, FALL, FALL + 0.04, FALL + 0.06, FALL + 0.25) : 0;
+        const [x, y] = slot(t.col, t.row);
+        t.g.position.set(x, y + (1 - k * k) * 1.4 + 0.03 * Math.sin(lt * 1.6 + t.col + t.row), 0);
+        t.g.scale.setScalar(0.55 + 0.45 * k);
+        t.g.rotation.set(t.tilt[0] * (1 - k) + 0.04 * Math.sin(lt + t.row), t.tilt[1] * (1 - k) + 0.06 * Math.sin(lt * 0.8 + t.col), 0);
+        t.box.scale.set(1 + 0.1 * squash, 1 - 0.14 * squash, 1);
+        t.g.visible = u > 0;
+      }
+      if (rig) {
+        ctx.t = shot.in + lt; ctx.words = spokenWords();
+        const u = shot.first ? 9 : lt - mascotIn;
+        const [x, y] = slot(last.col, last.row);
+        let p = ACTIONS.wave(Math.max(0, u) + 0.2, ctx);
+        p = { ...alive(p, lt, 4.1), x, y: y - T / 2 - 0.05 + (1 - clamp(u / FALL) ** 2) * 3.2, z: 0 }; // the root's own scale shrinks the robot, not where it stands
+        applyPose(rig, p);
+        rig.root.visible = u > 0;
+        drawFace(rig.faceCanvas, { face: 'happy', blink: 0, look: [0, 0], mouth: mouthAt(shot.in + lt, ctx.words) });
+        rig.faceTex.needsUpdate = true;
+      }
+      // fit the grid between the top of the frame and the captions, a little from above
+      const px = raised([span[0], span[1], topText ? 470 : 300, 1230]);
+      frameSpan(camera, px, { push: lerp(1.04, 0.98, inOut(lt / shot.dur)), orbit: 0.06 * Math.sin(lt * 0.35), lift: 0.6 });
+    },
+  };
+};
+
+// ---- sticky notes floating in the dark, the camera drifting through them
+SHOTS.notes = async (el, shot) => {
+  const items = (el.dataset.items || '').split(',').map((s) => s.trim()).filter(Boolean).slice(0, 8);
+  if (!items.length) throw new Error('notes needs data-items, e.g. data-items="a launch video,a week of posts"');
+  const light = (el.dataset.set || '').toLowerCase() === 'studio';
+  const scene = new THREE.Scene();
+  scene.environment = env;
+  scene.environmentIntensity = 0.5;
+  const bg = light ? new THREE.Color('#ece6dd').lerp(PAL.accent, 0.07) : PAL.bg.clone().lerp(PAL.accent, 0.05).multiplyScalar(0.7);
+  scene.background = bg;
+  scene.fog = new THREE.Fog(bg, 6, 15);
+  scene.add(new THREE.HemisphereLight(0xffffff, bg, light ? 1.0 : 0.5));
+  const key = new THREE.DirectionalLight('#fff4e6', light ? 1.8 : 2.2); key.position.set(-2, 3, 5); scene.add(key);
+  const rim = new THREE.DirectionalLight(PAL.accent, 1.2); rim.position.set(3, 1, -3); scene.add(rim);
+  await document.fonts.load(`700 90px ${HAND}`);
+  const paper = ['#fbf3c4', '#fde3d6', '#e3f1fb', '#f6f2ea'];
+  const r = rng(13);
+  const notes = items.map((text, i) => {
+    const [c, g] = canvas2d(560, 560);
+    g.fillStyle = paper[i % paper.length]; g.fillRect(0, 0, 560, 560);
+    const grad = g.createLinearGradient(0, 0, 0, 560); grad.addColorStop(0, 'rgba(255,255,255,.25)'); grad.addColorStop(1, 'rgba(0,0,0,.06)');
+    g.fillStyle = grad; g.fillRect(0, 0, 560, 560);
+    g.fillStyle = 'rgba(255,255,255,.55)'; g.save(); g.translate(280, 22); g.rotate(-0.04); g.fillRect(-90, -20, 180, 46); g.restore();
+    let size = 92, lines;
+    const words = text.split(/\s+/);
+    for (;;) {
+      g.font = `700 ${size}px ${HAND}`;
+      lines = []; let cur = '';
+      for (const w of words) { const next = cur ? `${cur} ${w}` : w; if (g.measureText(next).width > 470 && cur) { lines.push(cur); cur = w; } else cur = next; }
+      lines.push(cur);
+      if ((lines.length * size * 1.1 <= 420 && lines.every((l) => g.measureText(l).width <= 490)) || size <= 48) break;
+      size -= 6;
+    }
+    g.fillStyle = '#26232b'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    lines.forEach((l, k) => g.fillText(l, 280, 300 + (k - (lines.length - 1) / 2) * size * 1.1));
+    const edge = new THREE.MeshStandardMaterial({ color: paper[i % paper.length], roughness: 0.9 });
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.78, 0.01), [edge, edge, edge, edge, new THREE.MeshStandardMaterial({ map: texture(c), roughness: 0.85 }), edge]);
+    // scattered up the frame and back into the dark, nearest first, zig-zagging side to side
+    const side = i % 2 ? 1 : -1;
+    const z = -i * (3.2 / Math.max(1, items.length - 1));
+    const x = side * (0.28 + 0.18 * r()) * (1 + i * 0.15);
+    const y = 1.8 + ((i % 3) - 1) * 0.58 + (r() - 0.5) * 0.2 + i * 0.05;
+    scene.add(m);
+    return { m, x, y, z, rot: [(r() - 0.5) * 0.25, (r() - 0.5) * 0.5, (r() - 0.5) * 0.35], phase: r() * 6.28, delay: (shot.first ? 0 : 0.1) + i * 0.12 };
+  });
+  const camera = new THREE.PerspectiveCamera(40, W / H, 0.05, 60);
+  return {
+    scene, camera, tone: light ? 'light' : 'dark',
+    events: Object.fromEntries(notes.map((n, i) => [`note-${i + 1}`, shot.first ? 0 : n.delay])),
+    update(lt) {
+      for (const n of notes) {
+        const k = shot.first ? 1 : out3((lt - n.delay) / 0.6);
+        n.m.position.set(n.x, n.y + 0.06 * Math.sin(lt * 1.1 + n.phase) - (1 - k) * 0.6, n.z);
+        n.m.rotation.set(n.rot[0] + 0.05 * Math.sin(lt * 0.9 + n.phase), n.rot[1] + 0.08 * Math.sin(lt * 0.7 + n.phase), n.rot[2]);
+        n.m.scale.setScalar(Math.max(0.001, k));
+      }
+      // drift slowly forward into them
+      const z = lerp(4.3, 4.3 - Math.min(1.6, 0.35 * shot.dur), inOut(lt / shot.dur));
+      camera.position.set(0.2 * Math.sin(lt * 0.4), 1.5 + 0.08 * Math.sin(lt * 0.3), z);
+      camera.lookAt(0, 1.62, z - 4);
+    },
+  };
+};
+
+// ---- a big button a cursor clicks (data-text, then data-done), the mascot cheering beside it
+function cursorMesh() {
+  const s = new THREE.Shape();
+  [[0, 0], [0, -1], [0.27, -0.76], [0.45, -1.15], [0.6, -1.08], [0.43, -0.7], [0.75, -0.7]].forEach(([x, y], i) => (i ? s.lineTo(x, y) : s.moveTo(x, y)));
+  s.closePath();
+  const g = new THREE.Group();
+  const fill = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: 0.05, bevelEnabled: false }), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 }));
+  const edge = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: 0.04, bevelEnabled: true, bevelThickness: 0.01, bevelSize: 0.06, bevelSegments: 2 }), new THREE.MeshStandardMaterial({ color: 0x111114, roughness: 0.5 }));
+  edge.position.z = -0.012;
+  fill.castShadow = edge.castShadow = true;
+  g.add(edge, fill);
+  g.scale.setScalar(0.42);
+  return g;
+}
+SHOTS.button = async (el, shot) => {
+  const before = el.dataset.text || '☆ Star';
+  const after = el.dataset.done || '★ Starred';
+  const { scene, camera } = studio({ night: (el.dataset.set || '').toLowerCase() === 'night' });
+  await document.fonts.load(`800 120px ${FONT}`, before + after);
+  const face = (text, bgCol, fg) => {
+    const [c, g] = canvas2d(1024, 300);
+    g.fillStyle = bgCol; g.beginPath(); g.roundRect(0, 0, 1024, 300, 150); g.fill();
+    let size = 130;
+    do { g.font = `800 ${size}px ${FONT}, ${EMOJI_FONT}`; size -= 6; } while (g.measureText(text).width > 860 && size > 60);
+    g.fillStyle = fg; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(text, 512, 158);
+    return texture(c);
+  };
+  const [BW, BH] = [1.9, 0.56];
+  const offTex = face(before, '#17171d', '#ffffff');
+  const onTex = face(after, hex(PAL.accent), '#ffffff');
+  const button = new THREE.Group();
+  const body = new THREE.Mesh(new RoundedBoxGeometry(BW, BH, 0.22, 6, BH / 2), plastic(PAL.ink, 0.35));
+  body.castShadow = true;
+  const top = new THREE.Mesh(new THREE.PlaneGeometry(BW, BH), new THREE.MeshBasicMaterial({ map: offTex, transparent: true, toneMapped: false }));
+  top.position.z = 0.111;
+  button.add(body, top);
+  button.position.set(0, 2.85, 0.2);
+  const cursor = cursorMesh();
+  scene.add(button, cursor);
+  const rig = buildMascot();
+  scene.add(rig.root);
+  const fx = confetti(scene, 70);
+  const CLICK = shot.first ? 0.6 : 1.1;
+  const ctx = { words: [], t: 0, bpm: 112, drop: 0, propSide: 0, side: 1 };
+  return {
+    scene, camera, tone: 'light', events: { click: CLICK },
+    update(lt) {
+      const pressed = lt >= CLICK;
+      const press = pulse(lt, CLICK - 0.06, CLICK, CLICK + 0.05, CLICK + 0.25);
+      top.material.map = pressed ? onTex : offTex;
+      body.material.color.copy(pressed ? PAL.accent.clone().multiplyScalar(0.85) : PAL.ink);
+      button.position.z = 0.2 - 0.1 * press;
+      button.scale.setScalar((shot.first ? 1 : back(lt / 0.5)) * (1 - 0.06 * press + 0.05 * pulse(lt, CLICK + 0.05, CLICK + 0.15, CLICK + 0.2, CLICK + 0.45)));
+      button.rotation.set(0.04 * Math.sin(lt * 0.9), 0.06 * Math.sin(lt * 0.7), 0);
+      // the cursor glides in from the bottom right, taps, and drifts off a little
+      const k = inOut(clamp((lt - (CLICK - 0.85)) / 0.75));
+      cursor.position.set(lerp(1.7, 0.35, k) + 0.08 * smooth(lt, CLICK + 0.2, CLICK + 0.8), lerp(1.2, 2.72, k) - 0.06 * press - 0.1 * smooth(lt, CLICK + 0.2, CLICK + 0.8), 0.45 - 0.08 * press);
+      cursor.rotation.set(0, 0, 0.18);
+      ctx.t = shot.in + lt; ctx.words = spokenWords();
+      let p = ACTIONS.point(lt + 0.3, { ...ctx, propSide: 0 });
+      p.head = [p.head[0] - 0.25, p.head[1], p.head[2]];
+      p.look = [0, 0.8];
+      p.handL = [0.62, 0.56, 0.16]; p.poleL = [0.8, -0.6, 0]; p.finger = [1, 0]; // pointing up at it
+      if (pressed) p = mixPose(p, ACTIONS.cheer(lt - CLICK + 0.3, ctx), smooth(lt - CLICK, 0, 0.2));
+      p.y *= 0.6;
+      applyPose(rig, { ...alive(p, lt, 3.3), x: 0, z: -0.3 });
+      drawFace(rig.faceCanvas, { face: pressed ? 'love' : 'happy', blink: 0, look: p.look, mouth: mouthAt(shot.in + lt, ctx.words) });
+      rig.faceTex.needsUpdate = true;
+      fx(lt, CLICK, V(0, 2.85, 0.3));
+      frameSpan(camera, raised([-0.02, 3.3, 280, 1290]), { push: lerp(1.04, 0.98, inOut(lt / shot.dur)), orbit: 0.06 * Math.sin(lt * 0.3) });
     },
   };
 };

@@ -39,9 +39,9 @@
  *   1. We built an editor that edits for you. [shot: desk src=assets/app-screen.png]
  *   2. Here it is. [shot: mascot do=present prop=screen src=assets/app-screen.png]
  *
- * The bold look ("captions: bold"): each line's whole caption on screen at once in heavy
- * capitals boxed in black, each word popping as it's said, and the first line from frame 0, so
- * it makes the cover. *Words* in asterisks stay yellow, in the lines and the hook (the asterisks
+ * The bold look ("captions: bold"): heavy capitals boxed in black, each word popping as it's
+ * said. A short line (up to 8 words) shows whole, a longer one a few words at a time so it
+ * doesn't bury the picture, and the first line shows whole from frame 0, so it makes the cover. *Words* in asterisks stay yellow, in the lines and the hook (the asterisks
  * aren't spoken). When the hook is the first line, it shows once, as that line's caption.
  * "series: week 2" and "brand: Your Name" put a tag in each top corner for the whole video.
  *
@@ -63,11 +63,13 @@ const { spawnSync } = require('child_process');
 const { parseScript } = require('./voice');
 const { prepareVoice } = require('./render');
 const { visualIdentity, applyIdentity } = require('./brand');
+const { analyseTrack, alignTrack } = require('./beats');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const LEAD = 0.15; // the first line starts almost at once; the hook is already on screen
 const GAP = 0.35; // a beat between one line ending and the next scene
 const TAIL = 1.2; // after the last line, room for the sonic logo
+const BOLD_WHOLE = 8; // in the bold look, lines of up to this many words show whole
 const MEDIA_EXT = /\.(jpe?g|png|webp|gif|mp4|mov|webm|m4v)$/i;
 const VIDEO_EXT = /\.(mp4|mov|webm|m4v)$/i;
 
@@ -80,11 +82,11 @@ const STYLES = {
   photo: { template: 'narrated.html' },
   '3d': {
     template: '3d.html', canvas: '<canvas class="art" width="1080" height="1920" data-lint="off"></canvas>',
-    shots: ['mascot', 'desk', 'title', 'shapes', 'hero', 'cards', 'chart', 'coin', 'rings', 'globe'],
+    shots: ['mascot', 'desk', 'title', 'icons', 'notes', 'button', 'shapes', 'hero', 'cards', 'chart', 'coin', 'rings', 'globe'],
     // the mascot presents, with a few abstract shots between its lines for pace
     first: 'mascot do=wave', last: 'mascot do=cheer',
     cycle: ['mascot do=talk', 'globe', 'mascot do=point', 'cards', 'mascot do=thumbs', 'rings', 'mascot do=present', 'shapes'],
-    sfx: { cards: 'swish:card-1', coin: 'ding:land', 'mascot:cheer': 'pop:land', 'mascot:walk': 'pop:stop', desk: 'whoosh:enter', title: 'pop:done' },
+    sfx: { cards: 'swish:card-1', coin: 'ding:land', 'mascot:cheer': 'pop:land', 'mascot:walk': 'pop:stop', desk: 'whoosh:enter', title: 'pop:done', icons: 'pop:done', notes: 'swish:note-1', button: 'click:click' },
   },
   pixel: {
     template: 'pixel.html', canvas: '<canvas class="art" width="135" height="240" data-lint="off"></canvas>',
@@ -340,6 +342,18 @@ async function main() {
   else if (music !== 'identity') sound.music = music;
   const beat = 60 / (parseFloat(sound.bpm) || 112);
   const snap = !musicSrc && sound.music !== 'none';
+  // A licensed track with a steady beat gets the same treatment as the generated music: it starts
+  // so its biggest lift lands as the hook ends, and scenes cut on its beats (beats.js). Below 0.5
+  // confidence the scenes follow the voice alone.
+  let track = null;
+  if (musicSrc && fs.existsSync(path.join(dir, musicSrc))) {
+    track = analyseTrack(path.join(dir, musicSrc));
+    if (track.confidence < 0.5) {
+      console.warn(`Note: ${musicSrc}'s beat is unclear (confidence ${track.confidence}), so scenes follow the voice, not the beat.`);
+      track = null;
+    }
+  }
+  const trackNotes = [];
 
   const scenes = [];
   let t = LEAD;
@@ -348,12 +362,16 @@ async function main() {
     const { length } = prepareVoice(path.join(dir, clips[i]));
     const start = t;
     let end = start + length + GAP;
-    if (i === 0) drop = r2(end);
-    else if (snap) end = drop + Math.ceil((end - drop) / beat - 1e-6) * beat;
+    if (i === 0) {
+      drop = r2(end);
+      if (track) trackNotes.push(...alignTrack(track, { align: drop })); // the length is checked below, once it's known
+    } else if (snap) end = drop + Math.ceil((end - drop) / beat - 1e-6) * beat;
+    else if (track) end = track.video.beats.find((b) => b >= end - 1e-6 && b - end < 0.7) ?? end;
     scenes.push({ ...l, clip: clips[i], start: r2(start), length, end: r2(end) });
     t = end;
   });
   const duration = r2(scenes[scenes.length - 1].start + scenes[scenes.length - 1].length + TAIL);
+  if (track) sound.bpm = track.bpm; // the page's tempo is the track's, so anything on the beat (the mascot's dance) follows it
   scenes[scenes.length - 1].end = duration;
 
   // ---- backgrounds (a drawn style draws its own)
@@ -372,7 +390,7 @@ async function main() {
   const bodyClass = (/<body[^>]*\bclass="([^"]*)"/.exec(html.slice(html.indexOf('</head>'))) || [])[1] || 'fyp';
   const attrs = [
     `class="${bodyClass}${bold ? ' bold' : ''}"`, `data-duration="${duration}"`, `data-drop="${drop}"`,
-    ...(musicSrc ? [`data-music-src="${esc(musicSrc)}"`, 'data-music="none"'] : [`data-music="${sound.music}"`]),
+    ...(musicSrc ? [`data-music-src="${esc(musicSrc)}"`, 'data-music="none"', ...(track ? [`data-music-start="${track.musicStart}"`] : [])] : [`data-music="${sound.music}"`]),
     ...['bpm', 'key', 'mode', 'energy', 'motif'].filter((k) => sound[k] !== undefined).map((k) => `data-${k}="${esc(String(sound[k]))}"`),
   ].join(' ');
   // the bold look shows the first line from frame 0; a hook that is that line isn't shown twice
@@ -383,7 +401,10 @@ async function main() {
     const parts = [];
     if (i === 0 && meta.hook && !hookIsLine) parts.push(`    <div class="cap hook"><span>${lit(meta.hook)}</span></div>`);
     if (last && meta.cta) parts.push(`    <div class="end"><div class="cap hl pop" style="--in:${s.start}s" data-sfx="chime"><span>${esc(plainText(meta.cta))}</span></div></div>`);
-    const cls = bold ? `say auto line${i === 0 ? ' now' : ''}` : 'say auto';
+    // bold: a short line shows whole; a long one a few words at a time, so it doesn't bury the picture.
+    // The first line is always whole: it's the cover.
+    const whole = i === 0 || s.text.split(/\s+/).length <= BOLD_WHOLE;
+    const cls = bold ? `say auto${whole ? ' line' : ''}${i === 0 ? ' now' : ''}` : 'say auto';
     const kw = s.kw.length ? ` data-kw="${esc([...new Set(s.kw)].join(','))}"` : '';
     parts.push(`    <div class="${cls}" data-voice="${esc(s.clip)}" style="--voice:${s.start}s"${kw}>${esc(s.text)}</div>`);
     return `  <!-- line ${s.n}, ${s.start}–${s.end}s -->\n  <div class="scene narr center"${last ? '' : ` style="--out:${r2(s.end - 0.15)}s"`}>\n${parts.join('\n')}\n  </div>`;
@@ -427,11 +448,15 @@ ${inserts}</body>
   console.log(`Wrote ${page}: ${scenes.length} lines, ${duration}s`);
   for (const s of scenes) console.log(`  ${String(s.n).padStart(2)}. ${s.start.toFixed(2)}–${s.end.toFixed(2)}s  ${s.clip}${s.media ? `  bg ${s.media}` : ''}${s.shot && style.shots ? `  shot ${s.shot.name}` : ''}  ${s.text.slice(0, 48)}${s.text.length > 48 ? '...' : ''}`);
   if (style.shots) console.log(`  style: ${styleName} (templates/${style.template})`);
-  console.log(`  sound: ${musicSrc ? `licensed track ${musicSrc}` : `${sound.music}${sound.music !== 'none' ? `, ${sound.bpm} BPM, ${sound.key} ${sound.mode || ''}, energy ${sound.energy}, cuts on the beat` : ''}`}${identity ? ' (the Sonic Identity)' : ' (the template default; no Sonic Identity saved yet)'}`);
+  console.log(`  sound: ${musicSrc ? `licensed track ${musicSrc}${track ? `, ${track.bpm} BPM, started at ${track.musicStart}s so its lift lands as the hook ends, cuts on its beat` : ''}` : `${sound.music}${sound.music !== 'none' ? `, ${sound.bpm} BPM, ${sound.key} ${sound.mode || ''}, energy ${sound.energy}, cuts on the beat` : ''}`}${musicSrc ? '' : identity ? ' (the Sonic Identity)' : ' (the template default; no Sonic Identity saved yet)'}`);
   console.log(`  look: ${branded.changes.length ? branded.changes.join('; ') : 'the template default; no Visual Identity saved yet'}`);
   for (const p of branded.problems) console.warn(`Note: ${p}`);
   if (!meta.hook && !bold) console.warn('Note: no hook in the frontmatter, so the first frame has no text. Add "hook: ..." to stop the scroll.');
-  if (musicSrc) console.warn(`Note: set data-music-start from beats.js (node beats.js ${musicSrc} --align ${drop} --duration ${duration}) and record the track's license with media.js credit.`);
+  for (const n of trackNotes) console.warn(`Note: ${musicSrc}: ${n}`);
+  if (track && track.musicStart + duration > track.duration) console.warn(`Note: ${musicSrc} runs out ${r2(track.musicStart + duration - track.duration)}s before the video ends; shorten the script or pick a longer track.`);
+  if (musicSrc && !track) console.warn(`Note: set data-music-start from beats.js (node beats.js ${musicSrc} --align ${drop} --duration ${duration}).`);
+  const credited = musicSrc && fs.existsSync(path.join(assets, 'CREDITS.md')) && fs.readFileSync(path.join(assets, 'CREDITS.md'), 'utf8').includes(path.basename(musicSrc));
+  if (musicSrc && !credited) console.warn(`Note: record the track's license with media.js credit (node media.js credit ${musicSrc} --source ... --license ...), and put any required credit in the post.`);
   if (!args.noCheck) {
     const check = run('render.js', [page, '--check'], { stdio: 'inherit' });
     if (check.status !== 0) console.warn('Fix what --check lists (usually by shortening a line or the hook), then compose again.');

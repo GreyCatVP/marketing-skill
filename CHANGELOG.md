@@ -32,6 +32,19 @@ Skills that read "our changelog" for source material read this file too.
   screen=assets/app.png at=...]` puts their screenshot on the laptop or
   phone they're holding, from the screen's four corners, moving with the
   photo's zoom.
+- Three more 3D shots, after the big launch videos: `icons` (app tiles
+  of features or skills dropping into a grid, the mascot waving in the
+  last cell), `notes` (handwritten sticky notes floating in the dark),
+  and `button` (a cursor clicking the call to action, "☆ Star" to
+  "★ Starred", under confetti).
+- `compose.js` cuts on a licensed track's beat: with `music:
+  assets/track.mp3`, it starts the track so its biggest lift lands as the
+  hook ends, moves every scene change onto a beat, and sets the page's
+  tempo to the track's (when `beats.js` is confident in the beat). In the
+  bold look, lines over 8 words show a few words at a time.
+- The plugin's v3 explainer (`media/explainer/v3/`): a narrated tour of
+  all fourteen skills and the new video features, made with `compose.js`
+  from one script.
 - The 3D studio's light is baked into the set, so a mascot frame renders
   in about half the time it would with the floor lit live.
 

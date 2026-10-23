@@ -332,7 +332,7 @@ Behind each line is a **shot**, from a small library in each template:
 
 | Style | Shots | Sound |
 |---|---|---|
-| `3d` | `mascot` (the mascot in a light studio or at night, doing `do=wave`, `talk`, `point`, `present`, `cheer`, `think`, `shrug`, `sad`, `walk`, `dance`, `thumbs`, or `wow`, holding `prop=phone`, `laptop`, or `sign`, or presenting `prop=screen`, all with your screenshot), `desk` (the mascot typing at a monitor showing your screen at night, spinning round to wave, then the camera flies into the screen), `title` (big 3D letters of your word dropping onto the floor), and the abstract ones: `shapes`, `hero` (a phone with your screenshot), `cards`, `chart` (your real numbers), `coin` (your logo), `rings`, `globe` | Your sonic identity |
+| `3d` | `mascot` (the mascot in a light studio or at night, doing `do=wave`, `talk`, `point`, `present`, `cheer`, `think`, `shrug`, `sad`, `walk`, `dance`, `thumbs`, or `wow`, holding `prop=phone`, `laptop`, or `sign`, or presenting `prop=screen`, all with your screenshot), `desk` (the mascot typing at a monitor showing your screen at night, spinning round to wave, then the camera flies into the screen), `title` (big 3D letters of your word dropping onto the floor), `icons` (app tiles of your features or skills dropping into a grid, the mascot waving among them), `notes` (handwritten sticky notes floating in the dark), `button` (a cursor clicking your call to action, "☆ Star" to "★ Starred"), and the abstract ones: `shapes`, `hero` (a phone with your screenshot), `cards`, `chart` (your real numbers), `coin` (your logo), `rings`, `globe` | Your sonic identity |
 | `pixel` | `walk` (a robot walking through a scrolling landscape, by day, sunset, or night), `boss` (the robot beating a slime: the problem, defeated), `coins` (a chest bursting with coins), `levelup` (a burst of light), `city` (a night city), `space` (a rocket through the stars), `photo` (your image, pixelated) | `chiptune`, in your identity's key and hook |
 
 Both take their colors from your Visual Identity: the 3D mascot and its
@@ -401,9 +401,10 @@ brand: Your Name
 2. ...
 ```
 
-- Each line's whole caption is on screen at once, each word popping as
-  it's said, and the first one from frame 0, so the first frame is the
-  cover. `*Words*` in asterisks stay yellow (they aren't spoken).
+- A short line's whole caption is on screen at once, a longer one a few
+  words at a time, each word popping as it's said, and the first line
+  shows whole from frame 0, so the first frame is the cover. `*Words*` in
+  asterisks stay yellow (they aren't spoken).
 - `series:` and `brand:` put a tag in each top corner.
 - `screen=` and `at=` put your screenshot on the laptop or phone in your
   own photo, from the screen's four corners in the photo's pixels

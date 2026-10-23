@@ -123,6 +123,17 @@ cta: try it free · link in bio
     dropping onto the studio floor one by one, the mascot cheering beside
     them. For a launch name, a result ("Sent", "Posted"), or a number the
     user gave.
+  - `icons`: app tiles dropping into a grid, a small mascot waving in the
+    last cell: `items="🔍 Research,📅 Calendar"` (an emoji, then a short
+    label; up to 8). For a product's features, a plugin's skills, or the
+    tools it works with; two `icons` lines show up to 16.
+  - `notes`: handwritten sticky notes floating in the dark, the camera
+    drifting through them: `items="a launch video,a week of posts"` (up to
+    8). Ideas, requests, or a week's plan; never a quote someone didn't
+    say.
+  - `button`: the call to action as a big button a cursor clicks,
+    `text="☆ Star"` changing to `done="★ Starred"` (or "+ Follow" to
+    "Following") under confetti while the mascot cheers.
   - The abstract shots still work alongside: `shapes`, `hero` (a phone;
     `src=` the user's real screenshot), `cards` (`items=` short labels),
     `chart` (`values=` the user's real numbers only), `coin` (`src=` their
@@ -136,8 +147,9 @@ cta: try it free · link in bio
   The robot hero wears the accent color, captions sit in a game dialog box,
   and the music is `chiptune` in the identity's key and hook (say so to the
   user, and offer `music: identity` if they'd rather keep their usual genre).
-- Pick shots that match each line's meaning: `mascot do=sad` or `boss`
-  under the problem, `desk` or `mascot prop=laptop` when the work or the
+- Pick shots that match each line's meaning: `icons` when the line lists
+  what the product does, `notes` for ideas or a plan, `button` under the
+  CTA, `mascot do=sad` or `boss` under the problem, `desk` or `mascot prop=laptop` when the work or the
   product is the point, `point` or `present` with `prop=screen` to show
   the product, `cheer`, `title`, `coins`, or `levelup` under the payoff,
   `chart` only with real numbers, `wave` or `thumbs` under the CTA. Never
@@ -161,9 +173,10 @@ cta: try it free · link in bio
 ## The bold look: the cover that stops the scroll
 
 Add `captions: bold` to a script's frontmatter (any style) for the look
-of the big creator ads: each line's whole caption on screen at once in
-heavy capitals, boxed in black, the subject big above it, and the first
-line on screen from frame 0, so the first frame is the cover. Mark the
+of the big creator ads: heavy capitals boxed in black, the subject big
+above them, and the first line whole on screen from frame 0, so the first
+frame is the cover. Short lines (up to 8 words) show whole; longer ones
+come a few words at a time, so a long explainer doesn't bury its picture. Mark the
 words that sell it with asterisks, in the lines and the hook (`I built
 an *AI* that makes *viral* video ads`); they stay yellow, and the
 asterisks aren't spoken. Write the first line as the hook itself and set
@@ -258,7 +271,10 @@ Set the `<body>` music attributes from the Sonic Identity in
   scenes to the voice or reading pace. Tell the user what you did ("104
   BPM, started at 0:32 so the drop hits as the hook ends, cuts on the
   bar"), and send an `--audio-only` render to check the sync, since you
-  can't hear it.
+  can't hear it. For a narrated script, `music: assets/<file>` in its
+  frontmatter does all of this in `compose.js`: it reads the beat, starts
+  the track so its lift lands as the hook ends, and moves every scene
+  change onto a beat.
 - **Longer than about 45 seconds:** the generated music repeats the same
   few bars and wears thin, so ask for a licensed track instead. The
   renderer warns about it.

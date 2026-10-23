@@ -12,10 +12,11 @@ video, from one script:
 - `explainer.html` and `explainer-landscape.html`: the pages `compose.js`
   wrote from it, vertical and landscape. Don't edit their timing by hand;
   edit the script and compose again.
-- `marketing-skill-v3.mp4`: the video, a lighter encode for the repo
-  (the full-quality render is what gets posted), with its captions in
-  `marketing-skill-v3.srt`; `poster.jpg` is the strip the main README
-  shows.
+- `marketing-skill-v3-landscape.mp4` and `marketing-skill-v3.mp4`: the
+  two cuts, lighter encodes for the repo (the full-quality renders are
+  what get posted), with their captions in the `.srt` files beside them.
+  `poster-landscape.jpg` is what the main README shows; `poster.jpg` is
+  the vertical cut's.
 - `assets/skills.png` (the real `skills/` folder, from
   `skills-screen.html`), `renders.png` and `templates.png` (real frames
   from the template gallery) are what the screens show.

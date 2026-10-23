@@ -1,14 +1,17 @@
 # Explainer v3
 
-A 1080x1920 (9:16) explainer of the plugin for r/claudeskills, about 80
-seconds: all fourteen skills, then the new video features. It's made the
-way the plugin makes any narrated video, from one script:
+An explainer of the plugin for r/claudeskills, about 80 seconds, in two
+cuts: 1920x1080 (16:9) for Reddit and the README, and 1080x1920 (9:16)
+for TikTok, Reels, and Shorts. It covers all fourteen skills, then the
+new video features, and it's made the way the plugin makes any narrated
+video, from one script:
 
 - `script.md`: 22 lines, one shot each, in `style: 3d` with the bold
   captions. The mascot presents; the `desk`, `icons`, `notes`, `title`,
   and `button` shots are the launch-video moves it borrows.
-- `explainer.html`: the page `compose.js` wrote from it. Don't edit its
-  timing by hand; edit the script and compose again.
+- `explainer.html` and `explainer-landscape.html`: the pages `compose.js`
+  wrote from it, vertical and landscape. Don't edit their timing by hand;
+  edit the script and compose again.
 - `marketing-skill-v3.mp4`: the video, a lighter encode for the repo
   (the full-quality render is what gets posted), with its captions in
   `marketing-skill-v3.srt`; `poster.jpg` is the strip the main README
@@ -32,11 +35,15 @@ is regenerated from the script.
 
 ## Making it again
 
-From this folder, with the track at `assets/funky-diesel.mp3`:
+From this folder, with the track at `assets/funky-diesel.mp3`, the vertical
+cut (TikTok, Reels, Shorts) and the landscape one (Reddit, YouTube, the
+README), from the same script and voice:
 
 ```
 node ../../../scripts/video/compose.js script.md --out explainer.html
 node ../../../scripts/video/render.js explainer.html marketing-skill-v3.mp4 --cover 0
+node ../../../scripts/video/compose.js script.md --format landscape --out explainer-landscape.html
+node ../../../scripts/video/render.js explainer-landscape.html marketing-skill-v3-landscape.mp4 --cover 0
 ```
 
 The voice lines are `assets/v3-1.wav` ... `v3-22.wav`, Kokoro's

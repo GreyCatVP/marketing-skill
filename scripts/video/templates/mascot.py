@@ -742,15 +742,27 @@ const radial = (g, x, y, r, inner, outer = 'rgba(0,0,0,0)') => { const gr = g.cr
 // a living room by day: a window full of sky, a plant, a lamp, a rug, the sun on the wall
 function roomSet(scene) {
   const wall = muted(PAL.second, 0.28, 0.7);
-  const [c, g] = canvas2d(1152, 896); // 9 x 7 units, from y 0
-  const U = 128, X = (x) => (x + 4.5) * U, Y = (y) => (7 - y) * U;
-  const grad = g.createLinearGradient(0, 0, 1152, 896);
+  const [c, g] = canvas2d(2304, 896); // 18 x 7 units, from y 0: wide enough for a landscape frame
+  const U = 128, X = (x) => (x + 9) * U, Y = (y) => (7 - y) * U;
+  const grad = g.createLinearGradient(0, 0, 2304, 896);
   grad.addColorStop(0, hex(wall.clone().offsetHSL(0, 0, 0.08))); grad.addColorStop(1, hex(wall.clone().offsetHSL(0, 0, -0.06)));
-  g.fillStyle = grad; g.fillRect(0, 0, 1152, 896);
-  g.fillStyle = hex(wall.clone().offsetHSL(0, 0.02, -0.12)); g.fillRect(0, Y(1.0), 1152, U * 1.0); // wainscot
+  g.fillStyle = grad; g.fillRect(0, 0, 2304, 896);
+  g.fillStyle = hex(wall.clone().offsetHSL(0, 0.02, -0.12)); g.fillRect(0, Y(1.0), 2304, U * 1.0); // wainscot
   g.strokeStyle = 'rgba(255,255,255,.18)'; g.lineWidth = 4;
-  for (let x = -4.2; x < 4.5; x += 0.9) g.strokeRect(X(x), Y(0.85), 0.7 * U, 0.65 * U);
-  g.fillStyle = 'rgba(255,255,255,.55)'; g.fillRect(0, Y(1.02), 1152, 7); g.fillRect(0, Y(0.08), 1152, 10);
+  for (let x = -8.7; x < 9; x += 0.9) g.strokeRect(X(x), Y(0.85), 0.7 * U, 0.65 * U);
+  g.fillStyle = 'rgba(255,255,255,.55)'; g.fillRect(0, Y(1.02), 2304, 7); g.fillRect(0, Y(0.08), 2304, 10);
+  // further out, for a wide frame: a bookcase on the left, a big painting on the right
+  g.fillStyle = '#efe8dc'; g.fillRect(X(-7.6), Y(4.3), 2.4 * U, 4.3 * U);
+  for (let sh = 0; sh < 5; sh++) {
+    const y = Y(0.4 + sh * 0.85);
+    g.fillStyle = '#d9cfbf'; g.fillRect(X(-7.5), y, 2.2 * U, 9);
+    let bx = X(-7.4);
+    for (let k = 0; k < 10; k++) { const w = 14 + ((sh * 5 + k * 7) % 12), h = 46 + ((sh * 3 + k * 13) % 36); g.fillStyle = hex([PAL.accent, PAL.second, PAL.third, PAL.ink, PAL.pearl][(sh + k) % 5].clone().multiplyScalar(0.9)); g.fillRect(bx, y - h, w, h); bx += w + 4; }
+  }
+  g.fillStyle = '#26232b'; g.fillRect(X(3.3), Y(4.0), 2.6 * U, 1.8 * U);
+  const art = g.createLinearGradient(X(3.3), Y(4.0), X(5.9), Y(2.2)); art.addColorStop(0, hex(PAL.third)); art.addColorStop(1, hex(PAL.accent));
+  g.fillStyle = art; g.fillRect(X(3.3) + 12, Y(4.0) + 12, 2.6 * U - 24, 1.8 * U - 24);
+  g.fillStyle = 'rgba(255,255,255,.35)'; g.beginPath(); g.arc(X(4.2), Y(3.2), 0.45 * U, 0, 6.29); g.fill();
   // the window: sky, a far skyline, the frame, and the sunbeam it throws to the right
   const [wx0, wx1, wy0, wy1] = [X(-2.75), X(-0.55), Y(3.9), Y(1.35)];
   const sky = g.createLinearGradient(0, wy0, 0, wy1); sky.addColorStop(0, '#7fb8ec'); sky.addColorStop(1, '#d9ecf7');
@@ -774,16 +786,17 @@ function roomSet(scene) {
   const spines = [PAL.accent, PAL.second, PAL.third, PAL.ink, PAL.pearl, PAL.accent, PAL.second];
   spines.forEach((col, i) => { const w = 16 + (i * 7) % 12, h = 54 + (i * 13) % 26; g.fillStyle = hex(col.clone().multiplyScalar(0.92)); g.fillRect(bx, Y(1.9) - h, w, h); bx += w + 3; });
   g.fillStyle = hex(PAL.third); g.beginPath(); g.ellipse(X(2.1), Y(1.9) - 26, 22, 28, 0, 0, 6.29); g.fill();
-  scene.add(flat(texture(c), 9, 7, 0, 3.5, -3.4));
+  scene.add(flat(texture(c), 18, 7, 0, 3.5, -3.4));
   // the floor: warm planks, darker away from the light
   const [fc, fg] = canvas2d(512, 512);
   const base = new THREE.Color('#b98a5e');
   for (let y = 0; y < 512; y += 32) for (let x = -((y / 32) % 2) * 90; x < 512; x += 180) { fg.fillStyle = hex(base.clone().offsetHSL(0, 0, (rr() - 0.5) * 0.08)); fg.fillRect(x, y, 178, 30); }
   const ft = texture(fc); ft.wrapS = ft.wrapT = THREE.RepeatWrapping; ft.repeat.set(4, 4);
-  const floorM = flat(ft, 12, 12, 0, 0, 2.6, { floor: true });
+  ft.repeat.set(8, 5);
+  const floorM = flat(ft, 24, 16, 0, 0, 2.6, { floor: true });
   scene.add(floorM);
   const [vc, vg] = canvas2d(256, 256); radial(vg, 128, 128, 128, 'rgba(0,0,0,0)', 'rgba(40,20,10,.55)');
-  scene.add(flat(texture(vc), 12, 12, 0, 0.002, 2.6, { floor: true, transparent: true }));
+  scene.add(flat(texture(vc), 24, 16, 0, 0.002, 2.6, { floor: true, transparent: true }));
   const [rc, rg] = canvas2d(512, 512);
   rg.fillStyle = hex(muted(PAL.accent, 0.45, 0.62)); rg.beginPath(); rg.arc(256, 256, 250, 0, 6.29); rg.fill();
   rg.strokeStyle = 'rgba(255,255,255,.45)'; rg.lineWidth = 10; [200, 150].forEach((r) => { rg.beginPath(); rg.arc(256, 256, r, 0, 6.29); rg.stroke(); });
@@ -796,6 +809,14 @@ function roomSet(scene) {
   const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.24, 0.04, 24), pole.material); foot.position.y = 0.02;
   const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.32, 0.4, 28, 1, true), new THREE.MeshStandardMaterial({ color: '#f3e7d3', emissive: '#ffd9a0', emissiveIntensity: 0.55, side: THREE.DoubleSide })); shade.position.y = 1.95;
   lamp.add(pole, foot, shade); lamp.position.set(1.75, 0, -2.55); scene.add(lamp);
+  // a sofa against the far right wall, out of a tall frame, in a wide one
+  const sofaM = plastic(muted(PAL.accent, 0.35, 0.5), 0.6);
+  const sofa = new THREE.Group();
+  [[0, 0.25, 0, 2.4, 0.5, 0.9], [0, 0.75, -0.35, 2.4, 0.6, 0.22], [-1.15, 0.45, 0, 0.22, 0.5, 0.9], [1.15, 0.45, 0, 0.22, 0.5, 0.9]].forEach(([x, y, z, w, h, d]) => {
+    const m = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 3, 0.08), sofaM); m.position.set(x, y, z); m.castShadow = true; sofa.add(m);
+  });
+  sofa.position.set(4.6, 0, -2.75); scene.add(sofa);
+  const pl2 = plant(); pl2.scale.setScalar(2.4); pl2.position.set(-3.9, 0, -2.7); scene.add(pl2);
   scene.background = wall.clone().multiplyScalar(0.8);
   scene.add(new THREE.HemisphereLight('#e8f2ff', '#b98a5e', 0.9));
   keyLight(scene, '#fff1dc', 2.2, [-4, 6.5, 5]);
@@ -816,13 +837,13 @@ function stageSet(scene) {
   gg.fillStyle = lg; gg.fillRect(0, 0, 1024, 256);
   for (let i = 0; i < 6; i++) radial(gg, 90 + i * 170, 128 + (i % 2 ? 50 : -40), 130, 'rgba(255,255,255,.6)');
   const glowTex = texture(gc); glowTex.wrapS = THREE.RepeatWrapping; glowTex.repeat.set(1, 1);
-  const led = flat(glowTex, 9.6, 5.2, 0, 3.0, -4.6);
+  const led = flat(glowTex, 19.2, 5.6, 0, 3.2, -4.6);
   const [mc, mg] = canvas2d(512, 280); // the LED dots: dark everywhere but the little round pixels
   mg.fillStyle = 'rgba(8,8,12,.82)'; mg.fillRect(0, 0, 512, 280); mg.globalCompositeOperation = 'destination-out';
   for (let y = 4; y < 280; y += 8) for (let x = 4; x < 512; x += 8) { mg.beginPath(); mg.arc(x, y, 3.3, 0, 6.29); mg.fill(); }
-  const maskTex = texture(mc); maskTex.wrapS = maskTex.wrapT = THREE.RepeatWrapping; maskTex.repeat.set(2, 2);
-  const mask = flat(maskTex, 9.6, 5.2, 0, 3.0, -4.58, { transparent: true });
-  const frameM = new THREE.Mesh(new THREE.BoxGeometry(9.9, 5.5, 0.1), new THREE.MeshBasicMaterial({ color: '#08080b' })); frameM.position.set(0, 3.0, -4.7);
+  const maskTex = texture(mc); maskTex.wrapS = maskTex.wrapT = THREE.RepeatWrapping; maskTex.repeat.set(4, 2.15);
+  const mask = flat(maskTex, 19.2, 5.6, 0, 3.2, -4.58, { transparent: true });
+  const frameM = new THREE.Mesh(new THREE.BoxGeometry(19.5, 5.9, 0.1), new THREE.MeshBasicMaterial({ color: '#08080b' })); frameM.position.set(0, 3.2, -4.7);
   scene.add(frameM, led, mask);
   // a glossy floor that picks up the wall's glow
   const [fc, fg] = canvas2d(512, 512);
@@ -830,13 +851,13 @@ function stageSet(scene) {
   const fl = fg.createLinearGradient(0, 0, 0, 512); fl.addColorStop(0, hex(PAL.accent.clone().multiplyScalar(0.55))); fl.addColorStop(0.45, 'rgba(0,0,0,0)');
   fg.fillStyle = fl; fg.fillRect(0, 0, 512, 512);
   radial(fg, 256, 330, 170, 'rgba(255,240,220,.35)');
-  scene.add(flat(texture(fc), 12, 10, 0, 0, 0.4, { floor: true }));
+  scene.add(flat(texture(fc), 24, 12, 0, 0, 0.4, { floor: true }));
   // beams from the rig above, through haze
   const [bc, bg] = canvas2d(64, 256);
   const bl = bg.createLinearGradient(0, 0, 0, 256); bl.addColorStop(0, 'rgba(255,255,255,.55)'); bl.addColorStop(1, 'rgba(255,255,255,0)');
   bg.fillStyle = bl; bg.fillRect(0, 0, 64, 256);
   const beamTex = texture(bc);
-  const beams = [[-2.6, PAL.second], [-1.0, PAL.pearl], [1.0, PAL.pearl], [2.6, PAL.accent]].map(([x, col], i) => {
+  const beams = [[-4.6, PAL.third], [-2.6, PAL.second], [-1.0, PAL.pearl], [1.0, PAL.pearl], [2.6, PAL.accent], [4.6, PAL.second]].map(([x, col], i) => {
     const m = new THREE.Mesh(new THREE.ConeGeometry(0.75, 6.5, 32, 1, true), new THREE.MeshBasicMaterial({ map: beamTex, color: col, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
     m.geometry.translate(0, -3.25, 0); // the tip at the rig, the wide end on the floor
     m.position.set(x, 6.4, -1.8);
@@ -887,17 +908,18 @@ function citySet(scene) {
   fg.strokeStyle = 'rgba(0,0,0,.25)'; fg.lineWidth = 3; for (let i = 0; i <= 512; i += 64) { fg.beginPath(); fg.moveTo(i, 0); fg.lineTo(i, 512); fg.moveTo(0, i); fg.lineTo(512, i); fg.stroke(); }
   radial(fg, 256, 300, 260, 'rgba(255,190,120,.28)');
   const ft = texture(fc); ft.wrapS = ft.wrapT = THREE.RepeatWrapping;
-  scene.add(flat(ft, 14, 8, 0, 0, 1.6, { floor: true }));
+  ft.repeat.set(2, 1);
+  scene.add(flat(ft, 30, 10, 0, 0, 1.6, { floor: true }));
   const railM = new THREE.MeshStandardMaterial({ color: '#202030', metalness: 0.6, roughness: 0.4 });
-  for (let x = -4; x <= 4; x += 0.8) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.05, 0.05), railM); post.position.set(x, 0.52, -2.4); scene.add(post); }
-  const top = new THREE.Mesh(new THREE.BoxGeometry(8.4, 0.06, 0.08), railM); top.position.set(0, 1.05, -2.4); scene.add(top);
+  for (let x = -10.4; x <= 10.4; x += 0.8) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.05, 0.05), railM); post.position.set(x, 0.52, -2.4); scene.add(post); }
+  const top = new THREE.Mesh(new THREE.BoxGeometry(21, 0.06, 0.08), railM); top.position.set(0, 1.05, -2.4); scene.add(top);
   const glassM = new THREE.MeshBasicMaterial({ color: '#9fb7ff', transparent: true, opacity: 0.08, depthWrite: false });
-  const glass = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 0.95), glassM); glass.position.set(0, 0.52, -2.42); scene.add(glass);
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(20.8, 0.95), glassM); glass.position.set(0, 0.52, -2.42); scene.add(glass);
   const bulbs = [];
   const bulbM = new THREE.MeshBasicMaterial({ color: '#ffd59a', toneMapped: false });
-  for (const [x0, x1, y, z] of [[-3.2, 3.2, 3.15, -1.7], [-3.6, 0.6, 2.85, -3.0]]) {
+  for (const [x0, x1, y, z, n] of [[-3.2, 3.2, 3.15, -1.7, 16], [-3.6, 0.6, 2.85, -3.0, 10], [3.6, 9.6, 3.2, -1.9, 16], [-9.8, -3.8, 3.0, -2.2, 16]]) {
     const pts = [];
-    for (let i = 0; i <= 16; i++) { const t = i / 16; pts.push(V(lerp(x0, x1, t), y - 0.45 * Math.sin(Math.PI * t), z)); }
+    for (let i = 0; i <= n; i++) { const t = i / n; pts.push(V(lerp(x0, x1, t), y - 0.45 * Math.sin(Math.PI * t), z)); }
     const wire = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 48, 0.008, 4), new THREE.MeshBasicMaterial({ color: '#111' }));
     scene.add(wire);
     pts.forEach((p, i) => { if (i % 2) return; const b = new THREE.Mesh(new THREE.SphereGeometry(0.045, 12, 8), bulbM.clone()); b.position.copy(p).add(V(0, -0.06, 0)); scene.add(b); bulbs.push(b); });
@@ -941,7 +963,7 @@ function parkSet(scene) {
   }
   const leafM = [new THREE.MeshStandardMaterial({ color: '#4f9b4f', roughness: 0.8 }), new THREE.MeshStandardMaterial({ color: '#69b35a', roughness: 0.8 })];
   const trunkM = new THREE.MeshStandardMaterial({ color: '#7a5537', roughness: 0.9 });
-  [[-3.4, -6, 1.4], [3.2, -7.5, 1.7], [-1.6, -10, 1.2], [1.4, -12, 1.5], [-5.5, -11, 1.8], [5.4, -10, 1.3]].forEach(([x, z, s], i) => {
+  [[-3.4, -6, 1.4], [3.2, -7.5, 1.7], [-1.6, -10, 1.2], [1.4, -12, 1.5], [-5.5, -11, 1.8], [5.4, -10, 1.3], [-8.6, -8, 1.6], [8.4, -7, 1.5], [-11.5, -13, 1.9], [11.8, -12, 1.7]].forEach(([x, z, s], i) => {
     const t = new THREE.Group();
     const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 1.4, 10), trunkM); trunk.position.y = 0.7;
     const crown = new THREE.Mesh(new THREE.SphereGeometry(0.9, 20, 14), leafM[i % 2]); crown.position.y = 1.9;
@@ -956,7 +978,7 @@ function parkSet(scene) {
   const flowerCols = [PAL.accent, '#ffffff', PAL.third, '#ff7aa8'];
   for (let i = 0; i < 26; i++) {
     const m = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), new THREE.MeshBasicMaterial({ color: flowerCols[i % 4] }));
-    const a = r() * 6.28, d = 1.3 + r() * 2.2;
+    const a = r() * 6.28, d = 1.3 + r() * (WIDE ? 4.5 : 2.2);
     m.position.set(Math.cos(a) * d, 0.05, -0.5 + Math.sin(a) * d * 0.7);
     scene.add(m);
   }
@@ -971,10 +993,11 @@ function parkSet(scene) {
 // camera were focused on the mascot standing in front of it
 async function photoSet(scene, src) {
   const img = await loadImage(src);
-  const [c, g] = canvas2d(540, 960);
-  const k = Math.max(540 / img.width, 960 / img.height);
+  const [cw, ch] = [W / 2, H / 2];
+  const [c, g] = canvas2d(cw, ch);
+  const k = Math.max(cw / img.width, ch / img.height);
   g.filter = 'blur(5px) saturate(1.05)';
-  g.drawImage(img, (540 - img.width * k) / 2, (960 - img.height * k) / 2, img.width * k, img.height * k);
+  g.drawImage(img, (cw - img.width * k) / 2, (ch - img.height * k) / 2, img.width * k, img.height * k);
   if (!readable(g)) throw new Error(`couldn't read ${src} into the 3D scene; open the page through render.js`);
   scene.background = texture(c);
   scene.add(new THREE.HemisphereLight('#ffffff', '#555555', 0.9));
@@ -1017,10 +1040,14 @@ const jumpRoom = ([y0, y1, p0, p1], jumps) => (jumps ? [y0, y1 + 0.5, p0, p1] : 
 
 // Frames a span of the scene: world heights y0..y1 at pixel rows p0..p1 (feet at the bottom),
 // from `push` times the distance that takes, `orbit` radians around, a little above eye level.
+// The rows are for a 1920-tall frame, scaled to this one.
 function frameSpan(camera, [y0, y1, p0, p1], { x = 0, z = 0, push = 1, orbit = 0, lift = 0.35 } = {}) {
-  const ppu = (p1 - p0) / (y1 - y0);
+  const ry = H / 1920;
+  let [q0, q1] = [p0 * ry, p1 * ry];
+  if (WIDE) { const c = (q0 + q1) / 2 - 40, h = (q1 - q0) * 0.64; [q0, q1] = [c - h, c + h]; } // a wide frame: closer in, so the subject isn't lost in it
+  const ppu = (q1 - q0) / (y1 - y0);
   const d = (H / ppu) / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)) * push;
-  const yc = y1 - (H / 2 - p0) / ppu;
+  const yc = y1 - (H / 2 - q0) / ppu;
   camera.position.set(x + Math.sin(orbit) * d, yc + lift, z + Math.cos(orbit) * d);
   camera.lookAt(x, yc + lift * 0.15, z);
 }
@@ -1219,13 +1246,21 @@ function holding(p, prop, lt) {
 
 // ---- the desk: a cozy room at night, the mascot at a monitor showing the user's screen
 function roomWall() {
-  const [c, g] = canvas2d(1024, 768); // 8 x 6 units of wall
-  const u = (x) => (x + 4) / 8 * 1024, v = (y) => (6 - y) / 6 * 768;
+  const [c, g] = canvas2d(2048, 768); // 16 x 6 units of wall, wide enough for a landscape frame
+  const u = (x) => (x + 8) * 128, v = (y) => (6 - y) / 6 * 768;
   const base = new THREE.Color('#1b2133').lerp(PAL.bg, 0.4);
   const grad = g.createLinearGradient(0, 0, 0, 768);
   grad.addColorStop(0, hex(base.clone().multiplyScalar(0.55)));
   grad.addColorStop(1, hex(base));
-  g.fillStyle = grad; g.fillRect(0, 0, 1024, 768);
+  g.fillStyle = grad; g.fillRect(0, 0, 2048, 768);
+  // a tall bookcase at the far left, books in the brand's colors
+  g.fillStyle = '#2a2018'; g.fillRect(u(-7.2), v(4.2), u(-4.6) - u(-7.2), v(0) - v(4.2));
+  for (let sh = 0; sh < 5; sh++) {
+    const y = v(0.35 + sh * 0.8);
+    g.fillStyle = '#3b2c20'; g.fillRect(u(-7.1), y, u(-4.7) - u(-7.1), 8);
+    let bx = u(-7.0);
+    for (let k = 0; k < 9; k++) { const w = 12 + ((sh * 5 + k * 7) % 11), h = 40 + ((sh * 3 + k * 13) % 34); g.fillStyle = hex([PAL.accent, PAL.second, PAL.third, PAL.pearl][(sh + k) % 4].clone().multiplyScalar(0.55)); g.fillRect(bx, y - h, w, h); bx += w + 4; }
+  }
   // the window, left of the desk: a night city behind blinds
   const [wx0, wx1, wy0, wy1] = [u(-2.5), u(-0.75), v(3.55), v(1.55)];
   const sky = g.createLinearGradient(0, wy0, 0, wy1);
@@ -1250,10 +1285,10 @@ function roomWall() {
   });
   const lamp = g.createRadialGradient(u(1.2), v(1.5), 10, u(1.2), v(1.5), 330);
   lamp.addColorStop(0, 'rgba(255,190,120,.42)'); lamp.addColorStop(1, 'rgba(255,190,120,0)');
-  g.fillStyle = lamp; g.fillRect(0, 0, 1024, 768);
+  g.fillStyle = lamp; g.fillRect(0, 0, 2048, 768);
   const glowGrad = g.createRadialGradient(u(0.15), v(1.4), 10, u(0.15), v(1.4), 420);
   glowGrad.addColorStop(0, hex(PAL.accent.clone().lerp(PAL.pearl, 0.4)) + '55'); glowGrad.addColorStop(1, hex(PAL.accent) + '00');
-  g.fillStyle = glowGrad; g.fillRect(0, 0, 1024, 768);
+  g.fillStyle = glowGrad; g.fillRect(0, 0, 2048, 768);
   return texture(c);
 }
 
@@ -1294,9 +1329,9 @@ SHOTS.desk = async (el, shot) => {
   scene.environmentIntensity = 0.3;
   scene.background = new THREE.Color('#07080c');
   const DESK = 0.82; // the desk top's height, sized to the mascot
-  const wall = new THREE.Mesh(new THREE.PlaneGeometry(8, 6), new THREE.MeshBasicMaterial({ map: roomWall() }));
+  const wall = new THREE.Mesh(new THREE.PlaneGeometry(16, 6), new THREE.MeshBasicMaterial({ map: roomWall() }));
   wall.position.set(0, 3, -1.45);
-  const floorM = new THREE.Mesh(new THREE.PlaneGeometry(8, 6), new THREE.MeshStandardMaterial({ color: '#1d1714', roughness: 0.8 }));
+  const floorM = new THREE.Mesh(new THREE.PlaneGeometry(16, 8), new THREE.MeshStandardMaterial({ color: '#1d1714', roughness: 0.8 }));
   floorM.rotation.x = -Math.PI / 2; floorM.position.z = 1.5;
   scene.add(wall, floorM);
   const wood = new THREE.MeshStandardMaterial({ color: '#4a3326', roughness: 0.55 });
@@ -1383,7 +1418,7 @@ SHOTS.desk = async (el, shot) => {
   const START = V(0.5, 2.7, 5.6);
   const normal = V(Math.sin(MON.turn), 0, Math.cos(MON.turn));
   const center = V(MON.x, MON.y, MON.z);
-  const END = center.clone().add(normal.clone().multiplyScalar(0.56));
+  const END = center.clone().add(normal.clone().multiplyScalar(WIDE ? 0.9 : 0.56)); // into the screen: past its height on a tall frame, to its width on a wide one
   const camTurn = Math.atan2(START.x - CHAIR.x, START.z - CHAIR.z);
   const PUSH = Math.min(1.2, D * 0.4); // the last stretch: into the screen
   const T1 = shot.first ? -1 : Math.min(1.1, D * 0.25); // the spin round to wave
@@ -1475,9 +1510,9 @@ SHOTS.title = async (el, shot) => {
   const letters = [];
   const built = rows.map((row, r) => [...row].map((ch) => (ch === ' ' ? { space: true, width: 0.35 } : letterMesh(ch, r === 0 && rows.length > 1 ? colors[1] : colors[0]))));
   const widest = Math.max(...built.map((row) => row.reduce((a, l) => a + l.width * 0.92, 0)));
-  const room = withMascot ? 1.7 : 2.5;
-  const size = Math.min(0.95, room / widest);
-  const offsetX = withMascot ? -0.38 : 0;
+  const room = (withMascot ? 1.7 : 2.5) * (WIDE ? 2 : 1);
+  const size = Math.min(WIDE ? 1.25 : 0.95, room / widest);
+  const offsetX = withMascot ? (WIDE ? -0.7 : -0.38) : 0;
   let order = 0;
   const rowOrder = rows.length > 1 ? [1, 0] : [0];
   for (const r of rowOrder) {
@@ -1528,7 +1563,7 @@ SHOTS.title = async (el, shot) => {
         let p = ACTIONS.present(Math.min(lt, 0.5) + 0.1, ctx);
         if (after > 0) p = mixPose(p, ACTIONS.cheer(after, ctx), smooth(after, 0, 0.2));
         p.y *= 0.5; // a smaller hop beside the letters
-        p = { ...alive(p, lt, 2.2), x: 1.05, z: -0.35, turn: -0.35 };
+        p = { ...alive(p, lt, 2.2), x: WIDE ? 2.1 : 1.05, z: -0.35, turn: -0.35 };
         applyPose(rig, p);
         blob.position.set(p.x, 0.004, p.z);
         blob.material.opacity = 0.42 / (1 + 3 * p.y);
@@ -1558,7 +1593,7 @@ SHOTS.icons = async (el, shot) => {
   await document.fonts.load(`800 72px ${FONT}`);
   for (const it of items) if (it.glyph) await document.fonts.load(`150px ${EMOJI_FONT}`, it.glyph);
   const cells = items.length + (withMascot ? 1 : 0);
-  const cols = cells === 4 ? 2 : Math.min(3, cells);
+  const cols = WIDE ? Math.min(4, cells) : cells === 4 ? 2 : Math.min(3, cells);
   const rows = Math.ceil(cells / cols);
   const [SX, SY, T] = [1.0, 1.08, 0.66]; // column and row spacing, tile size
   const tileMat = plastic(night ? PAL.pearl : PAL.ink, 0.32);
@@ -1669,7 +1704,7 @@ SHOTS.notes = async (el, shot) => {
     // scattered up the frame and back into the dark, nearest first, zig-zagging side to side
     const side = i % 2 ? 1 : -1;
     const z = -i * (3.2 / Math.max(1, items.length - 1));
-    const x = side * (0.28 + 0.18 * r()) * (1 + i * 0.15);
+    const x = side * (0.28 + 0.18 * r()) * (1 + i * 0.15) * (WIDE ? 2.6 : 1);
     const y = 1.8 + ((i % 3) - 1) * 0.58 + (r() - 0.5) * 0.2 + i * 0.05;
     scene.add(m);
     return { m, x, y, z, rot: [(r() - 0.5) * 0.25, (r() - 0.5) * 0.5, (r() - 0.5) * 0.35], phase: r() * 6.28, delay: (shot.first ? 0 : 0.1) + i * 0.12 };

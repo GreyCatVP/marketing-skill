@@ -382,6 +382,16 @@ comment lists every shot and what it takes.
   start of this guide), with the style in the prompt. That spends the
   tool's credits.
 
+### Landscape for YouTube, Reddit, and LinkedIn
+
+Every narrated video can also come out 16:9 (1920x1080): add
+`format: landscape` to the script, or compose a second cut of the same
+script with `node compose.js script.md --format landscape --out
+<name>-landscape.html`. The captions sit low and centered, and the 3D
+scenes open out to the wide frame: more of the room, the stage, the city,
+or the park, and the mascot framed closer. The plugin's own explainer is
+made this way, once vertical and once landscape, from one script.
+
 ### The bold look (a cover that stops the scroll)
 
 The big creator ads open on a face, a product, and a few huge words:

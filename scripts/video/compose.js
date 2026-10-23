@@ -8,7 +8,7 @@
  *
  * Usage:
  *   node compose.js <script.md> [--out <page.html>] [--voice af_heart] [--speed 1]
- *                   [--style photo|3d|pixel] [--no-media] [--no-check]
+ *                   [--style photo|3d|pixel] [--format portrait|landscape] [--no-media] [--no-check]
  *
  * The script is Markdown: optional frontmatter, then numbered lines, one per scene. A line can
  * end with a background: [bg: a search query] fetches a stock photo for it (media.js), and
@@ -45,6 +45,10 @@
  * aren't spoken). When the hook is the first line, it shows once, as that line's caption.
  * "series: week 2" and "brand: Your Name" put a tag in each top corner for the whole video.
  *
+ * Landscape: "format: landscape" (or --format landscape) makes the same video 1920x1080 (16:9)
+ * for YouTube, Reddit, and LinkedIn, with the captions low and centered and the 3D sets
+ * opened out to the wider frame. Pixel art stays vertical.
+ *
  * A screen in a photo: [bg: assets/me-laptop.jpg screen=assets/app.png at=x1,y1,x2,y2,x3,y3,x4,y4]
  * puts the user's screenshot on the laptop or phone screen in their own photo, from the screen's
  * four corners in the photo's pixels (top left, top right, bottom right, bottom left), moving
@@ -70,6 +74,23 @@ const LEAD = 0.15; // the first line starts almost at once; the hook is already 
 const GAP = 0.35; // a beat between one line ending and the next scene
 const TAIL = 1.2; // after the last line, room for the sonic logo
 const BOLD_WHOLE = 8; // in the bold look, lines of up to this many words show whole
+// Landscape (16:9): the same page in a 1920x1080 frame, the text low and centered, as YouTube,
+// Reddit, and LinkedIn show it; the 3D shots read the canvas's size and widen their framing.
+const LANDSCAPE_CSS = `<style>
+  html, body { width: 1920px; height: 1080px; }
+  .art { width: 1920px; height: 1080px; }
+  .scene, .endcard { left: 170px; right: 170px; top: 70px; bottom: 52px; }
+  .say { font-size: 62px; }
+  .narr .say { min-height: 0; }
+  .hook { font-size: 56px; }
+  .bold .say.line, .bold .say.auto:not(.line) { font-size: 54px; }
+  .bold .say.line { max-width: 1340px; margin: 0 auto; }
+  .bold .hook { font-size: 50px; }
+  .corner { top: 42px; font-size: 34px; }
+  .corner.brand { left: 64px; }
+  .corner.series { right: 64px; }
+</style>
+`;
 const MEDIA_EXT = /\.(jpe?g|png|webp|gif|mp4|mov|webm|m4v)$/i;
 const VIDEO_EXT = /\.(mp4|mov|webm|m4v)$/i;
 
@@ -116,7 +137,7 @@ function parseArgs(argv) {
     const a = argv[i];
     if (a === '--no-media') args.noMedia = true;
     else if (a === '--no-check') args.noCheck = true;
-    else if (['--out', '--voice', '--speed', '--style'].includes(a)) args[a.slice(2)] = argv[++i];
+    else if (['--out', '--voice', '--speed', '--style', '--format'].includes(a)) args[a.slice(2)] = argv[++i];
     else if (a === '-h' || a === '--help') args.help = true;
     else args.positional.push(a);
   }
@@ -268,6 +289,10 @@ async function main() {
     };
   }).filter((l) => l.text);
   const bold = String(meta.captions || '').toLowerCase() === 'bold';
+  const format = String(args.format || meta.format || 'portrait').toLowerCase();
+  const landscape = ['landscape', '16:9', 'wide'].includes(format);
+  if (!landscape && !['portrait', '9:16', 'vertical'].includes(format)) fail(`Unknown format "${format}" (use portrait or landscape).`);
+  if (landscape && styleName === 'pixel') fail('Pixel art is drawn for a vertical frame; use style 3d or photo for a landscape video.');
   if (!lines.length) fail(`No lines in ${scriptFile}; number them "1. ...", one per scene.`);
   if (style.shots) {
     if (lines.some((l) => l.bg)) console.warn(`Note: [bg: ...] and bg: are for photo backgrounds; style ${styleName} draws each line's background, so they're ignored (use [shot: ...]).`);
@@ -386,10 +411,11 @@ async function main() {
   }
 
   // ---- the page
-  const head = html.slice(html.indexOf('<html>'), html.indexOf('</head>') + '</head>'.length);
+  let head = html.slice(html.indexOf('<html>'), html.indexOf('</head>') + '</head>'.length);
+  if (landscape) head = head.replace('</head>', `${LANDSCAPE_CSS}</head>`);
   const bodyClass = (/<body[^>]*\bclass="([^"]*)"/.exec(html.slice(html.indexOf('</head>'))) || [])[1] || 'fyp';
   const attrs = [
-    `class="${bodyClass}${bold ? ' bold' : ''}"`, `data-duration="${duration}"`, `data-drop="${drop}"`,
+    `class="${bodyClass}${bold ? ' bold' : ''}"`, ...(landscape ? ['data-size="1920x1080"'] : []), `data-duration="${duration}"`, `data-drop="${drop}"`,
     ...(musicSrc ? [`data-music-src="${esc(musicSrc)}"`, 'data-music="none"', ...(track ? [`data-music-start="${track.musicStart}"`] : [])] : [`data-music="${sound.music}"`]),
     ...['bpm', 'key', 'mode', 'energy', 'motif'].filter((k) => sound[k] !== undefined).map((k) => `data-${k}="${esc(String(sound[k]))}"`),
   ].join(' ');
@@ -411,7 +437,7 @@ async function main() {
   }).join('\n\n');
   // what's behind the text: a drawn style's canvas and one shot per line, or a photo slot per line
   const layers = style.shots
-    ? [`  ${style.canvas}`, '  <div class="art-scrim" data-lint="off"></div>', '',
+    ? [`  ${landscape ? style.canvas.replace('width="1080" height="1920"', 'width="1920" height="1080"') : style.canvas}`, '  <div class="art-scrim" data-lint="off"></div>', '',
       ...scenes.map((s, i) => {
         const settings = Object.entries(s.shot.attrs).map(([k, v]) => ` data-${k}="${esc(v)}"`).join('');
         const cue = style.sfx[`${s.shot.name}:${s.shot.attrs.do || ''}`] || style.sfx[s.shot.name];

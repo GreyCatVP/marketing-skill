@@ -32,6 +32,11 @@ Skills that read "our changelog" for source material read this file too.
   screen=assets/app.png at=...]` puts their screenshot on the laptop or
   phone they're holding, from the screen's four corners, moving with the
   photo's zoom.
+- **Landscape videos**: `format: landscape` in a script (or `compose.js
+  --format landscape`) renders the same video 1920x1080 for YouTube,
+  Reddit, and LinkedIn. `render.js` reads the frame size from the page
+  (`<body data-size="1920x1080">`), the captions sit low and centered,
+  and the 3D shots open out to the wider frame.
 - **Places for the mascot**: a living room by day, a launch stage with an
   LED wall and light beams, a city rooftop at dusk, and a park, each in
   the brand's colors. Shots take them in turn (`set=` names one), so a

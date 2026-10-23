@@ -35,8 +35,10 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 // ---- frame, colors, helpers
-const W = 1080, H = 1920;
-const LIFT = 190; // the subject sits this far above the frame's middle, clear of the captions
+const ART = document.querySelector('canvas.art');
+const W = ART.width, H = ART.height; // 1080x1920, or 1920x1080 for a landscape video
+const WIDE = W > H;
+const LIFT = Math.round(190 * H / 1920); // the subject sits this far above the frame's middle, clear of the captions
 const css = getComputedStyle(document.documentElement);
 const cssColor = (name, fallback) => new THREE.Color(css.getPropertyValue(name).trim() || fallback);
 const SRGB = THREE.SRGBColorSpace;

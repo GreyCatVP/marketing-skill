@@ -60,6 +60,16 @@ To change a line, edit the script and run `compose.js` again: the timing is
 measured from the voice, so don't hand-edit it in the page. Send the user
 the voice (`--audio-only`) or a render to check, since you can't hear it.
 
+**Landscape (16:9).** The renders are vertical (9:16) for TikTok, Reels,
+and Shorts. For YouTube's main feed, Reddit, LinkedIn, or a website, add
+`format: landscape` to the script's frontmatter (or run `compose.js
+--format landscape` to make a second cut from the same script): the page
+is 1920x1080 with the captions low and centered, and the 3D shots open out
+to the wider frame (more of each set, the mascot framed closer). Both cuts
+share the voice files, so make the vertical one first, then compose again
+with `--format landscape --out <name>-landscape.html`. Pixel art is
+vertical only.
+
 ## A montage of the user's clips or photos: montage.js
 
 When the user's own clips of a place, a product, or an event are the

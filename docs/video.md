@@ -414,6 +414,13 @@ node montage.js state/videos/2026-10-21-maple.md
   held longer when its label needs time to be read. It ends on an end
   card with the client's logo, handle, contact lines, and fine print.
   Render it like any page.
+- **AI camera moves:** with a connected video model (Figma Weave's
+  Seedance or Veo, or Higgsfield), each photo becomes a short clip where
+  the camera really moves, orbiting or gliding into the room from new
+  angles. Generating spends the user's credits, so each run is quoted and
+  approved first. `montage.js frames <clip> --photo <photo>` puts the
+  clip's frames beside the photo, so any clip that changed the room is
+  caught and dropped. AI shots carry an "AI-animated" badge (`[ai]`).
 - **Clients:** each one has a profile in `state/clients/<slug>.md` with
   their colors, font, logo, sound, contact details, and the preferences
   they've asked for (`state/clients/README.md`). A script picks one with

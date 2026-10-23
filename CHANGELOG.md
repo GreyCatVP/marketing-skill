@@ -48,6 +48,19 @@ Skills that read "our changelog" for source material read this file too.
   next to each photo, with `amount=` for strength, `[depth: file]` for a
   depth map from elsewhere, and `depth: off` for flat moves. Without the
   model, every shot moves flat, as before.
+- **AI camera moves in montages.** With a connected video model (Figma
+  Weave's Seedance or Veo, or Higgsfield), `montage-video` turns each photo
+  into a short clip where the camera really moves (an orbit, a dolly in, a
+  glide through a doorway) and edits the clips on the beat, two angles per
+  clip where it can. The skill:
+  - quotes every run and asks before spending credits;
+  - checks each clip against its photo with the new `montage.js frames`
+    (the photo beside the clip's first, middle, and last frames), and drops
+    any clip that changed the room;
+  - labels AI shots with an `[ai]` "AI-animated" badge.
+
+  `references/montage-guide.md` has a prompt library for the moves and
+  notes on the models.
 - **Client profiles** in `state/clients/<slug>.md` (format in its
   README). Each holds a client's colors, font, logo, sound, contact
   details, and the preferences they've asked for. They're kept out of

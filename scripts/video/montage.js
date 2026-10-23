@@ -10,6 +10,7 @@
  * Usage:
  *   node montage.js inspect <folder | files...> --slug <slug> [--out <dir>] [--force]
  *   node montage.js <script.md> [--out <page.html>] [--no-check]
+ *   node montage.js frames <clip> [--photo <photo>] [--out <sheet.png>]
  *
  * inspect copies the photos and clips into state/videos/assets/ (or <dir>/assets) as
  * <slug>-01.jpg, <slug>-02.mp4, ...: photos upright and sized for the frame, as JPEG without
@@ -46,6 +47,10 @@
  *   4. assets/maple-04.jpg  Main suite  [staged]
  *   5. assets/maple-05.mp4  The backyard  [from: 3.5]
  *
+ * frames puts a clip's first, middle, and last frames beside the photo it was made from, to check
+ * an AI-animated clip (a connected video model's camera move, made from the photo) against the
+ * real room before it goes in a montage.
+ *
  * Tags:
  *   [move: push-in | pull-out | pan-left | pan-right | pan-up | pan-down | drift | none]
  *        with focus=x%,y% (the point of the photo to frame and move toward) and zoom=1.2
@@ -60,6 +65,7 @@
  *   [hold: 2 bars]      this shot's length (bars, beats, or seconds), instead of the pace
  *   [transition: cut]   how this shot comes in
  *   [staged]            the "Virtually staged" badge a virtually staged photo needs
+ *   [ai]                the "AI-animated" badge, for a clip a video model made from a photo
  *   [callout: 30%,60% solid oak]    a dot at that point of the photo, with a label; the shot holds still
  *   [before: assets/maple-04-before.jpg]   this shot's photo wipes in over the before photo
  *   [from: 3.5]         where a clip starts, in seconds
@@ -111,7 +117,7 @@ const MOVES = ['push-in', 'pull-out', 'pan-left', 'pan-right', 'pan-up', 'pan-do
 // each 3D move's flat stand-in, for a shot without a depth map
 const FLAT = { orbit: 'pan-right', 'orbit-left': 'pan-left', 'orbit-right': 'pan-right', dolly: 'push-in', 'dolly-in': 'push-in', 'dolly-out': 'pull-out', rise: 'pan-up' };
 const FITS = ['cover', 'contain', 'card'];
-const TAGS = ['move', 'fit', 'say', 'hold', 'transition', 'staged', 'callout', 'before', 'from', 'facts', 'depth'];
+const TAGS = ['move', 'fit', 'say', 'hold', 'transition', 'staged', 'ai', 'callout', 'before', 'from', 'facts', 'depth'];
 
 function fail(message) {
   console.error(message);
@@ -124,7 +130,7 @@ function parseArgs(argv) {
     const a = argv[i];
     if (a === '--no-check') args.noCheck = true;
     else if (a === '--force') args.force = true;
-    else if (['--out', '--slug'].includes(a)) args[a.slice(2)] = argv[++i];
+    else if (['--out', '--slug', '--photo'].includes(a)) args[a.slice(2)] = argv[++i];
     else if (a === '-h' || a === '--help') args.help = true;
     else args.positional.push(a);
   }
@@ -862,7 +868,9 @@ async function build(args) {
       const at = r2(s.start + Math.max(0.8, 0.4 * (s.end - s.start)));
       parts.push(`    <div class="stack ba"><div class="sticker dark swap" style="--in:${textIn}s; --out:${at}s">before</div><div class="sticker swap" style="--in:${at}s"${quiet ? '' : ' data-sfx="whoosh"'}>after</div></div>`);
     }
-    if (s.tags.staged) parts.push(`    <div class="staged fade" style="--in:${textIn}s">Virtually staged</div>`);
+    // what the viewer should know about the picture: virtual staging, and AI-made camera moves
+    const badge = [s.tags.staged && 'Virtually staged', s.tags.ai && 'AI-animated'].filter(Boolean).join(' · ');
+    if (badge) parts.push(`    <div class="staged fade" style="--in:${textIn}s">${badge}</div>`);
     if (s.label) parts.push(`    <div class="lt pop" style="--in:${textIn}s"><b>${esc(s.label)}</b>${s.sub ? `<small>${esc(s.sub)}</small>` : ''}</div>`);
     if (s.callout) {
       const pl = placement(s.info, s.fit, [s.callout.x, s.callout.y]);
@@ -912,7 +920,7 @@ ${scenes.join('\n\n')}
 
   console.log(`Wrote ${page}: ${shots.length} shots, ${total}s${total !== duration ? ` (${duration}s of shots and the end card)` : ''}`);
   for (const s of shots) {
-    const what = [s.is3d ? `${s.moveName} (3D)` : s.moveName, s.fit !== 'cover' ? `fit ${s.fit}` : '', s.transition !== 'fade' && s.n !== shots[0].n ? s.transition : '', s.say ? 'voiced' : '', s.tags.staged ? 'staged' : ''].filter(Boolean).join(', ');
+    const what = [s.is3d ? `${s.moveName} (3D)` : s.moveName, s.fit !== 'cover' ? `fit ${s.fit}` : '', s.transition !== 'fade' && s.n !== shots[0].n ? s.transition : '', s.say ? 'voiced' : '', s.tags.staged ? 'staged' : '', s.tags.ai ? 'AI' : ''].filter(Boolean).join(', ');
     console.log(`  ${String(s.n).padStart(2)}. ${s.start.toFixed(2)}–${s.end.toFixed(2)}s  ${s.media.padEnd(22)} ${what.padEnd(24)} ${[s.label, s.sub].filter(Boolean).join(' | ').slice(0, 44)}`);
   }
   const soundLine = musicSrc
@@ -933,11 +941,39 @@ ${scenes.join('\n\n')}
   console.log(`Next: node ${show(path.join(__dirname, 'render.js'))} ${show(page)} --slides, then render it to an .mp4.`);
 }
 
+// A clip's first, middle, and last frames beside the photo it was made from, in one sheet: what
+// an AI-animated clip shows of the room, next to what the room really looks like.
+function frames(args) {
+  const clip = args.positional[0];
+  if (!clip || !fs.existsSync(clip)) fail(`No clip at ${clip || '(none given)'}: node montage.js frames <clip> [--photo <photo>]`);
+  if (args.photo && !fs.existsSync(args.photo)) fail(`No photo at ${args.photo}`);
+  const info = probe(clip);
+  if (!info || !info.duration) fail(`Can't read ${clip} as a video`);
+  const out = path.resolve(args.out || `${clip.replace(/\.[^./\\]+$/, '')}-frames.png`);
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'montage-frames-'));
+  const stills = [0.05, info.duration / 2, Math.max(0, info.duration - 0.1)].map((t, i) => {
+    const f = path.join(tmp, `${i}.png`);
+    ffmpeg(['-ss', t.toFixed(2), '-i', clip, '-frames:v', '1', f]);
+    return f;
+  });
+  const panels = [...(args.photo ? [args.photo] : []), ...stills];
+  const filter = panels.map((_, i) => `[${i}:v]scale=-2:640,pad=iw+16:ih:0:0:color=0x111111[p${i}]`).join(';')
+    + `;${panels.map((_, i) => `[p${i}]`).join('')}hstack=inputs=${panels.length}`;
+  const res = ffmpeg([...panels.flatMap((f) => ['-i', f]), '-filter_complex', filter, '-frames:v', '1', out]);
+  fs.rmSync(tmp, { recursive: true, force: true });
+  if (res.status !== 0) fail(`ffmpeg couldn't make the sheet: ${(res.stderr || '').trim().split('\n').pop()}`);
+  console.log(`${out}: ${args.photo ? 'the photo, then ' : ''}the clip at the start, middle, and end (${info.w}x${info.h}, ${info.duration.toFixed(1)}s)`);
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help || !args.positional.length) {
     console.log(fs.readFileSync(__filename, 'utf8').split('*/')[0].replace(/^[\s\S]*?\/\*/, '').replace(/^ \* ?/gm, ''));
     process.exit(args.help ? 0 : 2);
+  }
+  if (args.positional[0] === 'frames') {
+    args.positional.shift();
+    return frames(args);
   }
   if (args.positional[0] === 'inspect') {
     args.positional.shift();

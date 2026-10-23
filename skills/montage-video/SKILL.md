@@ -1,6 +1,6 @@
 ---
 name: montage-video
-description: "Turns a client's own photos or phone clips of a room, a home for sale or rent, or a product into a finished vertical marketing montage for TikTok, Instagram Reels, and YouTube Shorts: each photo moving like a real camera (3D orbits and dolly moves from a free local depth model, or pans and push-ins), cut on the music's beat, with labels, a hook, the price and specs, and the client's logo and contact details on the end card. Adds music in the client's saved sound, a licensed track, or the user's own, and an optional voiceover (a free local voice or the user's recordings) with synced captions, then keeps editing the video on request (faster, reorder shots, other music, new text, another voice) and saves each version. Keeps a profile per client. Use when the user shares photos of a property, listing, room, or product and asks for a montage, slideshow, listing video, property tour, product video, or a reel or TikTok made from their pictures."
+description: "Turns a client's own photos or phone clips of a room, a home for sale or rent, or a product into a finished vertical marketing montage for TikTok, Instagram Reels, and YouTube Shorts: each photo moving like a real camera (AI-made camera moves and new angles with a connected video model such as Figma Weave, or free local 3D moves and pans), cut on the music's beat, with labels, a hook, the price and specs, and the client's logo and contact details on the end card. Adds music in the client's saved sound, a licensed track, or the user's own, and an optional voiceover (a free local voice or the user's recordings) with synced captions, then keeps editing the video on request (faster, reorder shots, other music, new text, another voice) and saves each version. Keeps a profile per client. Use when the user shares photos of a property, listing, room, or product and asks for a montage, slideshow, listing video, property tour, product video, or a reel or TikTok made from their pictures."
 allowed-tools: Read, Grep, Glob, WebSearch, Write, Bash
 ---
 
@@ -145,14 +145,21 @@ command below. `VIDEO` below means `${CLAUDE_PLUGIN_ROOT}/scripts/video`.
    - **Staged or edited photos:** ask whether any photo is virtually
      staged, or edited beyond color and exposure. A virtually staged photo
      gets the `[staged]` badge.
-   - **How the camera moves:** say plainly what the moves are. A 3D move
-     (`orbit`, `dolly-in`, `rise`) re-draws the photo from how far each
-     part of it is, so the camera seems to move a little through the
-     space. It only shows what's in the photo: no new angles, nothing
-     around a corner, and only small moves (about a step, or a slight
-     turn). For a real change of angle, the cut goes to another photo of
-     the same room taken from another spot. Ask the photographer for two
-     or three angles of the best rooms.
+   - **How the camera moves:** say plainly which kind of move each shot
+     gets.
+     - **Local moves** (free): a pan or push-in, or a 3D move (`orbit`,
+       `dolly-in`, `rise`) that re-draws the photo from how far each part
+       of it is. These only show what's in the photo: no new angles,
+       nothing around a corner, and only small moves.
+     - **AI camera moves** (a connected video model, costs credits): the
+       camera really orbits, glides through a doorway, or sees the room
+       from a new angle, because the model invents what the photo doesn't
+       show. Every clip is checked against its photo and labeled. See
+       "AI camera moves" below. Offer this whenever a model is connected
+       and the user wants the camera to move, not just the picture.
+     - A real second angle can also come from another photo of the same
+       room. Ask the photographer for two or three angles of the best
+       rooms.
 
 7. **Write the script and build the page.** Edit the starter script. The
    format and every tag are documented at the top of `VIDEO/montage.js`:
@@ -218,6 +225,8 @@ command below. `VIDEO` below means `${CLAUDE_PLUGIN_ROOT}/scripts/video`.
    | "change the text", "remove the price" | the label, `hook:`, `price:`, `specs:`, `cta:` |
    | "zoom in on the fireplace" | `[move: push-in focus=62%,48%]`, or `[move: dolly-in focus=62%,48%]` for a move in 3D |
    | "make it feel like a real camera" | 3D moves: `[move: orbit]` on wide rooms, `dolly-in` or `rise` on others (on by default when the depth model is set up) |
+   | "change the camera angle", "real camera moves", "not just moving pictures" | AI camera moves ("AI camera moves" below): a clip per photo from a connected video model, quoted and approved first |
+   | "the AI changed the room" | reject that clip: regenerate it (quoted and approved), or use a local move on that photo |
    | "more 3D" / "less 3D" | `amount=1.5` or `amount=0.6` in that shot's move |
    | "it looks warped" | a lower `amount=`, a flat move (`pan-right`, `push-in`) on that shot, or `depth: off` for all |
    | "smoother" / "punchier cuts" | `transition: fade`, or `cut`, `slide`, `zoom`, `wipe`, `flash` |
@@ -249,15 +258,61 @@ command below. `VIDEO` below means `${CLAUDE_PLUGIN_ROOT}/scripts/video`.
     CREDITS.md` requires a credit (a licensed track), it goes in every
     caption.
 
-**A connected video model (optional).** If Higgsfield or Figma Weave is
-connected this session (check the tools, as `short-form-video` step 3
-describes), it can animate a still photo into a short clip. Generating
-spends the user's credits, so show the cost quote and get an explicit yes
-first. For a property, say plainly that a generated clip can change what
-the room looks like (a window that wasn't there, a bigger yard).
-Check every frame against the photo, and prefer the local moves for
-listings: the 3D moves only re-draw the photo, so they never change the
-property. Drop any generated clip that does.
+### AI camera moves (a connected video model)
+
+When the user wants the camera to really move through the space (orbit
+the island, glide through a doorway, see the room from a new angle), only
+a generative video model can do it. It turns each photo into a short clip
+and invents what the camera sees as it moves. It costs the user's credits,
+and every clip has to be checked against its photo.
+
+1. **Find a model.** Check this session's tools, as `short-form-video`
+   step 3 describes. With the Figma connector, Weave runs models directly:
+   `weave_find_model` (for example "seedance") returns each model's
+   settings and its approximate credit cost. Higgsfield works the same way
+   if connected. Recommend a model from `montage-guide.md`, "AI camera
+   moves" (Seedance 1.5 Pro for most videos). If nothing is connected, say
+   which connector would do it, and use local moves.
+2. **Plan one move per photo** from the prompt library in
+   `montage-guide.md`. Name what's really in the photo ("orbit left around
+   the white waterfall island"), and add the shared clause that keeps the
+   room as it is. For a full-screen montage, ask for vertical 9:16 clips
+   (the model extends the top and bottom a little). Ask for 5 seconds each,
+   with the camera not fixed and no generated audio.
+3. **Get the photos to the model,** one upload per photo.
+   `weave_upload_asset` opens a file picker on the user's device, so if the
+   photos only exist on this machine, send the user the copies first. An
+   https URL works too, where the photos are already hosted.
+4. **Quote, then ask.**
+   - Call `weave_run_model` without `acknowledgedCost` for each clip to get
+     its quote.
+   - Show every quote, and the total, in one structured Approve/Cancel
+     question. Run only what's approved.
+   - Quote and approve every rerun the same way.
+   - With a new kind of photo or a new model, run one clip first and check
+     it before the rest.
+5. **Collect each clip.**
+   - Poll `weave_get_model_run_output`.
+   - Download each result at once (the link expires) into
+     `state/videos/assets/<slug>-NN-ai.mp4`.
+   - Record it with `node VIDEO/media.js credit <clip> --ai "Weave / <model>"
+     --prompt "<prompt>"`.
+6. **Check every clip against its photo.**
+   - Run `node VIDEO/montage.js frames <clip> --photo <photo>`. It writes the
+     photo beside the clip's first, middle, and last frames. Read it.
+   - Reject a clip that adds or removes a window, door, room, fixture, or
+     piece of furniture, changes the view, the finishes, or the size of the
+     room, warps straight lines, or adds people or text.
+   - Regenerate it (quoted and approved), or use a local move for that
+     photo. Never keep a clip that changes a property for sale.
+7. **Edit the clips.**
+   - Each clip is a shot (`assets/<slug>-01-ai.mp4  Kitchen  [ai]`).
+   - A 5-second clip often gives two shots from different points
+     (`[from: 0]` and `[from: 3]`), so two angles of the same room.
+   - Cuts land on the beat as usual.
+   - Every AI shot carries `[ai]`, an "AI-animated" badge.
+   - The caption says the camera moves were AI-animated from the photos, and
+     the user switches on the platform's AI-content label when posting.
 
 ## When to use this skill
 
@@ -285,7 +340,8 @@ out with the reason.
 ### Video
 Whether a video was actually rendered this round, and where it was saved
 (each version's path), which shots move in 3D (and, if 3D moves are off,
-how to turn them on). Also the cover frame and its `--cover-ms`, the sound
+how to turn them on), and which shots are AI-animated: the model, each
+clip's prompt, the credits spent, and any clips rejected and why. Also the cover frame and its `--cover-ms`, the sound
 (genre and the client's identity, or the licensed track and its credit),
 the voice (none, which generated voice, or the user's recordings) and how
 captions were timed, any hook variants, and anything `--check` or

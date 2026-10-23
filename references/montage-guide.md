@@ -103,6 +103,45 @@ plain zoom doesn't.
 - 3D shots render slower, about three times as long on a machine without
   a graphics card. Say so before a long render.
 
+## AI camera moves
+
+A connected video model (Figma Weave or Higgsfield; see the skill's "AI
+camera moves") turns a photo into a short clip where the camera really
+moves: around the island, through the doorway, up the stairs. It invents
+what the photo doesn't show, so keep moves short and slow (they stay
+truest), check every clip with `montage.js frames`, and label it `[ai]`.
+
+| Move | Prompt | Good for |
+|---|---|---|
+| Orbit | Slow, smooth camera orbit to the left around the {focal point} | A kitchen island, a sofa group, a dining table |
+| Dolly in | Slow, smooth dolly forward into the room toward the {focal point} | Living rooms, bedrooms, a view out the window |
+| Truck | Slow sideways camera move to the right along the {feature} | Built-ins, a long room, a gallery wall |
+| Crane up | Camera slowly rises from the {low feature} to reveal the room | Tall rooms, a staircase, a chandelier |
+| Drone pull-back | Drone slowly pulls back and up from the front door to reveal the whole house | Exteriors, a yard, a view |
+| Through a door | Camera glides forward through the open {door} into the {room} | Linking two spaces, a reveal |
+| Product orbit | Slow half orbit around the {product} on the {surface} | A product on a table or in use |
+
+End every prompt with the same clause: "Steady gimbal shot, realistic,
+natural light. The room stays exactly as it is: no people, no text, no
+new furniture or objects, no changes to windows, walls, or finishes."
+Name only what's in the photo.
+
+**Models** (in Weave as of this writing; always go by the quote):
+- **Seedance 1.5 Pro**, about 31 credits a clip: 4–12 seconds, 720p or
+  1080p, and it can output vertical 9:16. Set `camera_fixed: false` and
+  `generate_audio: false`. The default.
+- **Veo 3.1 (image to video)**, about 90 credits: the most detail, 1080p,
+  but only horizontal from a photo.
+- **MiniMax H3**, about 20 credits: 480–768p, and the photo sets the
+  shape. Good for drafts.
+- **Hailuo-02**, about 32 credits: follows camera directions in the prompt
+  well.
+
+**Cutting AI clips:** use 2–3 seconds of each clip. The first and last
+seconds of one clip are two different angles, so they make two shots.
+Skip a still first moment with `[from: 0.4]`, and use the smoothest part.
+A montage of 6 photos becomes 8–10 shots this way.
+
 ## Transitions
 
 - **fade** (the default): calm, for homes and premium products.

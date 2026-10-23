@@ -26,6 +26,16 @@ Made something with it? [Share it in Show and tell](https://github.com/marcosmod
 
 ## See it
 
+[![The plugin's 80-second tour: its 3D mascot presenting all fourteen skills on a stage, in a park, on a rooftop, and in a living room](media/explainer/v3/poster-landscape.jpg)](media/explainer/v3/marketing-skill-v3-landscape.mp4)
+
+**[▶ Watch the 80-second tour](media/explainer/v3/marketing-skill-v3-landscape.mp4)**:
+the plugin's mascot presenting all fourteen skills, made by the plugin
+itself from [one script](media/explainer/v3/script.md), with a voiceover,
+captions synced to it, and music cut on the beat. The same script also
+renders the [vertical cut](media/explainer/v3/marketing-skill-v3.mp4) for
+TikTok, Reels, and Shorts.
+<sub>Music from #Uppbeat (free for Creators!): https://uppbeat.io/music/tracks/21-on-the-block/funky-diesel License code: WKCBH1LMDV3AQDIE · Voiceover: AI voice (Kokoro)</sub>
+
 32 video templates, rendered on your machine with music composed in your
 brand's own sound. Each frame below is one template, mid-video:
 
@@ -39,11 +49,13 @@ brand's own sound. Each frame below is one template, mid-video:
 ![Comment bait templates](docs/gallery/comment-bait.jpg)
 ![Skit and story templates](docs/gallery/skits-and-stories.jpg)
 
-**3D and pixel-art animation**, narrated, with captions synced to the voice
+**3D and pixel-art animation**, narrated, with captions synced to the voice.
+The 3D videos star your brand's mascot: it walks, waves, holds up your
+product, points at your screen, cheers, and lip-syncs to the voice.
 
 ![3D and pixel-art templates](docs/gallery/animation.jpg)
 
-[The plugin's own explainer](media/explainer/marketing-skill-explainer.mp4)
+The [earlier landscape explainer](media/explainer/marketing-skill-explainer.mp4)
 was made with the same renderer.
 
 ## What you can do with it
@@ -70,9 +82,12 @@ was made with the same renderer.
   launch, FAQ, and more) or to an everyday FYP format (POV, tier list,
   text-message skit, storytime, hot take, and 17 more). Also the finished
   vertical video itself, rendered on your machine: animated text over
-  stock or AI backgrounds, or a narrated 3D or pixel-art animation, with
-  a voiceover, music composed in your brand's own sound, and meme sound
-  effects.
+  stock or AI backgrounds, a narrated 3D animation starring your brand's
+  mascot (it moves, gestures, holds up your product, and lip-syncs), or
+  pixel art, with a voiceover, music composed in your brand's own sound,
+  and meme sound effects. The bold look gives it a cover that stops the
+  scroll: huge boxed captions with the selling words in yellow over your
+  face (your app on the laptop in your photo) or the mascot.
 - **Montages from your own videos:** hand over the phone clips you or a
   client filmed (a home, a product, a shop, an event), plus your own
   music or voiceover if you have them, and get a finished vertical reel
@@ -109,7 +124,7 @@ anything actually publishes.
 | `email-sequence` | "email sequence," "drip campaign," "welcome series" | A multi-email sequence with send timing, subject lines, and a real narrative arc across emails |
 | `email-outreach` | "cold outreach," "prospecting emails," "daily sales outreach," "personalized cold email to [name]" | Researches real prospects against a defined ICP (public-web research by default; a connected prospecting tool only if you ask for verified contact details), checks each one against a permanent contact log so nobody's contacted twice — or ever again once unsubscribed/replied — drafts a genuinely personalized email per prospect, re-confirms strategy monthly, and queues everything for approval (or drafts directly in Gmail if connected); never sends |
 | `visual-brief-generator` | "visual brief," "video brief," "shot list," "image prompts for X" | A structured shot list, per-scene prompts, aspect ratios, and style guide; generates the actual asset only if a visual-gen tool is connected |
-| `short-form-video` | "TikTok video," "Instagram Reel script," "YouTube Short," "short-form/vertical video for..." | A hook-first script/shot list plus a ready-to-post package per platform (YouTube Shorts/Instagram Reels/TikTok) — title/caption, sized hashtags, and a best-time-to-post window, shaped to one of 23 marketing video types (testimonial, how-to, announcement, and so on) or 22 everyday FYP formats (POV, tier list, text-message skit, storytime, and so on); if you opt in, makes the actual video too, either with a connected tool (Higgsfield, Figma Weave, Canva, or similar) or by rendering it locally (`scripts/video/`): animated text over stock or AI backgrounds, or a narrated 3D or pixel-art animation, with music in the project's own saved sound; otherwise points to current free tools |
+| `short-form-video` | "TikTok video," "Instagram Reel script," "YouTube Short," "short-form/vertical video for..." | A hook-first script/shot list plus a ready-to-post package per platform (YouTube Shorts/Instagram Reels/TikTok) — title/caption, sized hashtags, and a best-time-to-post window, shaped to one of 23 marketing video types (testimonial, how-to, announcement, and so on) or 22 everyday FYP formats (POV, tier list, text-message skit, storytime, and so on); if you opt in, makes the actual video too, either with a connected tool (Higgsfield, Figma Weave, Canva, or similar) or by rendering it locally (`scripts/video/`): animated text over stock or AI backgrounds, or a narrated animation starring the brand's 3D mascot, or pixel art, with music in the project's own saved sound; otherwise points to current free tools |
 | `clip-montage` | "make a montage of these videos," "edit these clips into a reel," "recap video from today," "make a montage" | The default for montages, and free: brings in the user's own clips (location data stripped), looks at each one frame by frame to pick its best moment, and renders a 9:16 montage cut on the beat of their own music (or a generated track, or none for an in-app sound), with a clip's own sound where someone talks, their voiceover with synced captions, labels, and the client's contact end card; then edits it on request, saving each version. With only photos it asks for clips first, then hands over to `montage-video` |
 | `montage-video` | "make a video from these listing photos," "turn these product photos into a reel," "property tour from these pictures" | Brings in the client's photos and clips (upright, sized, location data stripped), looks at each one to order the shots, and renders a 9:16 montage with moves, beat-synced cuts, labels, price and specs, music or a voiceover with synced captions, and the client's branded contact end card; then edits it on request, saving each version and what each client prefers |
 | `community-post-generator` | "post this to r/[subreddit]," "help me post on Product Hunt," "write a Show HN/Show IH for this," "post this on dev.to," "post this in our Discord/Slack/Telegram" | Live-researches that specific subreddit's, Product Hunt's, Hacker News's, Indie Hackers', dev.to's, or a public Telegram channel's/group's actual rules and typical post style first (verifying each source is actually about that target, not a similarly-named one); for Discord, Slack, and private Telegram targets, asks you for the rules instead, since it can't research those. Gives a plain Go/No-Go either way, and only drafts a post (shaped for that platform — title+body, title+URL+first comment for Show HN, dev.to's title+body+tags, or a single chat message in Discord's, Slack's, or Telegram's own formatting for the chat platforms) if it's actually welcome there, written to read like a person wrote it |
@@ -262,9 +277,17 @@ times for TikTok, Reels, and Shorts, and, if you want, makes the video:
   local voice, or your own takes) over a background per line, with
   word-by-word captions synced to the voice (`compose.js`).
 - **Animated, in 3D or pixel art:** the same narrated script, drawn as 3D
-  scenes in your brand's colors (your screenshot on a phone, your logo on
-  a coin) or as a pixel-art game with chiptune music (`style: 3d` or
-  `style: pixel`).
+  scenes starring your brand's mascot, a robot in your colors that walks
+  in, waves, types at a desk with your app on the monitor, points at your
+  screen, holds up your laptop, cheers, and lip-syncs to the voice, moving
+  through a living room, a launch stage, a city rooftop, and a park (or
+  standing in your own photo); or as
+  a pixel-art game with chiptune music (`style: 3d` or `style: pixel`).
+- **The bold look:** `captions: bold` gives any narrated video the cover
+  of the big creator ads: huge capitals boxed in black with the selling
+  words in yellow, the first line on screen from frame 0, a series tag
+  ("week 2") in the corner, and your screenshot on the laptop or phone in
+  your own photo.
 - **Your own footage:** a talking-head take from your phone gets its
   pauses cut and captions added (`cut.js`); screen recordings play in a
   phone frame.
@@ -292,6 +315,32 @@ node compose.js script.md                    # a narrated video page from a scri
 node montage.js inspect clips/ --slug maple  # bring in a client's clips or photos; then montage.js <script.md>
 node render.js page.html out.mp4 --cover 0   # the video, its captions (.srt), and its cover
 ```
+
+**A mascot video or the bold cover, step by step.** Ask Claude in plain
+words, for example "make a 3D mascot video about our new invoicing app,
+here's a screenshot", or "make a TikTok with the big bold captions,
+here's a photo of me holding my laptop and a screenshot of the app". It
+writes a script like this one, voices it, and renders it:
+
+```
+---
+style: 3d              # the mascot; leave it out for photo backgrounds
+captions: bold         # big boxed captions; *words* in asterisks turn yellow
+hook: we made invoicing *one tap*
+series: week 2         # a tag in the top corner
+---
+1. We made invoicing *one tap*. [shot: mascot do=talk prop=laptop src=assets/app.png]
+2. It took a year of late nights. [shot: desk src=assets/app.png]
+3. Here's the new app. [shot: mascot do=point prop=screen src=assets/app.png]
+4. Try it *free* this week. [shot: mascot do=cheer]
+```
+
+To make it by hand, put your screenshot in `state/videos/assets/`, save
+the script as `script.md`, and run the commands above. Every action,
+prop, and scene the mascot has:
+[3D and pixel-art animation](docs/video.md#3d-and-pixel-art-animation).
+The bold look, and putting your app on the screen in a photo of you:
+[The bold look](docs/video.md#the-bold-look-a-cover-that-stops-the-scroll).
 
 Everything else, from backgrounds and sound to templates and connected
 video tools: **[docs/video.md](docs/video.md)**.
@@ -446,14 +495,14 @@ scripts/
     check.js             # QA pass over templates: layout lint, cues, fonts, loudness, contact sheets
     voice.js             # free local voiceover (Kokoro): a script -> one WAV per line
     captions.js          # word timing for a voice line, caption chunks, and .srt files
-    compose.js           # a narrated video page from a script: voice, backgrounds (photos, 3D, or pixel art), synced captions
+    compose.js           # a narrated video page from a script: voice, backgrounds (photos, the 3D mascot, or pixel art), synced captions, the bold look
     montage.js           # a montage page from a client's clips or photos: intake, clip moments and sound, moves, beat-synced cuts, labels, contact end card
     depth.js             # a photo's depth map (free local model), for the montage's 3D camera moves
     brand.js             # applies the Visual Identity to a page: colors, font, logo end card
     cut.js               # a filmed talking-head take: pauses cut, captions, and a page to render it
     beats.js             # a music track's tempo, beats, bars, and drops, to cut a video on its beat
     gallery.js           # rebuilds the template gallery in docs/gallery
-    templates/           # 8 marketing + 22 everyday + 3D and pixel-art starting pages, built by templates/build.py
+    templates/           # 8 marketing + 22 everyday + 3D (the mascot: templates/mascot.py) and pixel-art starting pages, built by templates/build.py
 ```
 
 ## Share what you made

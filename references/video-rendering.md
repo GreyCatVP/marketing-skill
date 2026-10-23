@@ -8,8 +8,9 @@ plugin folder, resolved the way the skill describes.
 ## What it makes
 
 Motion graphics (kinetic text, shapes, UI mockups) over stock photos, stock
-video clips, or AI images, or narrated animation drawn in 3D or pixel art
-(below), with an original soundtrack in the project's sonic identity and
+video clips, or AI images, or narrated animation drawn in 3D (the brand's
+own mascot, a character that moves and lip-syncs) or pixel art (below),
+with an original soundtrack in the project's sonic identity and
 sound effects synced to what's on screen. It's not filmed footage of the
 user's product or people, and the only voiceover is one the user records
 or supplies (or a free generated one, below). It suits the types
@@ -59,6 +60,16 @@ To change a line, edit the script and run `compose.js` again: the timing is
 measured from the voice, so don't hand-edit it in the page. Send the user
 the voice (`--audio-only`) or a render to check, since you can't hear it.
 
+**Landscape (16:9).** The renders are vertical (9:16) for TikTok, Reels,
+and Shorts. For YouTube's main feed, Reddit, LinkedIn, or a website, add
+`format: landscape` to the script's frontmatter (or run `compose.js
+--format landscape` to make a second cut from the same script): the page
+is 1920x1080 with the captions low and centered, and the 3D shots open out
+to the wider frame (more of each set, the mascot framed closer). Both cuts
+share the voice files, so make the vertical one first, then compose again
+with `--format landscape --out <name>-landscape.html`. Pixel art is
+vertical only.
+
 ## A montage of the user's clips or photos: montage.js
 
 When the user's own clips of a place, a product, or an event are the
@@ -71,8 +82,9 @@ below.
 
 ## 3D or pixel-art animation: a style
 
-When the user asks for a 3D animation, pixel art, an 8-bit or retro game
-look, or "an animated video" with no footage, write the same numbered
+When the user asks for a 3D animation, a mascot or animated character,
+pixel art, an 8-bit or retro game look, or "an animated video" with no
+footage, write the same numbered
 script and add `style: 3d` or `style: pixel` to its frontmatter. Each line
 then gets a drawn shot instead of a photo: `compose.js` picks them in turn,
 or a line names one, with its settings as key=value pairs:
@@ -84,40 +96,128 @@ style: 3d
 hook: we rebuilt invoicing from scratch
 cta: try it free · link in bio
 ---
-1. Invoicing used to take a whole afternoon. [shot: shapes]
-2. Now it's three steps. [shot: cards items="Track,Send,Get paid"]
-3. Here's the new app. [shot: hero src=assets/app-screen.png]
-4. Try it free this week. [shot: coin src=assets/logo.png]
+1. Invoicing used to take a whole afternoon. [shot: mascot do=sad]
+2. So we built this, late at night. [shot: desk src=assets/app-screen.png]
+3. Here's the new app. [shot: mascot do=point prop=screen src=assets/app-screen.png]
+4. Three steps, and it's sent. [shot: title text="Sent"]
+5. Try it free this week. [shot: mascot do=cheer]
 ```
 
-- **3d** (`templates/3d.html`): `shapes`, `hero` (a phone; `src=` the
-  user's real screenshot), `cards` (`items=` short labels), `chart`
-  (`values=` the user's real numbers only), `coin` (`src=` their logo),
-  `rings`, `globe`. Lit in the Visual Identity's accent, under the sonic
-  identity.
+- **3d** (`templates/3d.html`) is led by the brand's mascot: a robot in
+  the Visual Identity's colors that moves like a character, not a slide.
+  It blinks, breathes, gestures on the words, and its mouth moves with
+  the voice (from the caption timing, so it lip-syncs to whatever voice
+  the page has). With no shots named, `compose.js` has it wave on the
+  first line, talk, point, give a thumbs up, and cheer on the last, with
+  a few abstract shots between for pace.
+  - `mascot`: `do=` the action: `wave`, `talk` (presenting), `point`
+    (at the screen prop, or at the viewer without one), `present` (ta-da),
+    `cheer` (jumps, confetti), `think`, `shrug`, `sad` (the problem, under
+    a rain cloud), `walk` (walks in, then waves), `dance` (on the music's
+    beat), `thumbs`, `wow`. `prop=` puts something in its hands: `phone`
+    or `laptop` with `src=` the user's real screenshot (a laptop held up
+    with the mascot behind it is the 3D version of the classic "founder
+    holding the laptop" cover), `sign` with `text=` (or `src=` their
+    logo), or `screen`, the screenshot floating beside it for `point`
+    and `present`. `set=` picks the place: `room` (a living room by
+    day), `stage` (an LED wall and light beams), `city` (a rooftop at
+    dusk), `park` (sky, hills, and trees), `studio` (light and seamless),
+    or `night`; without one, shots take the room, stage, city, and park in
+    turn, so a video moves through places. Pick them to fit the line (the
+    stage for a launch, the room for working, the park for a payoff).
+    `bg=assets/<photo>` stands the mascot in front of the user's own photo
+    (their office, their shop), softly blurred; `face=` (`happy`, `wow`, `love`, `sad`, `think`,
+    `wink`) overrides the expression; `frame=mid` or `full` the framing;
+    `talk=no` keeps its mouth shut when the voice isn't the mascot's.
+  - `desk`: a cozy desk at night, the mascot typing at a monitor showing
+    `src=` (the user's screenshot), spinning round on its chair to wave,
+    then the camera pushes in and flies into the screen. A strong opener,
+    and a transition into the product: follow it with a `mascot`
+    shot holding or pointing at the same screen. `mascot=no` leaves the
+    chair empty.
+  - `title`: `text=` (one to three short words) as big 3D letters
+    dropping onto the studio floor one by one, the mascot cheering beside
+    them. For a launch name, a result ("Sent", "Posted"), or a number the
+    user gave.
+  - `icons`: app tiles dropping into a grid, a small mascot waving in the
+    last cell: `items="🔍 Research,📅 Calendar"` (an emoji, then a short
+    label; up to 8). For a product's features, a plugin's skills, or the
+    tools it works with; two `icons` lines show up to 16.
+  - `notes`: handwritten sticky notes floating in the dark, the camera
+    drifting through them: `items="a launch video,a week of posts"` (up to
+    8). Ideas, requests, or a week's plan; never a quote someone didn't
+    say.
+  - `button`: the call to action as a big button a cursor clicks,
+    `text="☆ Star"` changing to `done="★ Starred"` (or "+ Follow" to
+    "Following") under confetti while the mascot cheers.
+  - The abstract shots still work alongside: `shapes`, `hero` (a phone;
+    `src=` the user's real screenshot), `cards` (`items=` short labels),
+    `chart` (`values=` the user's real numbers only), `coin` (`src=` their
+    logo), `rings`, `globe`.
+  - The mascot is the brand's character, not a person: never present it
+    as a customer, a reviewer, or a team member, and never give it a
+    quote someone didn't say.
 - **pixel** (`templates/pixel.html`): `walk` (`time=day`, `sunset`, or
   `night`), `boss` (the problem, beaten), `coins` (a payoff), `levelup` (a
   result), `city`, `space`, `photo` (`src=` the user's image, pixelated).
   The robot hero wears the accent color, captions sit in a game dialog box,
   and the music is `chiptune` in the identity's key and hook (say so to the
   user, and offer `music: identity` if they'd rather keep their usual genre).
-- Pick shots that match each line's meaning: `boss` under the problem,
-  `coins` or `levelup` under the payoff, `hero` when the user's product
-  screen is the point, `chart` only with real numbers, `space` or `coin`
-  under the CTA. Never pass a screenshot, logo, photo, or number the user
-  didn't supply; the shots fall back to generic artwork without them.
+- Pick shots that match each line's meaning: `icons` when the line lists
+  what the product does, `notes` for ideas or a plan, `button` under the
+  CTA, `mascot do=sad` or `boss` under the problem, `desk` or `mascot prop=laptop` when the work or the
+  product is the point, `point` or `present` with `prop=screen` to show
+  the product, `cheer`, `title`, `coins`, or `levelup` under the payoff,
+  `chart` only with real numbers, `wave` or `thumbs` under the CTA. Never
+  pass a screenshot, logo, photo, or number the user didn't supply; the
+  shots fall back to generic artwork without them.
 - Each template's comment lists every shot, its settings, and the events
-  a sound can be cued on (`data-sfx="coin:open"`); `compose.js` adds one
+  a sound can be cued on (`data-sfx="pop:land"`); `compose.js` adds one
   fitting sound per shot.
 - Look at `--slides` before rendering, as always. 3D renders slowly on a
-  machine without a graphics card (about 3 frames a second in software),
-  so tell the user to expect a few minutes; pixel art is as quick as any
-  template.
-- **Other animation styles** (cartoon or anime characters, claymation, a
-  3D animated mascot) can't be drawn locally. They need a connected video
-  model (Higgsfield or Figma Weave, step 3 of the skill) with the style in
-  the prompt, which spends the user's credits; offer 3D or pixel art as
-  the free alternative.
+  machine without a graphics card (the mascot's shots at about a frame
+  every half second per core in software), so tell the user to expect a
+  few minutes for a 20-second video, and use `--draft` to check the
+  motion first; pixel art is as quick as any template.
+- **Other animation styles** (cartoon or anime characters, claymation, or
+  the user's own mascot design in place of the robot) can't be drawn
+  locally. They need a connected video model (Higgsfield or Figma Weave,
+  step 3 of the skill) with the style in the prompt, which spends the
+  user's credits; offer the 3D mascot or pixel art as the free
+  alternative.
+
+## The bold look: the cover that stops the scroll
+
+Add `captions: bold` to a script's frontmatter (any style) for the look
+of the big creator ads: heavy capitals boxed in black, the subject big
+above them, and the first line whole on screen from frame 0, so the first
+frame is the cover. Short lines (up to 8 words) show whole; longer ones
+come a few words at a time, so a long explainer doesn't bury its picture. Mark the
+words that sell it with asterisks, in the lines and the hook (`I built
+an *AI* that makes *viral* video ads`); they stay yellow, and the
+asterisks aren't spoken. Write the first line as the hook itself and set
+`hook:` to the same words, so it shows once. `series: week 2` and
+`brand: Your Name` put a tag in each top corner for the whole video
+(a series number brings viewers back for the next one).
+
+The subject is what makes the cover: the user's own face (a photo of
+them, or their filmed take), their product, or the mascot holding their
+product (`[shot: mascot do=talk prop=laptop src=assets/app.png]`).
+
+- **The user's photo with their product on its screen.** Ask for a photo
+  of them holding their laptop or phone (any screen content), and their
+  screenshot. Put the screenshot on that screen:
+  `[bg: assets/me-laptop.jpg screen=assets/app.png at=x1,y1,x2,y2,x3,y3,x4,y4]`,
+  with the screen's four corners in the photo's own pixels, clockwise from
+  the top left (look at the photo to read them). It moves with the photo's
+  zoom. Check it with `--stills 0` and nudge the corners until the edges
+  sit on the screen's.
+- **Their filmed take:** `cut.js ... --bold [--series "week 2"] [--brand
+  "Name"]` gives a talking-head video the same look, a few words at a
+  time, with `*keywords*` in `--text` and `--hook`.
+- Never make up the person: a face on the cover is the user's own, or
+  someone who agreed to it, never stock or an AI image passed off as a
+  real customer or founder.
 
 ## Start the page
 
@@ -187,7 +287,10 @@ Set the `<body>` music attributes from the Sonic Identity in
   scenes to the voice or reading pace. Tell the user what you did ("104
   BPM, started at 0:32 so the drop hits as the hook ends, cuts on the
   bar"), and send an `--audio-only` render to check the sync, since you
-  can't hear it.
+  can't hear it. For a narrated script, `music: assets/<file>` in its
+  frontmatter does all of this in `compose.js`: it reads the beat, starts
+  the track so its lift lands as the hook ends, and moves every scene
+  change onto a beat.
 - **Longer than about 45 seconds:** the generated music repeats the same
   few bars and wears thin, so ask for a licensed track instead. The
   renderer warns about it.

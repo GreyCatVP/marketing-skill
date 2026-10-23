@@ -3,7 +3,9 @@
 /*
  * Renders an animated HTML page into a vertical MP4 (1080x1920, 9:16, 30fps,
  * H.264 + AAC) ready for YouTube Shorts, Instagram Reels, or TikTok, with an
- * original soundtrack synced to the page's own animation cues.
+ * original soundtrack synced to the page's own animation cues. A page with
+ * <body data-size="1920x1080"> renders landscape (16:9) instead, for YouTube,
+ * Reddit, and LinkedIn (compose.js writes one with "format: landscape").
  *
  * The page animates with CSS animations (or the Web Animations API). This
  * script pauses every animation and seeks it frame by frame in headless
@@ -56,8 +58,9 @@ const { fileURLToPath, pathToFileURL } = require('url');
 const { buildSoundtrack, wavBuffer, parseMotif, SOUNDS, GENRES } = require('./soundtrack');
 const captions = require('./captions');
 
-const WIDTH = 1080;
-const HEIGHT = 1920;
+// The frame: 1080x1920 unless the page asks for another (useFrameOf, as each page opens).
+let WIDTH = 1080;
+let HEIGHT = 1920;
 // Audio is mixed to -14 LUFS, what YouTube, Instagram, and TikTok normalize
 // to, with the true peak at or under -1 dBTP so a platform's re-encode
 // doesn't clip it. PRE goes first: a low-pass, because the noise-based
@@ -187,6 +190,7 @@ async function routeCached(page) {
 // has one) ready. Returns the page and any problems: fonts that failed, since a fallback font
 // changes every line break the layout lint checks, and scripts that failed or threw.
 async function openPage(browser, pagePath) {
+  useFrameOf(pagePath);
   const page = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT }, deviceScaleFactor: 1 });
   const scriptProblems = [];
   const scriptFailed = (url) => {
@@ -278,7 +282,7 @@ function meanLuma(file) {
   return sum / run.stdout.length / 255;
 }
 
-// Background videos become a 1080x1920 30fps JPEG frame sequence (made once,
+// Background videos become a 30fps JPEG frame sequence at the frame's size (made once,
 // cached across runs), and each <video> is swapped for an <img> that seek()
 // points at the right frame. That's exact on any frame, and it doesn't depend
 // on the browser's video codecs (Playwright's Chromium can't play H.264).
@@ -288,7 +292,7 @@ function meanLuma(file) {
 // rather than its middle. Images are decoded up front. Returns problems to warn about.
 async function prepareMedia(page) {
   const problems = [];
-  // A clip that fills the frame (a background) is cut to 1080x1920. One in a smaller box, like a
+  // A clip that fills the frame (a background) is cut to the frame's size. One in a smaller box, like a
   // screen recording in the phone frame, is cut to that box's own shape instead, so a tall
   // recording isn't cropped to 9:16 first and then cropped again to fit the box.
   const videos = await page.evaluate(() => [...document.querySelectorAll('video')].map((v, i) => {
@@ -368,7 +372,7 @@ async function prepareMedia(page) {
 
   const images = await page.evaluate(async () => Promise.all([...document.images].map(async (img) => {
     try { await img.decode(); } catch { /* reported below */ }
-    return { src: img.getAttribute('src'), w: img.naturalWidth, h: img.naturalHeight, bg: !!img.closest('.bg'),
+    return { src: img.getAttribute('src'), w: img.naturalWidth, h: img.naturalHeight, bg: !!img.closest('.bg') && !img.closest('.bg-insert'),
              fit: getComputedStyle(img).objectFit, blurred: /blur\(/.test(getComputedStyle(img).filter) };
   })));
   for (const img of images) {
@@ -385,7 +389,15 @@ async function prepareMedia(page) {
 
 // Platform UI covers the top ~150px (tabs), the bottom ~470px (caption, sound), and the
 // right ~120px (like/comment/share); text has to stay clear of all three.
-const SAFE_ZONE = { left: 60, right: 960, top: 150, bottom: 1450 };
+// Where text is safe from the platforms' buttons and captions: on a 9:16 frame, clear of the
+// bottom quarter and the right edge; on a 16:9 one, just in from the edges.
+const PORTRAIT_SAFE = { left: 60, right: 960, top: 150, bottom: 1450 };
+let SAFE_ZONE = PORTRAIT_SAFE;
+function useFrameOf(pagePath) {
+  const m = /<body[^>]*\bdata-size="(\d+)x(\d+)"/.exec(fs.readFileSync(pagePath, 'utf8'));
+  [WIDTH, HEIGHT] = m ? [Number(m[1]), Number(m[2])] : [1080, 1920];
+  SAFE_ZONE = WIDTH > HEIGHT ? { left: 60, right: WIDTH - 60, top: 36, bottom: HEIGHT - 36 } : PORTRAIT_SAFE;
+}
 
 // Checks every visible, settled text element at the current moment: inside the safe zone,
 // not overflowing its own box, not clipped by an overflow:hidden ancestor, and not
@@ -882,7 +894,13 @@ async function prepareVoices(page, settings) {
     if (next) hold = Math.min(hold, next.time);
     const html = captions.captionMarkup(chunks, clip.time, hold);
     await page.evaluate(([index, markup]) => {
-      document.querySelector(`[data-voice-index="${index}"]`).innerHTML = markup;
+      const el = document.querySelector(`[data-voice-index="${index}"]`);
+      // a whole-line caption (the bold look) is one box around every chunk; its data-kw words stay lit
+      el.innerHTML = el.classList.contains('line') ? `<span class="ln">${markup}</span>` : markup;
+      const kw = new Set((el.dataset.kw || '').split(',').map((w) => w.trim()).filter(Boolean));
+      for (const w of kw.size ? el.querySelectorAll('i') : []) {
+        if (kw.has(w.textContent.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''))) w.classList.add('kw');
+      }
     }, [clip.index, html]);
     chunks.forEach((c, i) => cues.push({
       start: clip.time + c.start,
@@ -1109,6 +1127,7 @@ async function coverProblems(page, t) {
     return out;
   });
   if (!boxes.length) return [{ t, kind: 'the cover has no text', text: '', detail: 'pick a moment that shows the hook, or give the hook class "now" and use --cover 0' }];
+  if (WIDTH > HEIGHT) return []; // a landscape video's thumbnail shows the whole frame
   return boxes.filter((b) => b.top < GRID_CROP.top || b.bottom > GRID_CROP.bottom)
     .map((b) => ({ t, kind: 'is cut off in the profile grid', text: b.text, detail: `the grid shows y ${GRID_CROP.top}-${GRID_CROP.bottom} of the cover` }));
 }

@@ -5,6 +5,60 @@ Skills that read "our changelog" for source material read this file too.
 
 ## 0.8.0 (unreleased)
 
+- **A 3D mascot that moves, for videos with no footage.** `style: 3d` now
+  stars the brand's mascot, a robot in the Visual Identity's colors, built
+  and rigged in `templates/mascot.py`. It blinks, breathes, gestures on
+  the words, and lip-syncs to the voice (from the caption timing), with
+  an antenna that wobbles after every move. `[shot: mascot do=...]` picks
+  the action: `wave`, `talk`, `point`, `present`, `cheer` (a jump and
+  confetti), `think`, `shrug`, `sad` (under a rain cloud), `walk`,
+  `dance` (on the music's beat), `thumbs`, or `wow`. `prop=phone`,
+  `laptop`, or `sign` puts the user's screenshot or words in its hands,
+  and `prop=screen` floats the screenshot beside it to point at. It
+  stands in a light seamless studio with soft shadows, or `set=night`
+  under a spotlight. With no shots named, the mascot waves, talks, points,
+  and cheers through the script.
+- Two cinematic 3D shots: `desk`, the mascot typing at a monitor showing
+  the user's screen in a cozy room at night, spinning round to wave
+  before the camera flies into the screen; and `title`, big 3D letters
+  dropping onto the studio floor while the mascot cheers.
+- **The bold look, for a cover that stops the scroll.** `captions: bold`
+  in a script shows each line's whole caption at once in heavy capitals
+  boxed in black, each word popping as it's said, with `*keywords*` in
+  yellow and the first line on screen from frame 0. `series: week 2` and
+  `brand:` put a tag in each top corner. Photos keep their light under
+  it. `cut.js --bold` gives a filmed take the same look.
+- A screen in the user's own photo: `[bg: assets/me.jpg
+  screen=assets/app.png at=...]` puts their screenshot on the laptop or
+  phone they're holding, from the screen's four corners, moving with the
+  photo's zoom.
+- **Landscape videos**: `format: landscape` in a script (or `compose.js
+  --format landscape`) renders the same video 1920x1080 for YouTube,
+  Reddit, and LinkedIn. `render.js` reads the frame size from the page
+  (`<body data-size="1920x1080">`), the captions sit low and centered,
+  and the 3D shots open out to the wider frame.
+- **Places for the mascot**: a living room by day, a launch stage with an
+  LED wall and light beams, a city rooftop at dusk, and a park, each in
+  the brand's colors. Shots take them in turn (`set=` names one), so a
+  video moves through places instead of standing on one plain backdrop,
+  and `bg=assets/photo.jpg` stands the mascot in front of the user's own
+  photo, softly blurred.
+- Three more 3D shots, after the big launch videos: `icons` (app tiles
+  of features or skills dropping into a grid, the mascot waving in the
+  last cell), `notes` (handwritten sticky notes floating in the dark),
+  and `button` (a cursor clicking the call to action, "☆ Star" to
+  "★ Starred", under confetti).
+- `compose.js` cuts on a licensed track's beat: with `music:
+  assets/track.mp3`, it starts the track so its biggest lift lands as the
+  hook ends, moves every scene change onto a beat, and sets the page's
+  tempo to the track's (when `beats.js` is confident in the beat). In the
+  bold look, lines over 8 words show a few words at a time.
+- The plugin's v3 explainer (`media/explainer/v3/`): a narrated tour of
+  all fourteen skills and the new video features, made with `compose.js`
+  from one script.
+- The 3D studio's light is baked into the set, so a mascot frame renders
+  in about half the time it would with the floor lit live.
+
 - **Montages from your own videos: `clip-montage`, a fourteenth skill, and
   the default for montages.** Send the phone clips you or a client filmed
   (a home, a product, a shop, an event), plus your own music or voiceover

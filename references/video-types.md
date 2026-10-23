@@ -17,10 +17,11 @@ For a longer survey of the formats, see Sparkhouse's
   `scripts/video/compose.js`). The voice is the user's own takes or a free
   generated one.
 - **Animate:** the same narrated script drawn as animation instead of over
-  photos: 3D scenes in the brand's colors (`3d.html`) or a pixel-art game
-  with chiptune music (`pixel.html`), both made by `compose.js` with
-  `style: 3d` or `style: pixel`. Free and local. Other styles (cartoon,
-  anime, claymation, animated characters) are Generate.
+  photos: the brand's 3D mascot presenting in its colors (`3d.html`) or a
+  pixel-art game with chiptune music (`pixel.html`), both made by
+  `compose.js` with `style: 3d` or `style: pixel`. Free and local. Other
+  styles (cartoon, anime, claymation, the user's own character design)
+  are Generate.
 - **Render + your assets:** renderable, but only with real material from
   you, such as screenshots, photos, a logo, a customer's actual words, or
   real numbers. The skill asks for these and never invents them.
@@ -84,7 +85,7 @@ and has to work with the sound off.
 
 ### Animation & motion graphics
 - **Goal:** any stage; make abstract or complex ideas concrete.
-- **Made by:** Render for kinetic text and UI motion (every template applies), or Animate for a 3D or pixel-art piece, narrated (`3d.html`, `pixel.html`). Character animation in a particular style (cartoon, anime, claymation) is Generate.
+- **Made by:** Render for kinetic text and UI motion (every template applies), or Animate for a 3D or pixel-art piece, narrated (`3d.html`, with the brand's mascot as the character, or `pixel.html`). Character animation in a particular style (cartoon, anime, claymation) is Generate.
 - **Beats:** follow whichever type the animation serves. In pixel art the story maps onto a game: the problem is a boss to beat, the payoff is coins or a level up.
 
 ### Product demo

@@ -1281,8 +1281,8 @@ const ACTIONS = {
   },
 
   walk(lt, c) {
-    const D = 2.0; // seconds of walking in, from off to the side
-    const dist = 2.6;
+    const D = 1.6; // seconds of walking in, from the edge of the frame
+    const dist = 1.75;
     const k = clamp(lt / D);
     const period = 0.62;
     const step = dist / (D / period) / 2;
@@ -1351,7 +1351,7 @@ const ACTIONS = {
   },
 };
 const TALK_POSE = () => mixPose(REST, TALK, 1);
-const ACTION_EVENTS = { cheer: { jump: 0.35, land: 0.85 }, walk: { stop: 2.0 }, point: { point: 0.35 }, present: { open: 0.4 } };
+const ACTION_EVENTS = { cheer: { jump: 0.35, land: 0.85 }, walk: { stop: 1.6 }, point: { point: 0.35 }, present: { open: 0.4 } };
 
 // ---- props: what the mascot holds or shows (always the user's own screenshot, logo, or words)
 // The user's screenshot on a screen w x h: cropped to fill it, or with fit 'contain' whole, over a
@@ -1549,6 +1549,9 @@ const raised = ([y0, y1, p0, p1]) => {
   return [y0, y1, p0 - up, p1 - 150];
 };
 
+// A cheer jumps about half a unit: room above the head so it stays clear of the text at the top.
+const jumpRoom = ([y0, y1, p0, p1], jumps) => (jumps ? [y0, y1 + 0.5, p0, p1] : [y0, y1, p0, p1]);
+
 // Frames a span of the scene: world heights y0..y1 at pixel rows p0..p1 (feet at the bottom),
 // from `push` times the distance that takes, `orbit` radians around, a little above eye level.
 function frameSpan(camera, [y0, y1, p0, p1], { x = 0, z = 0, push = 1, orbit = 0, lift = 0.35 } = {}) {
@@ -1645,11 +1648,11 @@ SHOTS.mascot = async (el, shot) => {
   prop?.group.traverse((o) => { if (o.isMesh) o.castShadow = true; });
   const standX = prop && prop.kind === 'screen' ? -0.62 : 0;
   const frame = el.dataset.frame || (prop && prop.kind === 'screen' ? 'wide' : prop || ['wave', 'talk', 'point', 'thumbs', 'think', 'shrug', 'wow'].includes(action) ? 'mid' : 'full');
-  const span = raised(topText && frame !== 'wide' ? (frame === 'mid' ? SPAN.midLow : SPAN.low) : SPAN[frame] || SPAN.full);
+  const span = jumpRoom(raised(topText && frame !== 'wide' ? (frame === 'mid' ? SPAN.midLow : SPAN.low) : SPAN[frame] || SPAN.full), action === 'cheer');
   const blob = contactShadow(1.4, 0.004, 0.42);
   scene.add(blob);
   // on the cover (the first shot at frame 0) the action is already under way, and a prop already up
-  const settle = shot.first ? Math.max({ wave: 0.55, cheer: 1.1, walk: 2.6, point: 0.6, present: 0.7, thumbs: 0.6, think: 0.6, shrug: 0.5, sad: 0.7, wow: 0.35 }[action] || 0, prop ? 0.6 : 0) : 0;
+  const settle = shot.first ? Math.max({ wave: 0.55, cheer: 1.1, walk: 2.2, point: 0.6, present: 0.7, thumbs: 0.6, think: 0.6, shrug: 0.5, sad: 0.7, wow: 0.35 }[action] || 0, prop ? 0.6 : 0) : 0;
   const fx = {
     confetti: action === 'cheer' ? confetti(scene) : null,
     dots: action === 'think' ? thoughtDots(rig.root) : null,
@@ -2056,7 +2059,8 @@ SHOTS.title = async (el, shot) => {
         ctx.t = shot.in + lt; ctx.words = spokenWords();
         const after = shot.first ? 9 : lt - done;
         let p = ACTIONS.present(Math.min(lt, 0.5) + 0.1, ctx);
-        if (after > 0) p = mixPose(p, ACTIONS.cheer(after + 0.0, ctx), smooth(after, 0, 0.2));
+        if (after > 0) p = mixPose(p, ACTIONS.cheer(after, ctx), smooth(after, 0, 0.2));
+        p.y *= 0.5; // a smaller hop beside the letters
         p = { ...alive(p, lt, 2.2), x: 1.05, z: -0.35, turn: -0.35 };
         applyPose(rig, p);
         blob.position.set(p.x, 0.004, p.z);
@@ -2066,7 +2070,7 @@ SHOTS.title = async (el, shot) => {
         fx(Math.max(0, lt - done) + (shot.first ? 0.8 : 0), 0.1, V(-0.2, 1.6, 0.4));
       }
       const k = inOut(lt / shot.dur);
-      frameSpan(camera, raised(topText ? [-0.02, 2.3, 600, 1200] : [-0.02, 2.3, 420, 1170]), { x: withMascot ? 0.15 : 0, push: lerp(1.05, 0.97, k), orbit: 0.08 * Math.sin(lt * 0.3) });
+      frameSpan(camera, jumpRoom(raised(topText ? [-0.02, 2.3, 600, 1200] : [-0.02, 2.3, 420, 1170]), withMascot), { x: withMascot ? 0.15 : 0, push: lerp(1.05, 0.97, k), orbit: 0.08 * Math.sin(lt * 0.3) });
     },
   };
 };

@@ -37,7 +37,7 @@ command below.
 
 2. **Confirm scope.**
    - Which content pieces are ready to send (from `content-repurposer`,
-     `visual-brief-generator`, `short-form-video`, `montage-video`,
+     `visual-brief-generator`, `short-form-video`, `clip-montage`, `montage-video`,
      `community-post-generator`, a row in `state/content-calendar.md`, or
      pasted directly)?
    - If the source is `community-post-generator`, confirm its Go/No-Go

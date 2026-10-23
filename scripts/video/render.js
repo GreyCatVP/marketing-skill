@@ -282,7 +282,10 @@ function meanLuma(file) {
 // cached across runs), and each <video> is swapped for an <img> that seek()
 // points at the right frame. That's exact on any frame, and it doesn't depend
 // on the browser's video codecs (Playwright's Chromium can't play H.264).
-// Images are decoded up front. Returns problems to warn about.
+// A video with data-length is cut to just the stretch it plays (from data-offset,
+// that many seconds), so a long phone clip isn't turned into frames whole; one
+// with data-focus="x,y" (0 to 1) is cropped to the frame around that point
+// rather than its middle. Images are decoded up front. Returns problems to warn about.
 async function prepareMedia(page) {
   const problems = [];
   // A clip that fills the frame (a background) is cut to 1080x1920. One in a smaller box, like a
@@ -291,7 +294,8 @@ async function prepareMedia(page) {
   const videos = await page.evaluate(() => [...document.querySelectorAll('video')].map((v, i) => {
     v.dataset.renderIndex = String(i);
     const full = !!v.closest('.bg') || !v.offsetWidth || !v.offsetHeight;
-    return { src: v.currentSrc || v.src || v.querySelector('source')?.src || '', w: full ? 0 : v.offsetWidth, h: full ? 0 : v.offsetHeight };
+    return { src: v.currentSrc || v.src || v.querySelector('source')?.src || '', w: full ? 0 : v.offsetWidth, h: full ? 0 : v.offsetHeight,
+             offset: parseFloat(v.dataset.offset) || 0, length: parseFloat(v.dataset.length) || 0, focus: v.dataset.focus || '' };
   }));
   const cacheDir = path.join(os.tmpdir(), 'render-video-cache');
   if (videos.length && !hasFfmpeg()) {
@@ -299,7 +303,7 @@ async function prepareMedia(page) {
     return problems;
   }
   for (let i = 0; i < videos.length; i++) {
-    const { src, w, h } = videos[i];
+    const { src, w, h, offset, length, focus } = videos[i];
     // twice the box's size for sharpness, within the frame, in even numbers for the encoder
     const scale = w ? Math.min(2, WIDTH / w, HEIGHT / h) : 1;
     const W = w ? 2 * Math.round((w * scale) / 2) : WIDTH;
@@ -314,12 +318,17 @@ async function prepareMedia(page) {
       continue;
     }
     const st = fs.statSync(file);
-    const key = crypto.createHash('sha1').update(`${file}|${st.size}|${st.mtimeMs}|${W}x${H}`).digest('hex').slice(0, 16);
+    const [fx, fy] = focus.split(',').map(parseFloat);
+    const crop = Number.isFinite(fx) && Number.isFinite(fy)
+      ? `crop=${W}:${H}:(in_w-out_w)*${Math.min(1, Math.max(0, fx))}:(in_h-out_h)*${Math.min(1, Math.max(0, fy))}`
+      : `crop=${W}:${H}`;
+    const window = length > 0 ? ['-ss', String(offset), '-t', String(length)] : [];
+    const key = crypto.createHash('sha1').update(`${file}|${st.size}|${st.mtimeMs}|${W}x${H}|${crop}|${window.join(' ')}`).digest('hex').slice(0, 16);
     const dir = path.join(cacheDir, key);
     if (!fs.existsSync(path.join(dir, 'done'))) {
       fs.rmSync(dir, { recursive: true, force: true });
       fs.mkdirSync(dir, { recursive: true });
-      ffmpeg(['-i', file, '-vf', `scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},fps=30`,
+      ffmpeg([...window, '-i', file, '-vf', `scale=${W}:${H}:force_original_aspect_ratio=increase,${crop},fps=30`,
         '-q:v', '3', path.join(dir, '%05d.jpg')]);
       fs.writeFileSync(path.join(dir, 'done'), '');
     }
@@ -330,6 +339,11 @@ async function prepareMedia(page) {
       for (const { name, value } of v.attributes) if (!['src', 'autoplay', 'loop', 'muted', 'controls', 'playsinline', 'preload', 'data-render-index'].includes(name)) img.setAttribute(name, value);
       img.dataset.frames = framesUrl;
       img.dataset.count = String(n);
+      // a sequence cut from data-offset already starts there (its sound still plays from it)
+      if (v.dataset.length) {
+        img.dataset.clipOffset = v.dataset.offset || '0';
+        img.dataset.offset = '0';
+      }
       img.dataset.srcFile = v.currentSrc || v.src || v.querySelector('source')?.src || '';
       img.src = `${framesUrl}/00001.jpg`;
       img.alt = '';
@@ -642,7 +656,8 @@ async function readPage(page) {
       voices.push({ src: new URL(el.dataset.voice, location.href).href, time, index, sceneOut, caption });
     });
     // A filmed clip that keeps its own sound: <video data-audio> plays it in sync with the
-    // picture, from data-offset seconds into the file, while the clip is on screen. Captions for
+    // picture, from data-offset seconds into the file, while the clip is on screen (and for no
+    // more than its data-length, when it has one). Captions for
     // it go in <div class="say auto" data-clip="<the video's id>">the words said</div>.
     const captionFor = new Map();
     for (const el of document.querySelectorAll('.say.auto[data-clip]')) captionFor.set(el.dataset.clip, el);
@@ -652,6 +667,7 @@ async function readPage(page) {
       const time = toSeconds(cs.getPropertyValue('--in')) || 0;
       const holder = el.closest('.bg') || el.closest('.scene');
       const sceneOut = holder ? toSeconds(holder.style.getPropertyValue('--out')) : NaN;
+      const length = parseFloat(el.dataset.length);
       const capEl = el.id ? captionFor.get(el.id) : null;
       let index;
       if (capEl) {
@@ -660,9 +676,10 @@ async function readPage(page) {
         captionFor.delete(el.id);
       }
       voices.push({
-        src, time, index, sceneOut, sync: true, offset: parseFloat(el.dataset.offset) || 0,
+        src, time, index, sceneOut, sync: true, offset: parseFloat(el.dataset.clipOffset ?? el.dataset.offset) || 0,
         // the sound stops when the clip leaves the screen
-        maxLength: Number.isFinite(sceneOut) ? Math.max(0, sceneOut - time) : undefined,
+        maxLength: Number.isFinite(sceneOut) ? Math.max(0, Math.min(sceneOut - time, length || Infinity))
+          : length > 0 ? length : undefined,
         caption: capEl ? capEl.textContent.replace(/\s+/g, ' ').trim() : '',
       });
     });

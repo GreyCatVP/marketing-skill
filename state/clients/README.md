@@ -1,10 +1,10 @@
 # Client profiles
 
-One file per client you make videos for, used by `montage-video` (and
-`scripts/video/montage.js` through a script's `client:` line). A profile
-holds that client's look, sound, and contact details, so every video for
-them looks and sounds like their brand, not yours. Your own business stays
-in `references/brand-voice.md`.
+One file per client you make videos for, used by `clip-montage` and
+`montage-video` (and `scripts/video/montage.js` through a script's
+`client:` line). A profile holds that client's look, sound, and contact
+details, so every video for them looks and sounds like their brand, not
+yours. Your own business stays in `references/brand-voice.md`.
 
 Everything in this folder except this README is kept out of git
 (`.gitignore`), because profiles hold people's phone numbers and logos.

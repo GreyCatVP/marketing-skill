@@ -1,9 +1,10 @@
 # Montage guide
 
-How `montage-video` turns a client's photos into a montage: which shot
-goes first, how many fit, how each one moves, what music suits it, and
-how to word it. The skill reads this file in its steps 5 to 7. Edit it
-like `brand-voice.md` if your clients' taste differs.
+How `clip-montage` and `montage-video` turn a client's clips or photos
+into a montage: which shot goes first, how many fit, how each one moves,
+what music suits it, and how to word it. Both skills read this file in
+their steps 5 to 7. Edit it like `brand-voice.md` if your clients' taste
+differs.
 
 ## Length and number of shots
 
@@ -53,6 +54,61 @@ monthly rate and lead with what guests book for (the view, the pool).
 6. **What's in the box,** if that sells it.
 7. **The offer:** price, any real discount, and the CTA.
 
+## Clips
+
+`clip-montage` makes montages from the user's own videos, the default
+whenever they have footage (or can film some). It's free and it's the
+truest picture: nothing is generated.
+
+### Filming tips for clips
+
+Send these when the user hasn't filmed yet:
+- **Vertical** (hold the phone upright), on the main camera, 1080p or 4K
+  at 30fps.
+- **Steady:** hold each shot for 3 to 5 seconds. Start recording a second
+  before the move and stop a second after it. Elbows in, or lean on
+  something.
+- **Slow moves:** walk in slowly, turn slowly, or hold still. A slow move
+  reads as a camera; a fast one reads as a shaky phone.
+- **Light:** daytime, lights on, blinds open. Food by a window.
+- **One clip per room, angle, or moment,** plus close-ups of the details
+  (the faucet, the label, the sizzle, the hands at work).
+- **Sound:** when someone talks to the camera, film close to them, away
+  from wind and loud music.
+- **People and privacy:** ask before filming anyone, and move personal
+  items (family photos, mail) out of frame.
+
+### Clips: picking the moments
+
+- Look at each clip with `montage.js frames <clip> --every 1`: a frame
+  every second with its time, and when its sound is loud.
+- 1.5 to 4 seconds a shot: the moment the subject is clearest and the
+  camera steadiest. Skip the first and last second of most clips (the tap
+  to start, the phone lowering).
+- A long clip gives two or three shots from different moments, each its
+  own line (`[from: 2] [to: 5]`, then `[from: 14] [to: 17]`).
+- A landscape clip is cut to 9:16. Set `[focus: x%,y%]` on what has to
+  stay in frame.
+- Keep a clip's own sound (`[sound]`) where it adds something: someone
+  talking, a laugh, the sizzle, the crowd. Everywhere else, the music.
+  Captions on it are the exact words, from the user.
+- Use `pace:` in beats for clips (`pace: 4 beats`). A shot is fitted up
+  to the next beat, and a bar can stretch a 3-second stretch to 5.
+
+### Clips: the order
+
+- **A home or a room:** as "Property: the order" below.
+- **A product:** as "Product: the order" below.
+- **A restaurant, a shop, a service:** the hero moment (the dish, the
+  finished cut, the reveal), the people making it, the details up close,
+  the space, customers enjoying it (with their OK), then the CTA (book,
+  visit, order).
+- **An event or a recap:** the peak moment first (the crowd, the reveal,
+  the toast), then arriving or setting up, the highlights in order, and
+  the close (a thank-you, the next date).
+- **A day at work, behind the scenes:** the most striking moment first,
+  then the day in order, ending on the result.
+
 ## Moves
 
 `montage.js` picks a move for each shot that doesn't name one. Override
@@ -70,7 +126,9 @@ it with `[move: ...]` when the photo asks for something else.
 - **Product on white:** `[fit: card]` with a gentle `push-in`.
 - **A photo that must be seen whole** (a floor plan, a group shot):
   `[fit: contain]`, with `move: none` or a slow push-in.
-- **Video clips** keep their own motion (`none`).
+- **Video clips** keep their own motion (`none`). A slow `push-in`,
+  `pull-out`, or `drift` on top works; a pan slides the zoomed clip,
+  since there's nothing beside the frame to pan to.
 - Consecutive shots move in different directions. A pan never moves
   faster than about a sixth of the frame a second, since faster reads as
   a shaky phone.
@@ -105,9 +163,13 @@ plain zoom doesn't.
 
 ## AI camera moves
 
-A connected video model (Figma Weave or Higgsfield; see the skill's "AI
-camera moves") turns a photo into a short clip where the camera really
-moves: around the island, through the doorway, up the stairs. It invents
+A connected video model (Figma Weave or Higgsfield; see `montage-video`'s
+"AI camera moves") turns a photo into a short clip where the camera
+really moves: around the island, through the doorway, up the stairs. It
+costs credits, and it's for photos only: when the user can film clips,
+`clip-montage` gives real camera moves for free. Offer it only when the
+user says they have a paid plan with a video model, and quote each run
+first. It invents
 what the photo doesn't show, so keep moves short and slow (they stay
 truest), check every clip with `montage.js frames`, and label it `[ai]`.
 
@@ -126,7 +188,9 @@ natural light. The room stays exactly as it is: no people, no text, no
 new furniture or objects, no changes to windows, walls, or finishes."
 Name only what's in the photo.
 
-**Models** (in Weave as of this writing; always go by the quote):
+**Models** (in Weave as of this writing; always go by the quote). Weave
+runs video models only on paid Figma plans; on a free (Starter) plan it
+refuses to quote them ("Video models are only available on paid plans").
 - **Seedance 1.5 Pro**, about 31 credits a clip: 4–12 seconds, 720p or
   1080p, and it can output vertical 9:16. Set `camera_fixed: false` and
   `generate_audio: false`. The default.
@@ -183,6 +247,10 @@ is read with `beats.js`, so the cuts land on it.
 - The free local voice speaks English. For another language, the user
   records each line in their own voice (`recordings:`), and captions
   follow their words.
+- Or the user records the whole voiceover in one take, a phone voice
+  memo included (`voiceover:`), with its words in `voiceover-text:` for
+  the captions. It plays under every shot, and the shots stretch to
+  cover it.
 
 ## Labels and hooks
 
@@ -229,13 +297,13 @@ there.
   change details. Check every frame against the photo, and drop any clip
   that changes the property.
 
-## Photos: rights and privacy
+## Photos and clips: rights and privacy
 
-- Use photos the client owns, or the listing photographer's photos
+- Use photos and clips the client owns, or the listing photographer's
   licensed to the client. Never pull photos from a listing site or
   another agent's listing.
-- `montage.js inspect` strips each photo's metadata, a phone photo's GPS
-  location included, from the copies it makes.
+- `montage.js inspect` strips each photo's and clip's metadata, a phone's
+  GPS location included, from the copies it makes.
 - Leave out photos that show a recognizable person who didn't agree to
   appear, or the occupants' personal items (family photos, mail,
   documents, a car's plate).

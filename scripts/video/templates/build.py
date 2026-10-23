@@ -835,7 +835,17 @@ TEMPLATES["montage.html"] = dict(
     chips, .callout (a dot at left/top px on a still shot, with its label), and
     the hook (.cap.left.hook.now) in the first shot's .top with any status
     .sticker.
-  Every photo, product, price, and spec is the user's own. Never ship the
+  - Clips: <video class="bg-media" src="assets/maple-05.mp4" data-loop="false"
+    data-offset="3.5" data-length="3.2"> plays from data-offset; the renderer
+    cuts just that stretch (data-length seconds), cropped to 9:16 around
+    data-focus="x,y" (0 to 1) when it's set. data-audio id="clip-5" keeps the
+    clip's own sound in sync (the music ducks under it), and <div class="say
+    auto" data-clip="clip-5">the words said</div> in its shot captions it.
+  - A voiceover under every shot: <div class="scene shot voiceover"><div
+    class="say auto" data-voice="assets/maple-vo.m4a" style="--voice:.3s">its
+    words</div></div> after the shots, and class "vo" on <body> to lift the
+    labels above its captions.
+  Every photo, clip, product, price, and spec is the user's own. Never ship the
   sample text below.""",
     body_attrs='class="montage" data-duration="15" data-drop="2.5" data-music="acoustic" data-bpm="96" data-key="D" data-mode="major" data-energy="2" data-motif="1 3 5 6 | 5 3 2 -"',
     css="""
@@ -890,6 +900,9 @@ TEMPLATES["montage.html"] = dict(
   .specs { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
   .specs span { padding: 12px 28px 14px; border-radius: 999px; background: #fff; color: #121212; font-size: 44px; font-weight: 800; white-space: nowrap; }
   .shot .say { min-height: 200px; }
+  /* a voiceover under the whole video: its captions sit low over every shot (.scene.shot.voiceover),
+     so on a page with them (body.vo) each shot's label moves up out of their way */
+  .vo .scene.shot:not(.voiceover) { padding-bottom: 222px; }
   .ba { align-self: flex-start; place-items: start; }
   /* the end card brand.js adds sits on the brand's background, not over the last photo */
   .montage .endcard::before { content: ''; position: absolute; z-index: -1; left: -90px; right: -150px; top: -330px; bottom: -470px; background: var(--bg); }

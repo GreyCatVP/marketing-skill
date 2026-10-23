@@ -308,7 +308,8 @@ command below.
    captions, where the hook text goes). Generation Status says plainly that
    the video still needs to be filmed. When the user sends back a single
    talking-head take, make it with `cut.js` (`video-rendering.md`, "Your
-   own footage"), with captions from their exact words.
+   own footage"), with captions from their exact words. When they send
+   back several clips, hand over to `clip-montage`, which edits them.
 
 7. **Hand off.** Note the concrete next step for getting this posted:
    - **Manual (the default, always available):** generate or edit the
@@ -355,10 +356,11 @@ Trigger on requests like:
 - "Make a 3D animated video / a pixel-art or 8-bit video with a voiceover about..."
 - "We need something memeable / relatable for the feed this week"
 
-**Do not** trigger when the user hands over their own photos or clips of
-a property, a room, or a product to be made into the video (a listing
-video, a property tour, a product montage) — that's `montage-video`,
-which keeps a profile per client and edits the montage with them. **Do
+**Do not** trigger when the user hands over their own clips of a place, a
+product, or an event to be edited into a montage (a listing video, a
+recap, highlights, a reel of the shop) — that's `clip-montage` — or only
+photos of a property, a room, or a product — that's `montage-video`.
+Both keep a profile per client and edit the montage with them. **Do
 not** trigger on a request for a long-form video brief, a static
 image brief, or a platform other than these three — that's
 `visual-brief-generator`'s job. Do not trigger on "post this to

@@ -5,6 +5,41 @@ Skills that read "our changelog" for source material read this file too.
 
 ## 0.8.0 (unreleased)
 
+- **Montages from your own videos: `clip-montage`, a fourteenth skill, and
+  the default for montages.** Send the phone clips you or a client filmed
+  (a home, a product, a shop, an event), plus your own music or voiceover
+  if you have them, and get a finished vertical montage, free: it renders
+  locally, with no credits, and nothing is generated. The skill:
+  - looks at every clip frame by frame and picks each one's best moment
+    (`[from:]` to `[to:]`), two or three from a long clip;
+  - cuts on the beat of your own track (or the client's generated sound,
+    or none, for a trending sound added in the app);
+  - keeps a clip's own sound where someone talks, with the music ducked
+    under it and the exact words captioned;
+  - lays your voiceover under the whole video with synced captions;
+  - with only photos, asks for clips first and hands over to
+    `montage-video`.
+  `montage-video` now offers AI camera moves only when the user says they
+  have a paid video-model plan, and quotes each run first. Figma Weave
+  runs video models only on paid Figma plans.
+- `scripts/video/montage.js` for clips:
+  - `[to: 6]` ends a clip's stretch.
+  - `[sound]` keeps a clip's own sound in sync, and a `[say: ...]` on it
+    captions what's said.
+  - `[focus: 30%,50%]` keeps that point in frame when a landscape clip is
+    cut to 9:16.
+  - `voiceover:`, `voiceover-text:`, and `voiceover-at:` put one recording
+    under every shot, with captions, the shots stretching to cover it.
+  - `frames <clip> --every 1` lays out a frame every second with its time,
+    and prints when the clip's sound is loud.
+  - `inspect` strips a clip's metadata (a phone's location) while keeping
+    its picture, sound, and rotation, and says whether each clip has sound.
+  - A pan on a clip now slides the zoomed clip. Before, it did nothing,
+    since a clip is cut to the frame first.
+- `scripts/video/render.js` turns only the stretch a clip plays into
+  frames (`data-length`), not the whole file, so long phone clips render
+  quickly. It crops a clip to 9:16 around `data-focus`.
+
 - **Montages from a client's own photos: `montage-video`, a thirteenth
   skill.** Hand over photos or phone clips of a home, a room, or a
   product, and get a finished vertical reel:

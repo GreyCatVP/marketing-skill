@@ -1,24 +1,28 @@
 #!/usr/bin/env node
 'use strict';
 /*
- * Builds a montage page from the user's own photos or phone clips of a property or a product:
- * one shot per photo, each moving (a pan across a wide room, a push in on a detail), cut on the
- * music's beat or timed to a voiceover, with a label on each shot, the hook on the first, the
- * price, specs, and CTA near the end, and a client's look with their contact details on the end
- * card. The page is templates/montage.html's look; render.js turns it into the MP4.
+ * Builds a montage page from the user's own phone clips or photos of a place, a product, or an
+ * event: one shot per clip or photo, the clips playing their own footage (from the moment the
+ * script picks, with their own sound where it asks) and the photos moving (a pan across a wide
+ * room, a push in on a detail), cut on the music's beat or timed to a voiceover, with a label on
+ * each shot, the hook on the first, the price, specs, and CTA near the end, and a client's look
+ * with their contact details on the end card. The page is templates/montage.html's look;
+ * render.js turns it into the MP4.
  *
  * Usage:
  *   node montage.js inspect <folder | files...> --slug <slug> [--out <dir>] [--force]
  *   node montage.js <script.md> [--out <page.html>] [--no-check]
  *   node montage.js frames <clip> [--photo <photo>] [--out <sheet.png>]
+ *   node montage.js frames <clip> --every 1 [--out <sheet.png>]
  *
  * inspect copies the photos and clips into state/videos/assets/ (or <dir>/assets) as
  * <slug>-01.jpg, <slug>-02.mp4, ...: photos upright and sized for the frame, as JPEG without
  * their metadata (a phone photo's location included), PNGs as PNG to keep transparency, clips
- * as they are. The originals aren't touched. It prints each file's size, shape, and brightness,
- * writes a numbered contact sheet, <slug>-contact.png, to look at them all at once, and a
- * starter script, state/videos/<date>-<slug>.md, one shot per file in name order (--force
- * replaces an existing one).
+ * with their footage and sound as they are but their metadata (a phone's location) removed. The
+ * originals aren't touched. It prints each file's size, shape, and brightness (a clip's length,
+ * and whether it has sound), writes a numbered contact sheet, <slug>-contact.png, to look at them
+ * all at once, and a starter script, state/videos/<date>-<slug>.md, one shot per file in name
+ * order (--force replaces an existing one).
  *
  * The script is Markdown: frontmatter, then numbered shots, one per photo or clip: the file
  * (no spaces in its name), a label (with a second, smaller line after "|"), and any tags.
@@ -34,8 +38,11 @@
  *   cta: book a showing · link in bio  # on the last shot
  *   music: identity                    # identity (default), none, a genre, or assets/track.mp3
  *   voice: none                        # none (default), a voice.js voice for the [say: ...] lines, or
- *   recordings: assets/maple-{n}.m4a   # the user's own takes, one per [say: ...] line
- *   pace: 1 bar                        # each shot: N bars, N beats, or seconds (2.5s); or instead
+ *   recordings: assets/maple-{n}.m4a   # the user's own takes, one per [say: ...] line, or
+ *   voiceover: assets/maple-vo.m4a     # one recording of the user's own under the whole video,
+ *   voiceover-text: Welcome to ...     #   its words for the captions (none: no captions), and
+ *   voiceover-at: 0.3                  #   when it starts, in seconds (0.3 by default)
+ *   pace: 1 bar                       # each shot: N bars, N beats, or seconds (2.5s); or instead
  *   length: 30                         # a target length for the shots, in seconds (the end card adds ~3s)
  *   transition: fade                   # fade (default), cut, slide, zoom, wipe, or flash
  *   depth: auto                        # auto (default): 3D moves where a depth map can be had; off
@@ -46,10 +53,13 @@
  *   3. assets/maple-03.jpg  Chef's kitchen  [say: The kitchen was redone last year.]
  *   4. assets/maple-04.jpg  Main suite  [staged]
  *   5. assets/maple-05.mp4  The backyard  [from: 3.5]
+ *   6. assets/maple-06.mp4  Meet Dana  [from: 12] [to: 16.5] [sound] [say: Come see it this Saturday.]
  *
  * frames puts a clip's first, middle, and last frames beside the photo it was made from, to check
  * an AI-animated clip (a connected video model's camera move, made from the photo) against the
- * real room before it goes in a montage.
+ * real room before it goes in a montage. With --every <seconds>, it lays out a frame at every
+ * step of the clip with its time instead, to pick each shot's [from:] and [to:], and prints when
+ * the clip's sound is loud (someone talking, or a sound worth keeping with [sound]).
  *
  * Tags:
  *   [move: push-in | pull-out | pan-left | pan-right | pan-up | pan-down | drift | none]
@@ -69,17 +79,27 @@
  *   [callout: 30%,60% solid oak]    a dot at that point of the photo, with a label; the shot holds still
  *   [before: assets/maple-04-before.jpg]   this shot's photo wipes in over the before photo
  *   [from: 3.5]         where a clip starts, in seconds
+ *   [to: 6]             where it ends: the shot is the clip from [from:] to here (then fitted to the beat)
+ *   [sound]             the clip keeps its own sound (someone talking, the sizzle, the waves), in sync,
+ *                       with the music ducked under it; a [say: ...] on it is then the words said in
+ *                       the clip, captioned word by word, not a voiceover line
+ *   [focus: 30%,50%]    the point to keep in frame: where a landscape clip is cut to 9:16, or the
+ *                       focus of a photo's move (the same as focus= in [move: ...])
  *   [facts]             the price and specs go on this shot instead of the last
  *   [depth: assets/maple-02-depth.png]   a depth map from elsewhere (white near) for this photo
  *
  * A shot without a move gets one that suits it, each the other way from the last: with a depth
  * map, an orbit across a wide photo and a dolly in or a rise on a tall one; without, a pan or a
- * push in. A clip keeps its own motion. Depth maps come from depth.js (a free local model, set
+ * push in. A clip keeps its own motion (a push-in, pull-out, or drift on top of it works; a pan
+ * slides the zoomed clip, since there is nothing beside the frame to pan to). A long clip is
+ * cut to the stretch its shot plays before it's rendered. Depth maps come from depth.js (a free local model, set
  * up once with `npm install @huggingface/transformers`), made as they're needed and kept next to
  * each photo; without it, every shot moves flat. Without a voice, every shot is a
  * whole number of the music's beats, with the first cut where the beat drops (a licensed track
  * is read with beats.js and cut on its bars when its beat is steady). With a voice, a shot
- * lasts at least its line. A shot is held longer when its label needs the time to be read.
+ * lasts at least its line. A voiceover: plays from voiceover-at under the shots, the music
+ * ducked under it, and the shots stretch to cover it (the last one held if they don't). A shot
+ * is held longer when its label needs the time to be read.
  * Edit the script and run montage.js again rather than editing the page.
  */
 const fs = require('fs');
@@ -89,6 +109,7 @@ const { spawnSync } = require('child_process');
 const { pathToFileURL } = require('url');
 const { parseScript } = require('./voice');
 const { prepareVoice, meanLuma, launchBrowser } = require('./render');
+const captions = require('./captions');
 const { visualIdentity, applyIdentity } = require('./brand');
 const { parseFrontmatter, sonicIdentity } = require('./compose');
 const { analyseTrack, alignTrack } = require('./beats');
@@ -117,7 +138,7 @@ const MOVES = ['push-in', 'pull-out', 'pan-left', 'pan-right', 'pan-up', 'pan-do
 // each 3D move's flat stand-in, for a shot without a depth map
 const FLAT = { orbit: 'pan-right', 'orbit-left': 'pan-left', 'orbit-right': 'pan-right', dolly: 'push-in', 'dolly-in': 'push-in', 'dolly-out': 'pull-out', rise: 'pan-up' };
 const FITS = ['cover', 'contain', 'card'];
-const TAGS = ['move', 'fit', 'say', 'hold', 'transition', 'staged', 'ai', 'callout', 'before', 'from', 'facts', 'depth'];
+const TAGS = ['move', 'fit', 'say', 'hold', 'transition', 'staged', 'ai', 'callout', 'before', 'from', 'to', 'sound', 'focus', 'facts', 'depth'];
 
 function fail(message) {
   console.error(message);
@@ -130,7 +151,7 @@ function parseArgs(argv) {
     const a = argv[i];
     if (a === '--no-check') args.noCheck = true;
     else if (a === '--force') args.force = true;
-    else if (['--out', '--slug', '--photo'].includes(a)) args[a.slice(2)] = argv[++i];
+    else if (['--out', '--slug', '--photo', '--every'].includes(a)) args[a.slice(2)] = argv[++i];
     else if (a === '-h' || a === '--help') args.help = true;
     else args.positional.push(a);
   }
@@ -168,6 +189,38 @@ function probe(file) {
   const rotation = Math.abs(Number(((s.side_data_list || []).find((d) => d.rotation !== undefined) || {}).rotation || 0));
   const [w, h] = rotation === 90 || rotation === 270 ? [s.height, s.width] : [s.width, s.height];
   return { w, h, duration: parseFloat((data.format || {}).duration) || 0 };
+}
+
+// Whether a clip has a sound track.
+const hasSound = (file) => /audio/.test(spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'stream=codec_type', '-of', 'csv=p=0', file], { encoding: 'utf8' }).stdout || '');
+
+// A copy of a clip with its picture and sound as they are and its metadata gone (a phone clip
+// carries where it was filmed); the plain copy, flagged, if ffmpeg can't remux it.
+function importClip(src, file) {
+  const res = ffmpeg(['-i', src, '-map', '0:v:0', '-map', '0:a:0?', '-c', 'copy', '-map_metadata', '-1', '-map_chapters', '-1', file]);
+  if (res.status === 0 && probe(file)) return { file };
+  fs.copyFileSync(src, file);
+  return { file, note: 'copied as it is (its metadata, a phone\'s location included, is still in it)' };
+}
+
+// The stretches of a clip where its sound is loud, as "1.2–3.4s" (someone talking, a sizzle, a
+// cheer), or null without a sound track.
+function loudStretches(file) {
+  if (!hasSound(file)) return null;
+  let runs;
+  try {
+    runs = captions.spokenRuns(captions.envelope(captions.decode(file)));
+  } catch {
+    return null;
+  }
+  // phrases a breath apart read as one stretch
+  const merged = [];
+  for (const r of runs) {
+    const last = merged[merged.length - 1];
+    if (last && r.start - last.end < 0.6) last.end = r.end;
+    else merged.push({ ...r });
+  }
+  return merged.filter((r) => r.end - r.start >= 0.3).map((r) => `${r.start.toFixed(1)}–${r.end.toFixed(1)}s`);
 }
 
 // The EXIF orientation of a JPEG (1 is upright), read from its APP1 segment.
@@ -271,7 +324,7 @@ async function contactSheet(items, out, tmp) {
   img { width: 100%; height: 100%; object-fit: contain; }
   b { position: absolute; left: 8px; top: 8px; background: #ffd23f; color: #111; padding: 2px 10px 4px; border-radius: 8px; font-size: 26px; }
   figcaption { padding-top: 6px; font-size: 15px; color: #bbb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-</style>${cells.map((c) => `<figure><div class="img"><img src="${pathToFileURL(c.src).href}"><b>${c.n}</b></div><figcaption>${esc(path.basename(c.file))} · ${c.w}×${c.h}${c.clip ? ` · ${c.duration.toFixed(1)}s clip` : ''}</figcaption></figure>`).join('')}`);
+</style>${cells.map((c) => `<figure><div class="img"><img src="${pathToFileURL(c.src).href}"><b>${esc(String(c.badge ?? c.n))}</b></div><figcaption>${esc(c.caption ?? `${path.basename(c.file)} · ${c.w}×${c.h}${c.clip ? ` · ${c.duration.toFixed(1)}s clip${c.sound ? ' with sound' : ''}` : ''}`)}</figcaption></figure>`).join('')}`);
     const browser = await launchBrowser(playwright.chromium);
     const tab = await browser.newPage({ viewport: { width: cols * 314 + 18, height: 400 } });
     await tab.goto(pathToFileURL(page).href, { waitUntil: 'load' });
@@ -310,9 +363,9 @@ async function inspect(args) {
     const n = i + 1;
     const base = path.join(assets, `${slug}-${String(n).padStart(2, '0')}`);
     let file;
+    let note = '';
     if (CLIP_EXT.test(src)) {
-      file = `${base}${path.extname(src).toLowerCase()}`;
-      fs.copyFileSync(src, file);
+      ({ file, note = '' } = importClip(src, `${base}${path.extname(src).toLowerCase()}`));
     } else {
       const res = importPhoto(src, base, tmp);
       if (res.error) {
@@ -330,7 +383,7 @@ async function inspect(args) {
     const shape = info.w / info.h > 1.1 ? 'landscape' : info.w / info.h < 0.9 ? 'portrait' : 'square';
     // how much a frame-filling shot enlarges it
     const enlarge = Math.max(W / info.w, H / info.h);
-    items.push({ n, src, file, clip, ...info, shape, luma: clip ? null : meanLuma(file), enlarge });
+    items.push({ n, src, file, clip, ...info, shape, luma: clip ? null : meanLuma(file), enlarge, note, sound: clip && hasSound(file) });
   });
 
   console.log(`Copied ${items.length} file${items.length === 1 ? '' : 's'} into ${assets}:`);
@@ -340,7 +393,12 @@ async function inspect(args) {
     if (it.luma !== null && it.luma > 0.85) notes.push('very bright');
     if (!it.clip && it.enlarge > 1.25) notes.push(`low resolution: ${it.enlarge.toFixed(1)}x to fill the frame, so it will look soft (try fit: contain)`);
     if (it.clip && it.duration < 2) notes.push('very short clip');
-    console.log(`  ${String(it.n).padStart(2)}. ${path.basename(it.file).padEnd(18)} ${`${it.w}x${it.h}`.padEnd(10)} ${it.shape.padEnd(9)} ${it.clip ? `clip ${it.duration.toFixed(1)}s`.padEnd(15) : `brightness ${it.luma === null ? '?' : it.luma.toFixed(2)}`.padEnd(15)} ${path.basename(it.src)}${notes.length ? `  (${notes.join('; ')})` : ''}`);
+    if (it.clip && it.duration > 20) notes.push(`long clip: pick its moments with "frames ${path.basename(it.file)} --every 1"`);
+    if (it.clip && it.shape === 'landscape') notes.push('landscape: cut to 9:16, so set [focus: x%,y%] on what to keep');
+    if (it.clip && Math.min(it.w, it.h) < 720) notes.push('low resolution: it will look soft');
+    if (it.note) notes.push(it.note);
+    const what = it.clip ? `clip ${it.duration.toFixed(1)}s ${it.sound ? 'sound' : 'silent'}` : `brightness ${it.luma === null ? '?' : it.luma.toFixed(2)}`;
+    console.log(`  ${String(it.n).padStart(2)}. ${path.basename(it.file).padEnd(18)} ${`${it.w}x${it.h}`.padEnd(10)} ${it.shape.padEnd(9)} ${what.padEnd(17)} ${path.basename(it.src)}${notes.length ? `  (${notes.join('; ')})` : ''}`);
   }
   for (const s of skipped) console.warn(`Skipped ${s}`);
   if (!items.length) fail('Nothing could be copied.');
@@ -453,7 +511,8 @@ function placement(info, fit, focus) {
 // The slot's move: the --kb keyframes and the variables they read.
 function resolveMove(shot, dur, defaults, prev) {
   const asked = shot.move.name;
-  const place = placement(shot.info, shot.fit, shot.move.focus);
+  // a clip is cut to the frame (around its focus) before it's placed, so it has nothing to pan across
+  const place = placement(shot.clip ? { w: W, h: H } : shot.info, shot.fit, shot.move.focus);
   const vars = { '--ox': pct(place.ox), '--oy': pct(place.oy), '--fx': pct(place.x / W), '--fy': pct(place.y / H) };
   let name = asked || defaults.next(shot, place, prev);
   const notes = [];
@@ -572,6 +631,29 @@ async function build(args) {
     }
     s.move = s.tags.move ? parseMove(s.tags.move) : { name: '' };
     if (s.move.name && !MOVES.includes(s.move.name)) fail(`shot ${s.n}: move: ${s.move.name}? Use ${MOVES.join(', ')}.`);
+    if (s.tags.focus !== undefined) {
+      const focus = parseMove(`none focus=${String(s.tags.focus).replace(/\s+/g, '')}`).focus;
+      if (!focus) fail(`shot ${s.n}: focus: ${s.tags.focus}? Write it as [focus: 30%,50%].`);
+      s.move.focus = s.move.focus || focus;
+    }
+    // a clip's stretch: [from:] to [to:], and its own sound with [sound]
+    s.from = parseFloat(s.tags.from) || 0;
+    if (s.tags.from !== undefined && !(parseFloat(s.tags.from) >= 0)) fail(`shot ${s.n}: from: ${s.tags.from}? Write it in seconds, like [from: 3.5].`);
+    if (s.tags.to !== undefined || s.tags.sound) {
+      if (!s.clip) notes.push(`shot ${s.n} is a photo; [to:] and [sound] are for clips`);
+    }
+    if (s.clip && s.tags.to !== undefined) {
+      const to = parseFloat(s.tags.to);
+      if (!(to > s.from)) fail(`shot ${s.n}: to: ${s.tags.to} must come after from: ${s.from} (in seconds)`);
+      if (to > s.info.duration + 0.05) notes.push(`shot ${s.n}: to: ${to} is past the clip's end (${s.info.duration.toFixed(1)}s)`);
+      s.to = Math.min(to, s.info.duration);
+    }
+    if (s.clip && s.from >= s.info.duration) fail(`shot ${s.n}: from: ${s.from} is past the clip's end (${s.info.duration.toFixed(1)}s)`);
+    s.sound = !!(s.clip && s.tags.sound);
+    if (s.sound && !hasSound(file)) {
+      notes.push(`shot ${s.n}: ${s.media} has no sound track, so [sound] is ignored`);
+      s.sound = false;
+    }
     s.transition = String(s.tags.transition || meta.transition || 'fade').toLowerCase();
     if (TRANSITIONS[s.transition] === undefined) fail(`shot ${s.n}: transition: ${s.transition}? Use ${Object.keys(TRANSITIONS).join(', ')}.`);
     if (typeof s.tags.before === 'string') {
@@ -635,8 +717,10 @@ async function build(args) {
   }
   if (flat.length && !depthMaps.available()) notes.push(`3D moves are off: they need a depth model. From scripts/video, run once: npm install @huggingface/transformers`);
 
-  // ---- the voice: the user's recordings, or a generated voice, for the [say: ...] lines
-  let said = shots.filter((s) => typeof s.tags.say === 'string' && s.tags.say);
+  // ---- the voice: the user's recordings, or a generated voice, for the [say: ...] lines (on a
+  // clip that keeps its own sound, [say: ...] is what's said in it: captions, not a line to voice)
+  for (const s of shots) if (s.sound && typeof s.tags.say === 'string' && s.tags.say) s.clipSay = s.tags.say;
+  let said = shots.filter((s) => typeof s.tags.say === 'string' && s.tags.say && !s.sound);
   const voiceName = String(meta.voice || '').trim();
   if (said.length && !meta.recordings && voiceName.toLowerCase() === 'none') {
     notes.push('voice: none, so the [say: ...] lines are left out; set a voice (or recordings:) to voice them');
@@ -644,6 +728,7 @@ async function build(args) {
   } else if (!said.length && ((voiceName && voiceName.toLowerCase() !== 'none') || meta.recordings)) {
     notes.push('a voice is set, but no shot has a [say: ...] line');
   }
+  if (said.length && meta.voiceover) fail('voiceover: plays one recording under the whole video, so the [say: ...] lines would talk over it.\nUse the voiceover, or the lines (with voice: or recordings:), not both.');
   if (said.length && meta.recordings) {
     for (const s of said) s.clipFile = meta.recordings.replace('{n}', String(s.n));
     const gone = said.filter((s) => !fs.existsSync(path.join(dir, s.clipFile)));
@@ -673,6 +758,21 @@ async function build(args) {
     s.voiceLength = prepareVoice(path.join(dir, s.clipFile)).length;
   }
 
+  // ---- a voiceover: one recording of the user's own, under the whole video
+  let voiceover = null;
+  if (meta.voiceover) {
+    if (!fs.existsSync(path.join(dir, meta.voiceover))) fail(`Voiceover not found: ${meta.voiceover} (relative to ${dir})`);
+    const at = meta['voiceover-at'] !== undefined ? parseFloat(meta['voiceover-at']) : 0.3;
+    if (!(at >= 0)) fail(`voiceover-at: ${meta['voiceover-at']}? Write when it starts, in seconds, like 0.3.`);
+    const length = prepareVoice(path.join(dir, meta.voiceover)).length;
+    voiceover = { src: meta.voiceover, at, length, end: at + length, text: String(meta['voiceover-text'] || '').trim() };
+    const talking = shots.filter((s) => s.sound);
+    if (talking.length) notes.push(`${talking.length > 1 ? `shots ${talking.map((s) => s.n).join(', ')} keep their` : `shot ${talking[0].n} keeps its`} own sound under the voiceover; both play`);
+    if (!voiceover.text) notes.push('the voiceover has no captions; add voiceover-text: (its words, as said) for them');
+    // the shots stretch to cover it, unless the script sets their length
+    if (!meta.pace && !(parseFloat(meta.length) > 0)) meta.length = String(r2(voiceover.end + 0.4));
+  }
+
   // ---- the sound
   const template = fs.readFileSync(path.join(__dirname, 'templates', 'montage.html'), 'utf8');
   const sound = templateDefaults(template);
@@ -681,7 +781,7 @@ async function build(args) {
   if (identity) {
     Object.assign(sound, Object.fromEntries(Object.entries({
       music: identity.music, bpm: identity.bpm, key: identity.key, mode: identity.mode,
-      energy: Number.isFinite(identity.energy) ? Math.max(1, identity.energy - (said.length ? 1 : 0)) : undefined, motif: identity.motif,
+      energy: Number.isFinite(identity.energy) ? Math.max(1, identity.energy - (said.length || voiceover ? 1 : 0)) : undefined, motif: identity.motif,
     }).filter(([, v]) => v !== undefined && v !== '' && !Number.isNaN(v))));
   } else if (kind === 'product') {
     Object.assign(sound, { music: 'pop', bpm: '112', energy: '3' });
@@ -715,6 +815,8 @@ async function build(args) {
 
   // ---- each shot's length: its hold, the pace, a share of the target length, or the default
   const holds = shots.map((s) => {
+    // a clip's [from:]–[to:] stretch, unless a [hold:] says otherwise
+    if (!s.tags.hold && s.to !== undefined) return s.to - s.from;
     if (!s.tags.hold) return null;
     const len = parseLength(s.tags.hold);
     if (!len) fail(`shot ${s.n}: hold: ${s.tags.hold}? Write it as "2 bars", "6 beats", or "3s".`);
@@ -791,6 +893,15 @@ async function build(args) {
     s.end = r2(end);
     t = end;
   });
+  // the voiceover finishes before the video does: the last shot holds (a beat at a time) until it has
+  const lastShot = shots[shots.length - 1];
+  if (voiceover && lastShot.end < voiceover.end + 0.3) {
+    const step = snap && !track ? beat : 0;
+    const want = voiceover.end + 0.3;
+    const end = r2(step ? lastShot.end + Math.ceil((want - lastShot.end) / step - 0.001) * step : want);
+    notes.push(`shot ${lastShot.n} held to ${(end - lastShot.start).toFixed(1)}s so the voiceover (${voiceover.length.toFixed(1)}s from ${voiceover.at}s) finishes; add shots, or set length:, to spread it out`);
+    lastShot.end = end;
+  }
   const drop = shots[0].end;
   const duration = shots[shots.length - 1].end;
 
@@ -819,8 +930,17 @@ async function build(args) {
     if (s.tags.before) vars['--at'] = `${r2(s.start + Math.max(0.8, 0.4 * (s.end - s.start)))}s`;
     const style = Object.entries(vars).map(([k, v]) => `${k}:${v}`).join('; ');
     const src = esc(s.media);
+    // a clip: the stretch it plays (the renderer cuts just that), the point its 9:16 crop keeps,
+    // and its own sound, in sync, with [sound]
+    const clipAttrs = () => [
+      s.from ? ` data-offset="${s.from}"` : '',
+      // (the last shot's sound stops where the shot does, not under the end card)
+      ` data-length="${r2(Math.min(last ? dur : dur + 0.5, s.info.duration - s.from + 0.1))}"`,
+      s.move.focus ? ` data-focus="${s.move.focus.map((v) => Math.round(v * 1000) / 1000).join(',')}"` : '',
+      s.sound ? ` data-audio id="clip-${i + 1}"` : '',
+    ].join('');
     const media = (extra = '') => (s.clip
-      ? `<video class="bg-media${extra}" src="${src}" data-loop="false"${s.tags.from ? ` data-offset="${parseFloat(s.tags.from) || 0}"` : ''}></video>`
+      ? `<video class="bg-media${extra}" src="${src}" data-loop="false"${clipAttrs()}></video>`
       : `<img class="bg-media${extra}" src="${src}" alt="">`);
     let inner;
     if (move.depth) {
@@ -835,8 +955,8 @@ async function build(args) {
     else inner = media();
     const sfx = i > 0 && ['slide', 'wipe', 'zoom'].includes(s.transition) ? ' data-sfx="whoosh"' : '';
     const flash = i > 0 && s.transition === 'flash' ? `\n  <div class="flash" style="--in:${s.start}s" data-sfx="shutter"></div>` : '';
-    if (s.clip && s.info.duration - (parseFloat(s.tags.from) || 0) < s.end - into) {
-      notes.push(`shot ${s.n}'s clip runs ${(s.info.duration - (parseFloat(s.tags.from) || 0)).toFixed(1)}s, less than the shot; it holds on its last frame`);
+    if (s.clip && s.info.duration - s.from < s.end - into) {
+      notes.push(`shot ${s.n}'s clip runs ${(s.info.duration - s.from).toFixed(1)}s from ${s.from}s, less than the shot; it holds on its last frame`);
     }
     return `  <!-- shot ${s.n}, ${s.start}–${s.end}s: ${s.media} -->\n  <div class="${cls}" style="${style}"${sfx}>${inner}</div>${flash}`;
   });
@@ -844,7 +964,7 @@ async function build(args) {
   // ---- the text on each shot
   const hooks = [meta.hook, meta['hook-b'], meta['hook-c']].filter(Boolean);
   // under a voice, sounds only at the cuts (and the price), so they don't talk over it
-  const quiet = said.length > 0;
+  const quiet = said.length > 0 || !!voiceover || shots.some((s) => s.sound);
   const scenes = shots.map((s, i) => {
     const last = i === shots.length - 1;
     const textIn = r2(s.start + (i === 0 ? 0.6 : 0.2 + TRANSITIONS[s.transition] / 2));
@@ -878,13 +998,15 @@ async function build(args) {
       parts.push(`    <div class="callout pop${cls}" style="--in:${r2(textIn + 0.3)}s; left:${Math.round(pl.x - SCENE.left)}px; top:${Math.round(pl.y - SCENE.top)}px"${quiet ? '' : ' data-sfx="pop"'}><i></i><span>${esc(s.callout.text)}</span></div>`);
     }
     if (s.say) parts.push(`    <div class="say auto" data-voice="${esc(s.clipFile)}" style="--voice:${r2(s.start + (i === 0 ? 0.15 : 0.3))}s">${esc(s.say)}</div>`);
+    // the words said in a clip that keeps its sound, timed to it
+    if (s.clipSay) parts.push(`    <div class="say auto" data-clip="clip-${i + 1}">${esc(s.clipSay)}</div>`);
     return `  <!-- shot ${s.n}, ${s.start}–${s.end}s -->\n  <div class="scene shot"${last ? '' : ` style="--out:${r2(s.end - 0.15)}s"`}>\n${parts.join('\n')}\n  </div>`;
   });
 
   // ---- the page
   const head = template.slice(template.indexOf('<html>'), template.indexOf('</head>') + '</head>'.length);
   const attrs = [
-    'class="montage"', `data-duration="${duration}"`, `data-drop="${drop}"`,
+    `class="montage${voiceover && voiceover.text ? ' vo' : ''}"`, `data-duration="${duration}"`, `data-drop="${drop}"`,
     ...(musicSrc ? [`data-music-src="${esc(musicSrc)}"`, `data-music-start="${musicStart ?? 0}"`, 'data-music="none"'] : [`data-music="${sound.music}"`]),
     ...['bpm', 'key', 'mode', 'energy', 'motif'].filter((k) => sound[k] !== undefined).map((k) => `data-${k}="${esc(String(sound[k]))}"`),
   ].join(' ');
@@ -901,7 +1023,12 @@ ${head}
   <div class="glow g2"></div>
 ${slots.join('\n')}
 
-${scenes.join('\n\n')}
+${scenes.join('\n\n')}${voiceover ? `
+
+  <!-- the voiceover, ${voiceover.at}–${r2(voiceover.end)}s, over every shot -->
+  <div class="scene shot voiceover">
+    <div class="say${voiceover.text ? ' auto' : ''}" data-voice="${esc(voiceover.src)}" style="--voice:${voiceover.at}s">${esc(voiceover.text)}</div>
+  </div>` : ''}
 </body>
 </html>
 `;
@@ -920,7 +1047,7 @@ ${scenes.join('\n\n')}
 
   console.log(`Wrote ${page}: ${shots.length} shots, ${total}s${total !== duration ? ` (${duration}s of shots and the end card)` : ''}`);
   for (const s of shots) {
-    const what = [s.is3d ? `${s.moveName} (3D)` : s.moveName, s.fit !== 'cover' ? `fit ${s.fit}` : '', s.transition !== 'fade' && s.n !== shots[0].n ? s.transition : '', s.say ? 'voiced' : '', s.tags.staged ? 'staged' : '', s.tags.ai ? 'AI' : ''].filter(Boolean).join(', ');
+    const what = [s.clip ? `clip from ${s.from}s` : '', s.is3d ? `${s.moveName} (3D)` : s.moveName, s.fit !== 'cover' ? `fit ${s.fit}` : '', s.transition !== 'fade' && s.n !== shots[0].n ? s.transition : '', s.say ? 'voiced' : '', s.sound ? 'own sound' : '', s.clipSay ? 'captioned' : '', s.tags.staged ? 'staged' : '', s.tags.ai ? 'AI' : ''].filter(Boolean).join(', ');
     console.log(`  ${String(s.n).padStart(2)}. ${s.start.toFixed(2)}–${s.end.toFixed(2)}s  ${s.media.padEnd(22)} ${what.padEnd(24)} ${[s.label, s.sub].filter(Boolean).join(' | ').slice(0, 44)}`);
   }
   const soundLine = musicSrc
@@ -928,6 +1055,7 @@ ${scenes.join('\n\n')}
     : `${sound.music}${sound.music !== 'none' ? `, ${sound.bpm} BPM, ${sound.key} ${sound.mode || ''}, energy ${sound.energy}, cuts on the ${unitBeats === 4 ? 'bar' : 'beat'}` : ''}${identity ? ` (${sound.music === identity.music ? '' : 'in the key and hook of '}${profile ? 'the client\'s' : 'the'} Sonic Identity)` : ' (no Sonic Identity saved; the template default)'}`;
   console.log(`  sound: ${soundLine}`);
   if (said.length) console.log(`  voice: ${meta.recordings ? `the user's recordings (${meta.recordings})` : voiceName || 'af_heart'}, ${said.length} line${said.length === 1 ? '' : 's'}`);
+  if (voiceover) console.log(`  voiceover: ${voiceover.src}, ${voiceover.length.toFixed(1)}s from ${voiceover.at}s, ${voiceover.text ? 'captioned' : 'no captions'}`);
   console.log(`  look: ${branded.changes.length ? branded.changes.join('; ') : 'the template default'}${profile ? ` (client ${path.basename(profile.file, '.md')})` : ''}`);
   for (const p of branded.problems) notes.push(p);
   if (!hooks.length) notes.push('no hook, so the first frame has no text; add "hook: ..." to stop the scroll');
@@ -943,14 +1071,15 @@ ${scenes.join('\n\n')}
 
 // A clip's first, middle, and last frames beside the photo it was made from, in one sheet: what
 // an AI-animated clip shows of the room, next to what the room really looks like.
-function frames(args) {
+async function frames(args) {
   const clip = args.positional[0];
-  if (!clip || !fs.existsSync(clip)) fail(`No clip at ${clip || '(none given)'}: node montage.js frames <clip> [--photo <photo>]`);
+  if (!clip || !fs.existsSync(clip)) fail(`No clip at ${clip || '(none given)'}: node montage.js frames <clip> [--photo <photo> | --every <seconds>]`);
   if (args.photo && !fs.existsSync(args.photo)) fail(`No photo at ${args.photo}`);
   const info = probe(clip);
   if (!info || !info.duration) fail(`Can't read ${clip} as a video`);
   const out = path.resolve(args.out || `${clip.replace(/\.[^./\\]+$/, '')}-frames.png`);
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'montage-frames-'));
+  if (args.every !== undefined) return everyFrames(clip, info, parseFloat(args.every), out, tmp);
   const stills = [0.05, info.duration / 2, Math.max(0, info.duration - 0.1)].map((t, i) => {
     const f = path.join(tmp, `${i}.png`);
     ffmpeg(['-ss', t.toFixed(2), '-i', clip, '-frames:v', '1', f]);
@@ -963,6 +1092,27 @@ function frames(args) {
   fs.rmSync(tmp, { recursive: true, force: true });
   if (res.status !== 0) fail(`ffmpeg couldn't make the sheet: ${(res.stderr || '').trim().split('\n').pop()}`);
   console.log(`${out}: ${args.photo ? 'the photo, then ' : ''}the clip at the start, middle, and end (${info.w}x${info.h}, ${info.duration.toFixed(1)}s)`);
+}
+
+// A frame at every step of a clip, each with its time, in one sheet (at most 60 frames), and when
+// its sound is loud: what the clip shows when, to pick each shot's [from:] and [to:].
+async function everyFrames(clip, info, every, out, tmp) {
+  if (!(every > 0)) fail('--every takes the step in seconds, like --every 1');
+  const step = Math.max(every, Math.ceil((info.duration / 60) * 10) / 10);
+  const times = [];
+  for (let t = 0; t < info.duration - 0.05; t += step) times.push(Math.round(t * 10) / 10);
+  const items = times.map((t, i) => {
+    const file = path.join(tmp, `${String(i).padStart(3, '0')}.jpg`);
+    ffmpeg(['-ss', String(Math.min(t + 0.05, Math.max(0, info.duration - 0.1))), '-i', clip, '-frames:v', '1', '-vf', 'scale=480:480:force_original_aspect_ratio=decrease', file]);
+    return { n: i + 1, badge: `${t.toFixed(1)}s`, caption: '', file, w: info.w, h: info.h };
+  }).filter((it) => fs.existsSync(it.file));
+  const sheet = await contactSheet(items, out, tmp);
+  fs.rmSync(tmp, { recursive: true, force: true });
+  if (!sheet) fail(`Couldn't make the sheet for ${clip}`);
+  console.log(`${out}: ${items.length} frames, one every ${step}s (${info.w}x${info.h}, ${info.duration.toFixed(1)}s)${step > every ? `; the clip is long, so every ${step}s instead of ${every}s` : ''}`);
+  const loud = loudStretches(clip);
+  if (loud === null) console.log('Sound: none (a silent clip)');
+  else console.log(`Sound: ${loud.length ? `loud at ${loud.join(', ')} (someone talking, or a sound worth keeping with [sound])` : 'quiet throughout (background only)'}`);
 }
 
 async function main() {

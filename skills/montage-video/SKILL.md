@@ -1,6 +1,6 @@
 ---
 name: montage-video
-description: "Turns a client's own photos or phone clips of a room, a home for sale or rent, or a product into a finished vertical marketing montage for TikTok, Instagram Reels, and YouTube Shorts: each photo moving like a real camera (AI-made camera moves and new angles with a connected video model such as Figma Weave, or free local 3D moves and pans), cut on the music's beat, with labels, a hook, the price and specs, and the client's logo and contact details on the end card. Adds music in the client's saved sound, a licensed track, or the user's own, and an optional voiceover (a free local voice or the user's recordings) with synced captions, then keeps editing the video on request (faster, reorder shots, other music, new text, another voice) and saves each version. Keeps a profile per client. Use when the user shares photos of a property, listing, room, or product and asks for a montage, slideshow, listing video, property tour, product video, or a reel or TikTok made from their pictures."
+description: "Turns a client's photos of a room, a home for sale or rent, or a product into a finished vertical marketing montage for TikTok, Instagram Reels, and YouTube Shorts: each photo moving like a camera (free local 3D moves and pans, or, only when the user has a paid plan with a video model such as Figma Weave and approves the quote, AI-made camera moves and new angles), cut on the music's beat, with labels, a hook, the price and specs, and the client's logo and contact details on the end card. Adds music in the client's saved sound, a licensed track, or the user's own, and an optional voiceover with synced captions, then keeps editing the video on request and saves each version. Keeps a profile per client. Use when the user shares photos of a property, listing, room, or product and asks for a montage, slideshow, listing video, property tour, or product video. When they have videos (or can film some), clip-montage is the default instead."
 allowed-tools: Read, Grep, Glob, WebSearch, Write, Bash
 ---
 
@@ -27,6 +27,13 @@ This skill is the photo-driven sibling of `short-form-video`. Use that one
 when there are no client photos (a scripted ad, an explainer, an everyday
 FYP post). Use this one whenever the user's own pictures of a place or
 product are the video.
+
+**Videos come first.** When the user has phone videos of the place or
+the product, or can film a few, `clip-montage` is the default: real
+camera moves, free, and nothing invented. This skill is for photos. Its
+moves are free too, except "AI camera moves", which spend the user's
+credits on a paid plan and run only when they say they have one and
+approve the quote.
 
 ## Step-by-step process
 
@@ -75,6 +82,9 @@ command below. `VIDEO` below means `${CLAUDE_PLUGIN_ROOT}/scripts/video`.
      people's phone numbers.
 
 3. **Get the photos onto disk.** The renderer needs files.
+   - First ask whether they have, or can film, short videos of the
+     place or product. If so, hand over to `clip-montage` (free, and the
+     truest picture). Carry on here with photos only.
    - Ask for the folder (or the file paths) the photos and clips are in.
    - If the user only pasted images into the chat, you can see them, but
      the renderer can't. Ask them to save them in a folder and give you
@@ -102,9 +112,16 @@ command below. `VIDEO` below means `${CLAUDE_PLUGIN_ROOT}/scripts/video`.
      If not, it says how to export them as JPEG.
    - It says whether **3D moves** are on. They need a free depth model set
      up once (`npm install @huggingface/transformers` in `VIDEO`; the
-     first use downloads about 100 MB). If they're off, ask the user
-     whether to set it up. Never install it unasked. Without it, every shot
-     still moves, just flat (pans and zooms).
+     first use downloads about 100 MB from huggingface.co). If they're
+     off, ask the user whether to set it up. Never install it unasked.
+     Without it, every shot still moves, just flat (pans and zooms).
+     - If the install stops on a GPU download (ONNX Runtime's CUDA files),
+       run it again with `ONNXRUNTIME_NODE_INSTALL_CUDA=skip`, or add
+       `--ignore-scripts`. It runs on the CPU either way.
+     - In a cloud session whose network policy blocks huggingface.co, the
+       model can't download and the shots move flat. Tell the user they
+       can allow huggingface.co in the environment's network settings,
+       then run `montage.js` again.
 
 5. **Look at every photo.** Read the contact sheet, then each photo you
    need a closer look at, with the Read tool.
@@ -151,12 +168,15 @@ command below. `VIDEO` below means `${CLAUDE_PLUGIN_ROOT}/scripts/video`.
        `dolly-in`, `rise`) that re-draws the photo from how far each part
        of it is. These only show what's in the photo: no new angles,
        nothing around a corner, and only small moves.
-     - **AI camera moves** (a connected video model, costs credits): the
+     - **AI camera moves** (a connected video model, paid credits): the
        camera really orbits, glides through a doorway, or sees the room
        from a new angle, because the model invents what the photo doesn't
        show. Every clip is checked against its photo and labeled. See
-       "AI camera moves" below. Offer this whenever a model is connected
-       and the user wants the camera to move, not just the picture.
+       "AI camera moves" below. Not the default: offer it only when the
+       user wants the camera to really move and says they have a paid
+       plan with a video model. Otherwise say in one line that it needs a
+       paid plan, and that filming a few clips (`clip-montage`) gives real
+       camera moves for free.
      - A real second angle can also come from another photo of the same
        room. Ask the photographer for two or three angles of the best
        rooms.
@@ -225,7 +245,7 @@ command below. `VIDEO` below means `${CLAUDE_PLUGIN_ROOT}/scripts/video`.
    | "change the text", "remove the price" | the label, `hook:`, `price:`, `specs:`, `cta:` |
    | "zoom in on the fireplace" | `[move: push-in focus=62%,48%]`, or `[move: dolly-in focus=62%,48%]` for a move in 3D |
    | "make it feel like a real camera" | 3D moves: `[move: orbit]` on wide rooms, `dolly-in` or `rise` on others (on by default when the depth model is set up) |
-   | "change the camera angle", "real camera moves", "not just moving pictures" | AI camera moves ("AI camera moves" below): a clip per photo from a connected video model, quoted and approved first |
+   | "change the camera angle", "real camera moves", "not just moving pictures" | filming a few clips (`clip-montage`, free), or, with a paid plan the user confirms, AI camera moves ("AI camera moves" below), quoted and approved first |
    | "the AI changed the room" | reject that clip: regenerate it (quoted and approved), or use a local move on that photo |
    | "more 3D" / "less 3D" | `amount=1.5` or `amount=0.6` in that shot's move |
    | "it looks warped" | a lower `amount=`, a flat move (`pan-right`, `push-in`) on that shot, or `depth: off` for all |
@@ -261,29 +281,39 @@ command below. `VIDEO` below means `${CLAUDE_PLUGIN_ROOT}/scripts/video`.
 ### AI camera moves (a connected video model)
 
 When the user wants the camera to really move through the space (orbit
-the island, glide through a doorway, see the room from a new angle), only
-a generative video model can do it. It turns each photo into a short clip
-and invents what the camera sees as it moves. It costs the user's credits,
-and every clip has to be checked against its photo.
+the island, glide through a doorway, see the room from a new angle) and
+has only photos, only a generative video model can do it. It turns each
+photo into a short clip and invents what the camera sees as it moves. It
+costs the user's credits, and every clip has to be checked against its
+photo. Real clips (`clip-montage`) do the same for free; suggest them
+first.
 
-1. **Find a model.** Check this session's tools, as `short-form-video`
+1. **Ask before anything else.** Ask whether the user has a paid plan
+   with a video model, and whether they want to spend credits on this.
+   Go on only on a yes. Never quote or run a model to find out.
+2. **Find a model.** Check this session's tools, as `short-form-video`
    step 3 describes. With the Figma connector, Weave runs models directly:
    `weave_find_model` (for example "seedance") returns each model's
    settings and its approximate credit cost. Higgsfield works the same way
    if connected. Recommend a model from `montage-guide.md`, "AI camera
    moves" (Seedance 1.5 Pro for most videos). If nothing is connected, say
    which connector would do it, and use local moves.
-2. **Plan one move per photo** from the prompt library in
+   - Weave runs video models only on paid Figma plans. If the quote call
+     fails with "Video models are only available on paid plans", run
+     `whoami`, tell the user which plan it shows (a free Starter plan
+     can't run them) and that an upgrade is needed, then offer clips
+     (`clip-montage`) or local moves. Don't retry.
+3. **Plan one move per photo** from the prompt library in
    `montage-guide.md`. Name what's really in the photo ("orbit left around
    the white waterfall island"), and add the shared clause that keeps the
    room as it is. For a full-screen montage, ask for vertical 9:16 clips
    (the model extends the top and bottom a little). Ask for 5 seconds each,
    with the camera not fixed and no generated audio.
-3. **Get the photos to the model,** one upload per photo.
+4. **Get the photos to the model,** one upload per photo.
    `weave_upload_asset` opens a file picker on the user's device, so if the
    photos only exist on this machine, send the user the copies first. An
    https URL works too, where the photos are already hosted.
-4. **Quote, then ask.**
+5. **Quote, then ask.**
    - Call `weave_run_model` without `acknowledgedCost` for each clip to get
      its quote.
    - Show every quote, and the total, in one structured Approve/Cancel
@@ -291,13 +321,13 @@ and every clip has to be checked against its photo.
    - Quote and approve every rerun the same way.
    - With a new kind of photo or a new model, run one clip first and check
      it before the rest.
-5. **Collect each clip.**
+6. **Collect each clip.**
    - Poll `weave_get_model_run_output`.
    - Download each result at once (the link expires) into
      `state/videos/assets/<slug>-NN-ai.mp4`.
    - Record it with `node VIDEO/media.js credit <clip> --ai "Weave / <model>"
      --prompt "<prompt>"`.
-6. **Check every clip against its photo.**
+7. **Check every clip against its photo.**
    - Run `node VIDEO/montage.js frames <clip> --photo <photo>`. It writes the
      photo beside the clip's first, middle, and last frames. Read it.
    - Reject a clip that adds or removes a window, door, room, fixture, or
@@ -305,7 +335,7 @@ and every clip has to be checked against its photo.
      room, warps straight lines, or adds people or text.
    - Regenerate it (quoted and approved), or use a local move for that
      photo. Never keep a clip that changes a property for sale.
-7. **Edit the clips.**
+8. **Edit the clips.**
    - Each clip is a shot (`assets/<slug>-01-ai.mp4  Kitchen  [ai]`).
    - A 5-second clip often gives two shots from different points
      (`[from: 0]` and `[from: 3]`), so two angles of the same room.
@@ -320,13 +350,17 @@ Trigger on requests like:
 - "Make a video from these listing photos"
 - "Here are pictures of the house, make a reel for the client"
 - "Turn these product photos into a TikTok"
-- "Make a montage / slideshow of this room with music"
+- "Make a slideshow of this room's photos with music"
 - "Property tour video with a voiceover from these pictures"
 - "Change the music / make it faster / put the kitchen first" (on a montage made here)
 
-**Do not** trigger when there are no photos of the user's own: a scripted
-ad, an explainer, or an everyday meme post is `short-form-video`. A
-long-form or horizontal video brief is `visual-brief-generator`.
+**Do not** trigger when the user has videos of the place or the product,
+or asks for a montage without saying what they have: that's
+`clip-montage`, the default, which asks for clips first and hands photos
+back here. **Do not** trigger when there are no photos of the user's
+own: a scripted ad, an explainer, or an everyday meme post is
+`short-form-video`. A long-form or horizontal video brief is
+`visual-brief-generator`.
 
 ## Output structure (required)
 

@@ -59,13 +59,15 @@ To change a line, edit the script and run `compose.js` again: the timing is
 measured from the voice, so don't hand-edit it in the page. Send the user
 the voice (`--audio-only`) or a render to check, since you can't hear it.
 
-## A montage of the user's photos: montage.js
+## A montage of the user's clips or photos: montage.js
 
-When the user's own photos or clips of a home or a product are the video,
-that's the `montage-video` skill, which follows its own steps with
-`scripts/video/montage.js` (`inspect` to bring the photos in, then a
-script of one shot per photo) and `templates/montage.html`. Render the page
-it writes the same way as below.
+When the user's own clips of a place, a product, or an event are the
+video, that's the `clip-montage` skill; with only photos, the
+`montage-video` skill. Both follow their own steps with
+`scripts/video/montage.js` (`inspect` to bring the clips or photos in,
+then a script of one shot per clip moment or photo) and
+`templates/montage.html`. Render the page it writes the same way as
+below.
 
 ## 3D or pixel-art animation: a style
 

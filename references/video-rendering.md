@@ -109,8 +109,14 @@ cta: try it free · link in bio
     with the mascot behind it is the 3D version of the classic "founder
     holding the laptop" cover), `sign` with `text=` (or `src=` their
     logo), or `screen`, the screenshot floating beside it for `point`
-    and `present`. `set=night` swaps the light studio for a dark one
-    under a spotlight; `face=` (`happy`, `wow`, `love`, `sad`, `think`,
+    and `present`. `set=` picks the place: `room` (a living room by
+    day), `stage` (an LED wall and light beams), `city` (a rooftop at
+    dusk), `park` (sky, hills, and trees), `studio` (light and seamless),
+    or `night`; without one, shots take the room, stage, city, and park in
+    turn, so a video moves through places. Pick them to fit the line (the
+    stage for a launch, the room for working, the park for a payoff).
+    `bg=assets/<photo>` stands the mascot in front of the user's own photo
+    (their office, their shop), softly blurred; `face=` (`happy`, `wow`, `love`, `sad`, `think`,
     `wink`) overrides the expression; `frame=mid` or `full` the framing;
     `talk=no` keeps its mouth shut when the voice isn't the mascot's.
   - `desk`: a cozy desk at night, the mascot typing at a monitor showing

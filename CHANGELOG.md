@@ -32,6 +32,12 @@ Skills that read "our changelog" for source material read this file too.
   screen=assets/app.png at=...]` puts their screenshot on the laptop or
   phone they're holding, from the screen's four corners, moving with the
   photo's zoom.
+- **Places for the mascot**: a living room by day, a launch stage with an
+  LED wall and light beams, a city rooftop at dusk, and a park, each in
+  the brand's colors. Shots take them in turn (`set=` names one), so a
+  video moves through places instead of standing on one plain backdrop,
+  and `bg=assets/photo.jpg` stands the mascot in front of the user's own
+  photo, softly blurred.
 - Three more 3D shots, after the big launch videos: `icons` (app tiles
   of features or skills dropping into a grid, the mascot waving in the
   last cell), `notes` (handwritten sticky notes floating in the dark),

@@ -269,7 +269,9 @@ times for TikTok, Reels, and Shorts, and, if you want, makes the video:
 - **Animated, in 3D or pixel art:** the same narrated script, drawn as 3D
   scenes starring your brand's mascot, a robot in your colors that walks
   in, waves, types at a desk with your app on the monitor, points at your
-  screen, holds up your laptop, cheers, and lip-syncs to the voice; or as
+  screen, holds up your laptop, cheers, and lip-syncs to the voice, moving
+  through a living room, a launch stage, a city rooftop, and a park (or
+  standing in your own photo); or as
   a pixel-art game with chiptune music (`style: 3d` or `style: pixel`).
 - **The bold look:** `captions: bold` gives any narrated video the cover
   of the big creator ads: huge capitals boxed in black with the selling

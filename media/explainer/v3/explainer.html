@@ -1479,6 +1479,302 @@ function studio({ night = false } = {}) {
   return { scene, camera };
 }
 
+// ---- places: rooms the mascot stands in, so a video moves through places instead of one backdrop.
+// Big surfaces are flat (their light painted in) and the shadows land on a catcher, which keeps
+// them quick to draw in software; only what stands near the mascot is lit.
+const SETS = ['room', 'stage', 'city', 'park'];
+const muted = (c, s, l) => { const h = c.getHSL({}, SRGB); return new THREE.Color().setHSL(h.h, s, l, SRGB); };
+function flat(tex, w, h, x, y, z, opts = {}) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: !!opts.transparent, toneMapped: false, depthWrite: !opts.transparent, ...(opts.additive ? { blending: THREE.AdditiveBlending, depthWrite: false, transparent: true } : {}) }));
+  m.position.set(x, y, z);
+  if (opts.floor) m.rotation.x = -Math.PI / 2;
+  return m;
+}
+function shadowCatcher(scene, opacity, color = 0x000000) {
+  const c = new THREE.Mesh(new THREE.PlaneGeometry(7, 5), new THREE.ShadowMaterial({ color, opacity }));
+  c.rotation.x = -Math.PI / 2;
+  c.position.set(0, 0.006, -0.4);
+  c.receiveShadow = true;
+  scene.add(c);
+}
+function keyLight(scene, color, intensity, pos) {
+  const key = new THREE.DirectionalLight(color, intensity);
+  key.position.set(...pos);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  Object.assign(key.shadow.camera, { left: -3.5, right: 3.5, top: 4, bottom: -1.5, near: 0.5, far: 25 });
+  key.shadow.bias = -0.0005; key.shadow.normalBias = 0.02; key.shadow.radius = 4;
+  scene.add(key);
+  return key;
+}
+const radial = (g, x, y, r, inner, outer = 'rgba(0,0,0,0)') => { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, inner); gr.addColorStop(1, outer); g.fillStyle = gr; g.fillRect(x - r, y - r, 2 * r, 2 * r); };
+
+// a living room by day: a window full of sky, a plant, a lamp, a rug, the sun on the wall
+function roomSet(scene) {
+  const wall = muted(PAL.second, 0.28, 0.7);
+  const [c, g] = canvas2d(1152, 896); // 9 x 7 units, from y 0
+  const U = 128, X = (x) => (x + 4.5) * U, Y = (y) => (7 - y) * U;
+  const grad = g.createLinearGradient(0, 0, 1152, 896);
+  grad.addColorStop(0, hex(wall.clone().offsetHSL(0, 0, 0.08))); grad.addColorStop(1, hex(wall.clone().offsetHSL(0, 0, -0.06)));
+  g.fillStyle = grad; g.fillRect(0, 0, 1152, 896);
+  g.fillStyle = hex(wall.clone().offsetHSL(0, 0.02, -0.12)); g.fillRect(0, Y(1.0), 1152, U * 1.0); // wainscot
+  g.strokeStyle = 'rgba(255,255,255,.18)'; g.lineWidth = 4;
+  for (let x = -4.2; x < 4.5; x += 0.9) g.strokeRect(X(x), Y(0.85), 0.7 * U, 0.65 * U);
+  g.fillStyle = 'rgba(255,255,255,.55)'; g.fillRect(0, Y(1.02), 1152, 7); g.fillRect(0, Y(0.08), 1152, 10);
+  // the window: sky, a far skyline, the frame, and the sunbeam it throws to the right
+  const [wx0, wx1, wy0, wy1] = [X(-2.75), X(-0.55), Y(3.9), Y(1.35)];
+  const sky = g.createLinearGradient(0, wy0, 0, wy1); sky.addColorStop(0, '#7fb8ec'); sky.addColorStop(1, '#d9ecf7');
+  g.fillStyle = sky; g.fillRect(wx0, wy0, wx1 - wx0, wy1 - wy0);
+  g.fillStyle = 'rgba(255,255,255,.85)';
+  [[0.3, 0.22, 46], [0.62, 0.35, 34], [0.2, 0.45, 28]].forEach(([fx, fy, r]) => { const x = wx0 + fx * (wx1 - wx0), y = wy0 + fy * (wy1 - wy0); g.beginPath(); g.ellipse(x, y, r * 1.8, r * 0.7, 0, 0, 6.29); g.ellipse(x + r, y - r * 0.3, r, r * 0.65, 0, 0, 6.29); g.fill(); });
+  const rr = rng(4);
+  for (let x = wx0; x < wx1; x += 14 + rr() * 18) { const h = 30 + rr() * 90; g.fillStyle = 'rgba(120,150,175,.75)'; g.fillRect(x, wy1 - h, 16 + rr() * 22, h); }
+  g.fillStyle = '#5f8f55'; for (let x = wx0; x < wx1; x += 22) { g.beginPath(); g.arc(x, wy1 - 6, 16 + rr() * 12, 0, 6.29); g.fill(); }
+  g.strokeStyle = '#f7f4ee'; g.lineWidth = 16; g.strokeRect(wx0, wy0, wx1 - wx0, wy1 - wy0);
+  g.lineWidth = 9; g.beginPath(); g.moveTo((wx0 + wx1) / 2, wy0); g.lineTo((wx0 + wx1) / 2, wy1); g.moveTo(wx0, (wy0 + wy1) / 2); g.lineTo(wx1, (wy0 + wy1) / 2); g.stroke();
+  g.fillStyle = '#f7f4ee'; g.fillRect(wx0 - 24, wy1, wx1 - wx0 + 48, 16); // the sill
+  g.save(); g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(255,236,200,.16)';
+  g.beginPath(); g.moveTo(wx1 + 40, wy0 + 30); g.lineTo(X(2.6), Y(3.1)); g.lineTo(X(3.6), Y(0.4)); g.lineTo(wx1 + 140, wy1 + 40); g.fill(); g.restore();
+  // a framed print in the brand's colors, and a shelf of books
+  g.fillStyle = '#26232b'; g.fillRect(X(0.55), Y(3.75), 1.35 * U, 1.6 * U);
+  g.fillStyle = hex(PAL.pearl); g.fillRect(X(0.55) + 12, Y(3.75) + 12, 1.35 * U - 24, 1.6 * U - 24);
+  radial(g, X(1.22), Y(3.05), 58, hex(PAL.accent), hex(PAL.accent)); g.fillStyle = hex(PAL.second); g.fillRect(X(0.8), Y(2.55), 0.85 * U, 14); g.fillRect(X(0.8), Y(2.4), 0.55 * U, 14);
+  g.fillStyle = '#e9e2d6'; g.fillRect(X(0.3), Y(1.9), 2.2 * U, 12);
+  let bx = X(0.42);
+  const spines = [PAL.accent, PAL.second, PAL.third, PAL.ink, PAL.pearl, PAL.accent, PAL.second];
+  spines.forEach((col, i) => { const w = 16 + (i * 7) % 12, h = 54 + (i * 13) % 26; g.fillStyle = hex(col.clone().multiplyScalar(0.92)); g.fillRect(bx, Y(1.9) - h, w, h); bx += w + 3; });
+  g.fillStyle = hex(PAL.third); g.beginPath(); g.ellipse(X(2.1), Y(1.9) - 26, 22, 28, 0, 0, 6.29); g.fill();
+  scene.add(flat(texture(c), 9, 7, 0, 3.5, -3.4));
+  // the floor: warm planks, darker away from the light
+  const [fc, fg] = canvas2d(512, 512);
+  const base = new THREE.Color('#b98a5e');
+  for (let y = 0; y < 512; y += 32) for (let x = -((y / 32) % 2) * 90; x < 512; x += 180) { fg.fillStyle = hex(base.clone().offsetHSL(0, 0, (rr() - 0.5) * 0.08)); fg.fillRect(x, y, 178, 30); }
+  const ft = texture(fc); ft.wrapS = ft.wrapT = THREE.RepeatWrapping; ft.repeat.set(4, 4);
+  const floorM = flat(ft, 12, 12, 0, 0, 2.6, { floor: true });
+  scene.add(floorM);
+  const [vc, vg] = canvas2d(256, 256); radial(vg, 128, 128, 128, 'rgba(0,0,0,0)', 'rgba(40,20,10,.55)');
+  scene.add(flat(texture(vc), 12, 12, 0, 0.002, 2.6, { floor: true, transparent: true }));
+  const [rc, rg] = canvas2d(512, 512);
+  rg.fillStyle = hex(muted(PAL.accent, 0.45, 0.62)); rg.beginPath(); rg.arc(256, 256, 250, 0, 6.29); rg.fill();
+  rg.strokeStyle = 'rgba(255,255,255,.45)'; rg.lineWidth = 10; [200, 150].forEach((r) => { rg.beginPath(); rg.arc(256, 256, r, 0, 6.29); rg.stroke(); });
+  const rug = flat(texture(rc), 2.8, 2.8, 0, 0.004, 0.1, { floor: true, transparent: true }); rug.scale.y = 0.75;
+  scene.add(rug);
+  // a big plant by the window, a floor lamp on the right
+  const pl = plant(); pl.scale.setScalar(2.6); pl.position.set(-1.75, 0, -2.6); scene.add(pl);
+  const lamp = new THREE.Group();
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.9, 10), new THREE.MeshStandardMaterial({ color: '#2a2b33', metalness: 0.6, roughness: 0.4 })); pole.position.y = 0.95;
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.24, 0.04, 24), pole.material); foot.position.y = 0.02;
+  const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.32, 0.4, 28, 1, true), new THREE.MeshStandardMaterial({ color: '#f3e7d3', emissive: '#ffd9a0', emissiveIntensity: 0.55, side: THREE.DoubleSide })); shade.position.y = 1.95;
+  lamp.add(pole, foot, shade); lamp.position.set(1.75, 0, -2.55); scene.add(lamp);
+  scene.background = wall.clone().multiplyScalar(0.8);
+  scene.add(new THREE.HemisphereLight('#e8f2ff', '#b98a5e', 0.9));
+  keyLight(scene, '#fff1dc', 2.2, [-4, 6.5, 5]);
+  const rim = new THREE.DirectionalLight(PAL.accent, 0.9); rim.position.set(4, 3, -4); scene.add(rim);
+  shadowCatcher(scene, 0.35, '#3a2516');
+  return { tone: 'light' };
+}
+
+// a launch stage: an LED wall in the brand's colors, light beams sweeping through haze
+function stageSet(scene) {
+  const dark = PAL.bg.clone().lerp(PAL.accent, 0.04).multiplyScalar(0.55);
+  scene.background = dark;
+  scene.fog = new THREE.Fog(dark, 9, 30);
+  const [gc, gg] = canvas2d(1024, 256);
+  const cols = [PAL.accent, PAL.second, PAL.third, PAL.accent];
+  const lg = gg.createLinearGradient(0, 0, 1024, 0);
+  cols.forEach((col, i) => lg.addColorStop(i / (cols.length - 1), hex(col)));
+  gg.fillStyle = lg; gg.fillRect(0, 0, 1024, 256);
+  for (let i = 0; i < 6; i++) radial(gg, 90 + i * 170, 128 + (i % 2 ? 50 : -40), 130, 'rgba(255,255,255,.6)');
+  const glowTex = texture(gc); glowTex.wrapS = THREE.RepeatWrapping; glowTex.repeat.set(1, 1);
+  const led = flat(glowTex, 9.6, 5.2, 0, 3.0, -4.6);
+  const [mc, mg] = canvas2d(512, 280); // the LED dots: dark everywhere but the little round pixels
+  mg.fillStyle = 'rgba(8,8,12,.82)'; mg.fillRect(0, 0, 512, 280); mg.globalCompositeOperation = 'destination-out';
+  for (let y = 4; y < 280; y += 8) for (let x = 4; x < 512; x += 8) { mg.beginPath(); mg.arc(x, y, 3.3, 0, 6.29); mg.fill(); }
+  const maskTex = texture(mc); maskTex.wrapS = maskTex.wrapT = THREE.RepeatWrapping; maskTex.repeat.set(2, 2);
+  const mask = flat(maskTex, 9.6, 5.2, 0, 3.0, -4.58, { transparent: true });
+  const frameM = new THREE.Mesh(new THREE.BoxGeometry(9.9, 5.5, 0.1), new THREE.MeshBasicMaterial({ color: '#08080b' })); frameM.position.set(0, 3.0, -4.7);
+  scene.add(frameM, led, mask);
+  // a glossy floor that picks up the wall's glow
+  const [fc, fg] = canvas2d(512, 512);
+  fg.fillStyle = hex(dark.clone().multiplyScalar(0.7)); fg.fillRect(0, 0, 512, 512);
+  const fl = fg.createLinearGradient(0, 0, 0, 512); fl.addColorStop(0, hex(PAL.accent.clone().multiplyScalar(0.55))); fl.addColorStop(0.45, 'rgba(0,0,0,0)');
+  fg.fillStyle = fl; fg.fillRect(0, 0, 512, 512);
+  radial(fg, 256, 330, 170, 'rgba(255,240,220,.35)');
+  scene.add(flat(texture(fc), 12, 10, 0, 0, 0.4, { floor: true }));
+  // beams from the rig above, through haze
+  const [bc, bg] = canvas2d(64, 256);
+  const bl = bg.createLinearGradient(0, 0, 0, 256); bl.addColorStop(0, 'rgba(255,255,255,.55)'); bl.addColorStop(1, 'rgba(255,255,255,0)');
+  bg.fillStyle = bl; bg.fillRect(0, 0, 64, 256);
+  const beamTex = texture(bc);
+  const beams = [[-2.6, PAL.second], [-1.0, PAL.pearl], [1.0, PAL.pearl], [2.6, PAL.accent]].map(([x, col], i) => {
+    const m = new THREE.Mesh(new THREE.ConeGeometry(0.75, 6.5, 32, 1, true), new THREE.MeshBasicMaterial({ map: beamTex, color: col, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    m.geometry.translate(0, -3.25, 0); // the tip at the rig, the wide end on the floor
+    m.position.set(x, 6.4, -1.8);
+    scene.add(m);
+    return { m, phase: i * 1.7 };
+  });
+  scene.add(new THREE.HemisphereLight('#6d6a8a', '#140f18', 0.35));
+  keyLight(scene, '#fff6ea', 1.9, [0.5, 7, 6]);
+  const r1 = new THREE.DirectionalLight(PAL.accent, 2.4); r1.position.set(4, 3, -4);
+  const r2 = new THREE.DirectionalLight(PAL.second, 2.0); r2.position.set(-4, 3, -4);
+  scene.add(r1, r2);
+  shadowCatcher(scene, 0.55);
+  return {
+    tone: 'dark',
+    update(lt) {
+      glowTex.offset.x = lt * 0.06;
+      beams.forEach((b) => { b.m.rotation.z = 0.32 * Math.sin(lt * 0.6 + b.phase); });
+    },
+  };
+}
+
+// a rooftop at dusk: a skyline under an orange and violet sky, string lights over a railing
+function citySet(scene) {
+  const [sc, sg] = canvas2d(256, 512);
+  const sk = sg.createLinearGradient(0, 0, 0, 512);
+  sk.addColorStop(0, '#1d2050'); sk.addColorStop(0.45, '#5b3a7a'); sk.addColorStop(0.75, '#d9707a'); sk.addColorStop(1, '#ffb27a');
+  sg.fillStyle = sk; sg.fillRect(0, 0, 256, 512);
+  radial(sg, 70, 430, 150, 'rgba(255,220,170,.85)');
+  scene.add(flat(texture(sc), 70, 40, 0, 12, -42));
+  const skyline = (z, w, h, color, lit, seed, top) => {
+    const [c, g] = canvas2d(1024, 384);
+    const r = rng(seed);
+    for (let x = 0; x < 1024;) {
+      const bw = 40 + r() * 70, bh = 120 + r() * 250 * top;
+      g.fillStyle = color; g.fillRect(x, 384 - bh, bw, bh);
+      for (let wy = 384 - bh + 10; wy < 376; wy += 16) for (let wx = x + 6; wx < x + bw - 8; wx += 12) if (r() < lit) { g.fillStyle = r() > 0.25 ? 'rgba(255,214,140,.9)' : 'rgba(170,210,255,.8)'; g.fillRect(wx, wy, 6, 8); }
+      x += bw + 2 + r() * 10;
+    }
+    scene.add(flat(texture(c), w, h, 0, h / 2 - 0.3, z, { transparent: true }));
+  };
+  skyline(-30, 48, 18, '#2c2650', 0.22, 5, 0.8);
+  skyline(-16, 26, 10, '#16152c', 0.35, 9, 1.0);
+  scene.background = new THREE.Color('#1d2050');
+  scene.fog = new THREE.Fog('#4a3a6e', 18, 60);
+  // the roof, a railing, and the lights strung across it
+  const [fc, fg] = canvas2d(512, 512);
+  fg.fillStyle = '#3a3a48'; fg.fillRect(0, 0, 512, 512);
+  fg.strokeStyle = 'rgba(0,0,0,.25)'; fg.lineWidth = 3; for (let i = 0; i <= 512; i += 64) { fg.beginPath(); fg.moveTo(i, 0); fg.lineTo(i, 512); fg.moveTo(0, i); fg.lineTo(512, i); fg.stroke(); }
+  radial(fg, 256, 300, 260, 'rgba(255,190,120,.28)');
+  const ft = texture(fc); ft.wrapS = ft.wrapT = THREE.RepeatWrapping;
+  scene.add(flat(ft, 14, 8, 0, 0, 1.6, { floor: true }));
+  const railM = new THREE.MeshStandardMaterial({ color: '#202030', metalness: 0.6, roughness: 0.4 });
+  for (let x = -4; x <= 4; x += 0.8) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.05, 0.05), railM); post.position.set(x, 0.52, -2.4); scene.add(post); }
+  const top = new THREE.Mesh(new THREE.BoxGeometry(8.4, 0.06, 0.08), railM); top.position.set(0, 1.05, -2.4); scene.add(top);
+  const glassM = new THREE.MeshBasicMaterial({ color: '#9fb7ff', transparent: true, opacity: 0.08, depthWrite: false });
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 0.95), glassM); glass.position.set(0, 0.52, -2.42); scene.add(glass);
+  const bulbs = [];
+  const bulbM = new THREE.MeshBasicMaterial({ color: '#ffd59a', toneMapped: false });
+  for (const [x0, x1, y, z] of [[-3.2, 3.2, 3.15, -1.7], [-3.6, 0.6, 2.85, -3.0]]) {
+    const pts = [];
+    for (let i = 0; i <= 16; i++) { const t = i / 16; pts.push(V(lerp(x0, x1, t), y - 0.45 * Math.sin(Math.PI * t), z)); }
+    const wire = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 48, 0.008, 4), new THREE.MeshBasicMaterial({ color: '#111' }));
+    scene.add(wire);
+    pts.forEach((p, i) => { if (i % 2) return; const b = new THREE.Mesh(new THREE.SphereGeometry(0.045, 12, 8), bulbM.clone()); b.position.copy(p).add(V(0, -0.06, 0)); scene.add(b); bulbs.push(b); });
+  }
+  const pot = plant(); pot.scale.setScalar(2.2); pot.position.set(-2.1, 0, -1.9); scene.add(pot);
+  scene.add(new THREE.HemisphereLight('#8f7fd0', '#2a2236', 0.55));
+  keyLight(scene, '#ffcf9a', 2.0, [-3, 5.5, 5]);
+  const rim = new THREE.DirectionalLight('#ff9a7a', 1.6); rim.position.set(-3, 2, -6); scene.add(rim);
+  const rim2 = new THREE.DirectionalLight(PAL.second, 1.2); rim2.position.set(4, 3, -4); scene.add(rim2);
+  shadowCatcher(scene, 0.5);
+  return { tone: 'dark', update(lt) { bulbs.forEach((b, i) => b.material.color.setScalar(0.85 + 0.15 * Math.sin(lt * 2.3 + i * 1.7))); } };
+}
+
+// a park on a bright day: sky, drifting clouds, rolling hills, round trees, grass
+function parkSet(scene) {
+  const [sc, sg] = canvas2d(256, 512);
+  const sk = sg.createLinearGradient(0, 0, 0, 512); sk.addColorStop(0, '#4f9be8'); sk.addColorStop(0.7, '#a9d4f5'); sk.addColorStop(1, '#e6f4fb');
+  sg.fillStyle = sk; sg.fillRect(0, 0, 256, 512);
+  radial(sg, 200, 120, 90, 'rgba(255,250,225,.9)');
+  scene.add(flat(texture(sc), 80, 44, 0, 14, -45));
+  scene.background = new THREE.Color('#a9d4f5');
+  scene.fog = new THREE.Fog('#cfe6f5', 20, 60);
+  const hills = (z, w, h, color, seed, amp) => {
+    const [c, g] = canvas2d(1024, 256);
+    const r = rng(seed); const ph = [r() * 6, r() * 6];
+    g.fillStyle = color; g.beginPath(); g.moveTo(0, 256);
+    for (let x = 0; x <= 1024; x += 8) g.lineTo(x, 256 - (110 + amp * Math.sin(x / 170 + ph[0]) + amp * 0.5 * Math.sin(x / 61 + ph[1])));
+    g.lineTo(1024, 256); g.fill();
+    scene.add(flat(texture(c), w, h, 0, h / 2 - 0.2, z, { transparent: true }));
+  };
+  hills(-34, 70, 14, '#8cbfa4', 3, 40);
+  hills(-20, 44, 8, '#6fae6e', 7, 34);
+  const clouds = [];
+  const cloudM = new THREE.MeshBasicMaterial({ color: '#ffffff' });
+  const r = rng(17);
+  for (let i = 0; i < 6; i++) {
+    const g = new THREE.Group();
+    for (let k = 0; k < 4; k++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.9 + r() * 0.7, 16, 10), cloudM); m.position.set(k * 1.1 - 1.6, (k % 2) * 0.4, 0); m.scale.y = 0.6; g.add(m); }
+    g.position.set(-14 + i * 5.5 + r() * 2, 7 + r() * 4, -26 - r() * 6);
+    scene.add(g); clouds.push({ g, x: g.position.x, speed: 0.15 + r() * 0.15 });
+  }
+  const leafM = [new THREE.MeshStandardMaterial({ color: '#4f9b4f', roughness: 0.8 }), new THREE.MeshStandardMaterial({ color: '#69b35a', roughness: 0.8 })];
+  const trunkM = new THREE.MeshStandardMaterial({ color: '#7a5537', roughness: 0.9 });
+  [[-3.4, -6, 1.4], [3.2, -7.5, 1.7], [-1.6, -10, 1.2], [1.4, -12, 1.5], [-5.5, -11, 1.8], [5.4, -10, 1.3]].forEach(([x, z, s], i) => {
+    const t = new THREE.Group();
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 1.4, 10), trunkM); trunk.position.y = 0.7;
+    const crown = new THREE.Mesh(new THREE.SphereGeometry(0.9, 20, 14), leafM[i % 2]); crown.position.y = 1.9;
+    const crown2 = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 12), leafM[(i + 1) % 2]); crown2.position.set(0.45, 1.55, 0.2);
+    t.add(trunk, crown, crown2); t.scale.setScalar(s); t.position.set(x, 0, z); scene.add(t);
+  });
+  const [gc, gg] = canvas2d(512, 512);
+  gg.fillStyle = '#7dbb5c'; gg.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 2500; i++) { gg.fillStyle = r() > 0.5 ? 'rgba(60,120,50,.35)' : 'rgba(170,220,120,.3)'; gg.fillRect(r() * 512, r() * 512, 2, 6); }
+  const gt = texture(gc); gt.wrapS = gt.wrapT = THREE.RepeatWrapping; gt.repeat.set(6, 6);
+  scene.add(flat(gt, 40, 40, 0, 0, -8, { floor: true }));
+  const flowerCols = [PAL.accent, '#ffffff', PAL.third, '#ff7aa8'];
+  for (let i = 0; i < 26; i++) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), new THREE.MeshBasicMaterial({ color: flowerCols[i % 4] }));
+    const a = r() * 6.28, d = 1.3 + r() * 2.2;
+    m.position.set(Math.cos(a) * d, 0.05, -0.5 + Math.sin(a) * d * 0.7);
+    scene.add(m);
+  }
+  scene.add(new THREE.HemisphereLight('#cfe8ff', '#6fae6e', 0.95));
+  keyLight(scene, '#fff3d6', 2.4, [3.5, 7, 4.5]);
+  const rim = new THREE.DirectionalLight(PAL.accent, 0.7); rim.position.set(-4, 3, -4); scene.add(rim);
+  shadowCatcher(scene, 0.32, '#1f3a14');
+  return { tone: 'light', update(lt) { clouds.forEach((c) => { c.g.position.x = c.x + lt * c.speed; }); } };
+}
+
+// the user's own photo as the place: cropped to fill the frame and softly blurred, as if the
+// camera were focused on the mascot standing in front of it
+async function photoSet(scene, src) {
+  const img = await loadImage(src);
+  const [c, g] = canvas2d(540, 960);
+  const k = Math.max(540 / img.width, 960 / img.height);
+  g.filter = 'blur(5px) saturate(1.05)';
+  g.drawImage(img, (540 - img.width * k) / 2, (960 - img.height * k) / 2, img.width * k, img.height * k);
+  if (!readable(g)) throw new Error(`couldn't read ${src} into the 3D scene; open the page through render.js`);
+  scene.background = texture(c);
+  scene.add(new THREE.HemisphereLight('#ffffff', '#555555', 0.9));
+  keyLight(scene, '#ffffff', 2.0, [-3, 6.5, 5]);
+  const rim = new THREE.DirectionalLight(PAL.accent, 1.0); rim.position.set(4, 3, -4); scene.add(rim);
+  shadowCatcher(scene, 0.45);
+  return { tone: 'dark' };
+}
+
+// The place for a shot: data-bg (a photo), data-set by name, or the next in turn, so a video's
+// shots move through the room, the stage, the city, and the park.
+function setFor(el) {
+  const named = (el.dataset.set || '').toLowerCase();
+  if (named) return named;
+  const shots = [...document.querySelectorAll('.shot')].filter((s) => ['mascot', 'title', 'icons', 'button'].includes(s.dataset.shot));
+  return SETS[Math.max(0, shots.indexOf(el)) % SETS.length];
+}
+async function buildSet(el) {
+  const name = el.dataset.bg ? 'photo' : setFor(el);
+  if (name === 'studio' || name === 'night') return { ...studio({ night: name === 'night' }), tone: name === 'night' ? 'dark' : 'light', update() {} };
+  const scene = new THREE.Scene();
+  scene.environment = env;
+  scene.environmentIntensity = 0.7;
+  const make = { room: roomSet, stage: stageSet, city: citySet, park: parkSet }[name];
+  if (name !== 'photo' && !make) throw new Error(`unknown set "${name}" (known: ${[...SETS, 'studio', 'night'].join(', ')}, or data-bg for a photo)`);
+  const built = name === 'photo' ? await photoSet(scene, el.dataset.bg) : make(scene);
+  const camera = new THREE.PerspectiveCamera(28, W / H, 0.1, 200);
+  return { scene, camera, tone: built.tone, update: built.update || (() => {}) };
+}
+
 // The bold look's captions are a taller block, so the subject sits higher above them.
 const raised = ([y0, y1, p0, p1]) => {
   if (!document.body.classList.contains('bold')) return [y0, y1, p0, p1];
@@ -1564,7 +1860,8 @@ SHOTS.mascot = async (el, shot) => {
   const action = (el.dataset.do || (shot.first ? 'wave' : 'talk')).toLowerCase();
   if (!ACTIONS[action]) throw new Error(`unknown mascot action "${action}" (known: ${Object.keys(ACTIONS).join(', ')})`);
   const propName = (el.dataset.prop || '').toLowerCase();
-  const { scene, camera } = studio({ night: (el.dataset.set || '').toLowerCase() === 'night' });
+  const place = await buildSet(el);
+  const { scene, camera } = place;
   const rig = buildMascot();
   scene.add(rig.root);
   const total = parseFloat(document.body.dataset.duration) || 0;
@@ -1630,8 +1927,9 @@ SHOTS.mascot = async (el, shot) => {
   for (const [name, at] of Object.entries(ACTION_EVENTS[action] || {})) events[name] = Math.max(0, at - settle);
   if (prop && prop.kind !== 'screen') events.show = shot.first ? 0 : 0.45;
   return {
-    scene, camera, events, tone: (el.dataset.set || '').toLowerCase() === 'night' ? 'dark' : 'light',
+    scene, camera, events, tone: place.tone,
     update(lt) {
+      place.update(lt);
       ctx.words = spokenWords();
       const [wx, wy] = wobble(lt);
       const pose = poseAt(lt);
@@ -1932,7 +2230,8 @@ function letterMesh(ch, color) {
 SHOTS.title = async (el, shot) => {
   const text = (el.dataset.text || 'NEW').trim().toUpperCase().slice(0, 18);
   await document.fonts.load(`900 260px ${FONT}`);
-  const { scene, camera } = studio({ night: (el.dataset.set || '').toLowerCase() === 'night' });
+  const place = await buildSet(el);
+  const { scene, camera } = place;
   const withMascot = (el.dataset.mascot || '').toLowerCase() !== 'no';
   // one row, or two when it's long: the bottom row lands first, the top row on top of it
   const words = text.split(/\s+/);
@@ -1979,9 +2278,10 @@ SHOTS.title = async (el, shot) => {
   const topText = (shot.first && document.querySelector('.hook')) || (shot.in + shot.dur >= total - 0.05 && document.querySelector('.end'));
   const fx = rig ? confetti(scene, 70) : null;
   return {
-    scene, camera, tone: 'light',
+    scene, camera, tone: place.tone,
     events: { ...Object.fromEntries(letters.map((l, i) => [`letter-${i + 1}`, shot.first ? 0 : l.delay + FALL])), done: shot.first ? 0 : done },
     update(lt) {
+      place.update(lt);
       for (const l of letters) {
         const u = shot.first ? 9 : lt - l.delay;
         const fall = clamp(u / FALL);
@@ -2022,8 +2322,9 @@ SHOTS.icons = async (el, shot) => {
   const withMascot = (el.dataset.mascot || '').toLowerCase() !== 'no';
   const items = (el.dataset.items || '').split(',').map((s) => s.trim()).filter(Boolean).slice(0, withMascot ? 8 : 9).map(splitIcon);
   if (!items.length) throw new Error('icons needs data-items, e.g. data-items="🔍 Research,📅 Calendar"');
-  const night = (el.dataset.set || '').toLowerCase() === 'night';
-  const { scene, camera } = studio({ night });
+  const place = await buildSet(el);
+  const { scene, camera } = place;
+  const night = place.tone === 'dark';
   await document.fonts.load(`800 72px ${FONT}`);
   for (const it of items) if (it.glyph) await document.fonts.load(`150px ${EMOJI_FONT}`, it.glyph);
   const cells = items.length + (withMascot ? 1 : 0);
@@ -2043,8 +2344,9 @@ SHOTS.icons = async (el, shot) => {
     const [lc, lg] = canvas2d(512, 112);
     let size = 76;
     do { lg.font = `800 ${size}px ${FONT}`; size -= 4; } while (lg.measureText(it.label).width > 500 && size > 40);
-    lg.fillStyle = night ? '#f3f2ee' : hex(PAL.ink); lg.textAlign = 'center'; lg.textBaseline = 'middle';
-    lg.fillText(it.label, 256, 58);
+    lg.textAlign = 'center'; lg.textBaseline = 'middle'; lg.lineJoin = 'round';
+    lg.strokeStyle = night ? 'rgba(0,0,0,.7)' : 'rgba(255,255,255,.75)'; lg.lineWidth = 12; lg.strokeText(it.label, 256, 58); // readable over a busy set
+    lg.fillStyle = night ? '#f3f2ee' : hex(PAL.ink); lg.fillText(it.label, 256, 58);
     const label = new THREE.Mesh(new THREE.PlaneGeometry(SX * 0.98, SX * 0.98 * 112 / 512), new THREE.MeshBasicMaterial({ map: texture(lc), transparent: true, depthWrite: false }));
     label.position.y = -T / 2 - 0.15;
     g.add(box, face, label);
@@ -2064,9 +2366,10 @@ SHOTS.icons = async (el, shot) => {
   const FALL = 0.45;
   const mascotIn = (shot.first ? 0 : 0.15) + items.length * 0.13;
   return {
-    scene, camera, tone: night ? 'dark' : 'light',
+    scene, camera, tone: place.tone,
     events: { ...Object.fromEntries(tiles.map((t, i) => [`tile-${i + 1}`, shot.first ? 0 : t.delay + FALL])), done: shot.first ? 0 : mascotIn + FALL },
     update(lt) {
+      place.update(lt);
       for (const t of tiles) {
         const u = shot.first ? 9 : lt - t.delay;
         const k = clamp(u / FALL);
@@ -2177,7 +2480,8 @@ function cursorMesh() {
 SHOTS.button = async (el, shot) => {
   const before = el.dataset.text || '☆ Star';
   const after = el.dataset.done || '★ Starred';
-  const { scene, camera } = studio({ night: (el.dataset.set || '').toLowerCase() === 'night' });
+  const place = await buildSet(el);
+  const { scene, camera } = place;
   await document.fonts.load(`800 120px ${FONT}`, before + after);
   const face = (text, bgCol, fg) => {
     const [c, g] = canvas2d(1024, 300);
@@ -2204,10 +2508,13 @@ SHOTS.button = async (el, shot) => {
   scene.add(rig.root);
   const fx = confetti(scene, 70);
   const CLICK = shot.first ? 0.6 : 1.1;
+  const total = parseFloat(document.body.dataset.duration) || 0;
+  const topText = (shot.first && document.querySelector('.hook')) || (shot.in + shot.dur >= total - 0.05 && document.querySelector('.end'));
   const ctx = { words: [], t: 0, bpm: 112, drop: 0, propSide: 0, side: 1 };
   return {
-    scene, camera, tone: 'light', events: { click: CLICK },
+    scene, camera, tone: place.tone, events: { click: CLICK },
     update(lt) {
+      place.update(lt);
       const pressed = lt >= CLICK;
       const press = pulse(lt, CLICK - 0.06, CLICK, CLICK + 0.05, CLICK + 0.25);
       top.material.map = pressed ? onTex : offTex;
@@ -2230,7 +2537,7 @@ SHOTS.button = async (el, shot) => {
       drawFace(rig.faceCanvas, { face: pressed ? 'love' : 'happy', blink: 0, look: p.look, mouth: mouthAt(shot.in + lt, ctx.words) });
       rig.faceTex.needsUpdate = true;
       fx(lt, CLICK, V(0, 2.85, 0.3));
-      frameSpan(camera, raised([-0.02, 3.3, 280, 1290]), { push: lerp(1.04, 0.98, inOut(lt / shot.dur)), orbit: 0.06 * Math.sin(lt * 0.3) });
+      frameSpan(camera, raised(topText ? [-0.02, 3.3, 560, 1330] : [-0.02, 3.3, 280, 1290]), { push: lerp(1.04, 0.98, inOut(lt / shot.dur)), orbit: 0.06 * Math.sin(lt * 0.3) });
     },
   };
 };
@@ -2288,27 +2595,27 @@ if (!navigator.webdriver) {
   <div class="art-scrim" data-lint="off"></div>
 
   <div class="shot" data-shot="desk" style="--in:0s" data-src="assets/skills.png" data-sfx="whoosh:enter"></div>
-  <div class="shot" data-shot="icons" style="--in:4.06s" data-items="🔍 Research,📅 Calendar,♻️ Repurpose,🔎 SEO,📣 Ad copy,🎨 Visuals,💬 Community" data-sfx="pop:done"></div>
-  <div class="shot" data-shot="icons" style="--in:7.39s" data-items="✉️ Emails,🤝 Outreach,🎬 Video,🎞️ Clips,🖼️ Photos,🚀 Publish,🔗 Pipeline" data-sfx="pop:done"></div>
-  <div class="shot" data-shot="mascot" style="--in:10.74s" data-do="think"></div>
+  <div class="shot" data-shot="icons" style="--in:4.06s" data-items="🔍 Research,📅 Calendar,♻️ Repurpose,🔎 SEO,📣 Ad copy,🎨 Visuals,💬 Community" data-set="stage" data-sfx="pop:done"></div>
+  <div class="shot" data-shot="icons" style="--in:7.39s" data-items="✉️ Emails,🤝 Outreach,🎬 Video,🎞️ Clips,🖼️ Photos,🚀 Publish,🔗 Pipeline" data-set="city" data-sfx="pop:done"></div>
+  <div class="shot" data-shot="mascot" style="--in:10.74s" data-do="think" data-set="room"></div>
   <div class="shot" data-shot="notes" style="--in:15.18s" data-items="Mon: launch post,Tue: LinkedIn tip,Wed: X thread,Thu: newsletter,Fri: Reddit post" data-sfx="swish:note-1"></div>
   <div class="shot" data-shot="cards" style="--in:17.96s" data-items="LinkedIn post,X thread,Newsletter" data-sfx="swish:card-1"></div>
-  <div class="shot" data-shot="mascot" style="--in:21.85s" data-do="present" data-prop="sign" data-text="SEO brief + ad copy"></div>
-  <div class="shot" data-shot="mascot" style="--in:26.84s" data-do="talk" data-prop="laptop"></div>
-  <div class="shot" data-shot="mascot" style="--in:31.29s" data-do="present" data-prop="sign" data-text="Rules first"></div>
-  <div class="shot" data-shot="title" style="--in:34.62s" data-text="Video" data-sfx="pop:done"></div>
-  <div class="shot" data-shot="mascot" style="--in:36.85s" data-do="talk" data-prop="laptop" data-src="assets/renders.png"></div>
-  <div class="shot" data-shot="mascot" style="--in:40.74s" data-do="present" data-prop="screen" data-src="assets/templates.png"></div>
-  <div class="shot" data-shot="mascot" style="--in:44.63s" data-do="walk" data-sfx="pop:stop"></div>
-  <div class="shot" data-shot="mascot" style="--in:48.51s" data-do="talk" data-frame="mid"></div>
-  <div class="shot" data-shot="mascot" style="--in:51.29s" data-do="point"></div>
-  <div class="shot" data-shot="mascot" style="--in:55.18s" data-do="dance"></div>
-  <div class="shot" data-shot="mascot" style="--in:59.07s" data-do="wow"></div>
-  <div class="shot" data-shot="title" style="--in:62.4s" data-text="Posted" data-sfx="pop:done"></div>
-  <div class="shot" data-shot="mascot" style="--in:65.73s" data-do="thumbs"></div>
-  <div class="shot" data-shot="mascot" style="--in:69.06s" data-do="cheer" data-sfx="pop:land"></div>
-  <div class="shot" data-shot="button" style="--in:72.95s" data-text="☆ Star" data-done="★ Starred" data-sfx="click:click"></div>
-  <div class="shot" data-shot="mascot" style="--in:76.84s" data-do="wave"></div>
+  <div class="shot" data-shot="mascot" style="--in:21.85s" data-do="present" data-prop="sign" data-text="SEO brief + ad copy" data-set="park"></div>
+  <div class="shot" data-shot="mascot" style="--in:26.84s" data-do="talk" data-prop="laptop" data-set="room"></div>
+  <div class="shot" data-shot="mascot" style="--in:31.29s" data-do="present" data-prop="sign" data-text="Rules first" data-set="city"></div>
+  <div class="shot" data-shot="title" style="--in:34.62s" data-text="Video" data-set="stage" data-sfx="pop:done"></div>
+  <div class="shot" data-shot="mascot" style="--in:36.85s" data-do="talk" data-prop="laptop" data-src="assets/renders.png" data-set="city"></div>
+  <div class="shot" data-shot="mascot" style="--in:40.74s" data-do="present" data-prop="screen" data-src="assets/templates.png" data-set="stage"></div>
+  <div class="shot" data-shot="mascot" style="--in:44.63s" data-do="walk" data-set="park" data-sfx="pop:stop"></div>
+  <div class="shot" data-shot="mascot" style="--in:48.51s" data-do="talk" data-frame="mid" data-set="room"></div>
+  <div class="shot" data-shot="mascot" style="--in:51.29s" data-do="point" data-set="city"></div>
+  <div class="shot" data-shot="mascot" style="--in:55.18s" data-do="dance" data-set="stage"></div>
+  <div class="shot" data-shot="mascot" style="--in:59.07s" data-do="wow" data-set="park"></div>
+  <div class="shot" data-shot="title" style="--in:62.4s" data-text="Posted" data-set="city" data-sfx="pop:done"></div>
+  <div class="shot" data-shot="mascot" style="--in:65.73s" data-do="thumbs" data-set="room"></div>
+  <div class="shot" data-shot="mascot" style="--in:69.06s" data-do="cheer" data-set="stage" data-sfx="pop:land"></div>
+  <div class="shot" data-shot="button" style="--in:72.95s" data-text="☆ Star" data-done="★ Starred" data-set="park" data-sfx="click:click"></div>
+  <div class="shot" data-shot="mascot" style="--in:76.84s" data-do="wave" data-set="room"></div>
   <div class="corner brand" style="--out:80.49s">marketing-skill</div>
   <div class="corner series" style="--out:80.49s">v3</div>
 

@@ -13,7 +13,8 @@
  * Running it again replaces what it added before. The end card adds 1.6 seconds after the
  * video's last scene. It goes on marketing and narrated pages by default, not on everyday
  * posts (they loop better without one); --endcard and --no-endcard override that.
- * compose.js applies it on its own.
+ * compose.js applies it on its own, and montage.js applies a client's (state/clients/<slug>.md,
+ * the same sections) with their contact lines and fine print on the card.
  *
  * In brand-voice.md:
  *   ## Visual Identity
@@ -112,7 +113,9 @@ function onBody(html, edit) {
 }
 
 // Applies the identity to the page's HTML. Returns { html, changes, problems }.
-function applyIdentity(html, id, { pageDir = '.', endcard } = {}) {
+// lines: contact lines under the handle (a name, a phone number, a website); fine: small print
+// (a brokerage and license number); seconds: how long the card stays up.
+function applyIdentity(html, id, { pageDir = '.', endcard, lines = [], fine = '', seconds = ENDCARD_SECONDS } = {}) {
   const changes = [];
   const problems = contrastProblems(id);
   // what an earlier run added
@@ -153,13 +156,15 @@ function applyIdentity(html, id, { pageDir = '.', endcard } = {}) {
   const duration = body && parseFloat((/data-duration="([\d.]+)"/.exec(body[1]) || [])[1]);
   const everyday = body && /class="[^"]*\bfyp\b/.test(body[1]) && !/class="say auto"/.test(html);
   const wantCard = endcard ?? !everyday;
-  if (wantCard && (id.logo || id.handle) && duration > 2) {
+  if (wantCard && (id.logo || id.handle || lines.length || fine) && duration > 2) {
     const at = duration;
     const logo = id.logo ? placeLogo(id.logo, pageDir) : null;
     if (id.logo && !logo) problems.push(`logo ${id.logo} not found; the end card shows the handle only`);
     const parts = [];
     if (logo) parts.push(`<img class="logo" src="${esc(logo)}" alt="">`);
     if (id.handle) parts.push(`<div class="handle">${esc(id.handle)}</div>`);
+    for (const line of lines) parts.push(`<div class="line">${esc(line)}</div>`);
+    if (fine) parts.push(`<div class="fine">${esc(fine)}</div>`);
     if (parts.length) {
       // the last scene (the one with no --out) leaves where the video used to end
       let cleared = false;
@@ -167,11 +172,12 @@ function applyIdentity(html, id, { pageDir = '.', endcard } = {}) {
         cleared = true;
         return `<div class="scene${cls}" style="--out:${(at - 0.1).toFixed(2)}s" data-brand-out>`;
       });
-      const total = +(duration + ENDCARD_SECONDS).toFixed(2);
+      const total = +(duration + seconds).toFixed(2);
       html = onBody(html, (attrs) => `${attrs.replace(/data-duration="[\d.]+"/, `data-duration="${total}"`)} data-brand-base="${duration}"`);
       const card = `  <!-- brand:endcard -->\n  <div class="endcard" style="--in:${at}s">${parts.join('')}</div>\n  <!-- /brand:endcard -->`;
       html = html.replace(/\n<\/body>/, `\n${card}\n</body>`);
-      changes.push(`end card from ${at}s, making the video ${total}s (${[logo && 'logo', id.handle && 'handle'].filter(Boolean).join(' and ')})${cleared ? '' : '; no open last scene found, so it overlays the last frame'}`);
+      const shown = [logo && 'logo', id.handle && 'handle', lines.length && `${lines.length} contact line${lines.length > 1 ? 's' : ''}`, fine && 'fine print'].filter(Boolean);
+      changes.push(`end card from ${at}s, making the video ${total}s (${shown.join(', ')})${cleared ? '' : '; no open last scene found, so it overlays the last frame'}`);
     }
   }
   return { html, changes, problems };

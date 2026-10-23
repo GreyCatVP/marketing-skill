@@ -1,10 +1,11 @@
 # Marketing Skills for Claude Code
 
-**12 AI marketing skills in one Claude Code plugin:** competitor research,
+**14 AI marketing skills in one Claude Code plugin:** competitor research,
 social media content calendars, LinkedIn and X posts, SEO content briefs,
 ad copy, email sequences, personalized cold email outreach, TikTok / Reels /
-YouTube Shorts scripts, Reddit and Hacker News posts, and approval-gated
-publishing to n8n, Make, or platform APIs.
+YouTube Shorts scripts, montages edited from your own videos or photos,
+Reddit and Hacker News posts, and approval-gated publishing to n8n, Make,
+or platform APIs.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-D97757.svg)](#install)
@@ -25,7 +26,7 @@ Made something with it? [Share it in Show and tell](https://github.com/marcosmod
 
 ## See it
 
-31 video templates, rendered on your machine with music composed in your
+32 video templates, rendered on your machine with music composed in your
 brand's own sound. Each frame below is one template, mid-video:
 
 **Marketing videos** (ads, demos, narrated explainers, testimonials, FAQs, launches, team)
@@ -72,6 +73,16 @@ was made with the same renderer.
   stock or AI backgrounds, or a narrated 3D or pixel-art animation, with
   a voiceover, music composed in your brand's own sound, and meme sound
   effects.
+- **Montages from your own videos:** hand over the phone clips you or a
+  client filmed (a home, a product, a shop, an event), plus your own
+  music or voiceover if you have them, and get a finished vertical reel
+  for free: the best moment of each clip, cuts on the beat, a clip's own
+  sound where someone talks, synced captions, labels, and the client's
+  logo and contact details on the end card. Only photos? Each photo moves
+  like a camera through the room (in 3D, near things moving more than far
+  ones), or, on a paid video-model plan you approve, gets AI camera moves.
+  Then keep editing it ("use the part where she laughs", "kitchen first",
+  "calmer music") version by version, with a saved profile per client.
 - **Community posts:** Reddit, Product Hunt, Hacker News (Show HN), Indie
   Hackers, dev.to, Discord, Slack, and Telegram posts written to each
   community's actual rules, with a Go/No-Go before drafting.
@@ -99,6 +110,8 @@ anything actually publishes.
 | `email-outreach` | "cold outreach," "prospecting emails," "daily sales outreach," "personalized cold email to [name]" | Researches real prospects against a defined ICP (public-web research by default; a connected prospecting tool only if you ask for verified contact details), checks each one against a permanent contact log so nobody's contacted twice — or ever again once unsubscribed/replied — drafts a genuinely personalized email per prospect, re-confirms strategy monthly, and queues everything for approval (or drafts directly in Gmail if connected); never sends |
 | `visual-brief-generator` | "visual brief," "video brief," "shot list," "image prompts for X" | A structured shot list, per-scene prompts, aspect ratios, and style guide; generates the actual asset only if a visual-gen tool is connected |
 | `short-form-video` | "TikTok video," "Instagram Reel script," "YouTube Short," "short-form/vertical video for..." | A hook-first script/shot list plus a ready-to-post package per platform (YouTube Shorts/Instagram Reels/TikTok) — title/caption, sized hashtags, and a best-time-to-post window, shaped to one of 23 marketing video types (testimonial, how-to, announcement, and so on) or 22 everyday FYP formats (POV, tier list, text-message skit, storytime, and so on); if you opt in, makes the actual video too, either with a connected tool (Higgsfield, Figma Weave, Canva, or similar) or by rendering it locally (`scripts/video/`): animated text over stock or AI backgrounds, or a narrated 3D or pixel-art animation, with music in the project's own saved sound; otherwise points to current free tools |
+| `clip-montage` | "make a montage of these videos," "edit these clips into a reel," "recap video from today," "make a montage" | The default for montages, and free: brings in the user's own clips (location data stripped), looks at each one frame by frame to pick its best moment, and renders a 9:16 montage cut on the beat of their own music (or a generated track, or none for an in-app sound), with a clip's own sound where someone talks, their voiceover with synced captions, labels, and the client's contact end card; then edits it on request, saving each version. With only photos it asks for clips first, then hands over to `montage-video` |
+| `montage-video` | "make a video from these listing photos," "turn these product photos into a reel," "property tour from these pictures" | Brings in the client's photos and clips (upright, sized, location data stripped), looks at each one to order the shots, and renders a 9:16 montage with moves, beat-synced cuts, labels, price and specs, music or a voiceover with synced captions, and the client's branded contact end card; then edits it on request, saving each version and what each client prefers |
 | `community-post-generator` | "post this to r/[subreddit]," "help me post on Product Hunt," "write a Show HN/Show IH for this," "post this on dev.to," "post this in our Discord/Slack/Telegram" | Live-researches that specific subreddit's, Product Hunt's, Hacker News's, Indie Hackers', dev.to's, or a public Telegram channel's/group's actual rules and typical post style first (verifying each source is actually about that target, not a similarly-named one); for Discord, Slack, and private Telegram targets, asks you for the rules instead, since it can't research those. Gives a plain Go/No-Go either way, and only drafts a post (shaped for that platform — title+body, title+URL+first comment for Show HN, dev.to's title+body+tags, or a single chat message in Discord's, Slack's, or Telegram's own formatting for the chat platforms) if it's actually welcome there, written to read like a person wrote it |
 | `publish-pipeline` | "publish this," "send to n8n/Make," "fire the webhook," "send the queued post for [date]" | Packages finished content/assets into JSON and hands off to your automation via webhook (or, optionally, straight to a platform API) after showing you the exact payload |
 | `full-pipeline` | "run the full pipeline," "research X and publish it," "do the whole thing end to end" | Chains research, repurposing, visual brief, and publish into one run, with a mandatory pause before anything actually publishes |
@@ -171,7 +184,7 @@ codex plugin add marketing-skill@marketing-skill
 To try a branch, add `--ref <branch-name>` to the first command, or pass
 the path to a local clone instead of `marcosmodly/marketing-skill`.
 
-All 12 skills load as-is; Codex ignores the `allowed-tools` line. A few
+All 14 skills load as-is; Codex ignores the `allowed-tools` line. A few
 things differ from Claude Code:
 
 - **Setup command:** Codex turns `/marketing-skill:marketing-setup` into
@@ -255,6 +268,15 @@ times for TikTok, Reels, and Shorts, and, if you want, makes the video:
 - **Your own footage:** a talking-head take from your phone gets its
   pauses cut and captions added (`cut.js`); screen recordings play in a
   phone frame.
+- **A montage of your clips** (`clip-montage`, the default and free): the
+  phone videos you film, each at its best moment, cut on the beat of your
+  own music, with a clip's own sound, your voiceover and synced captions,
+  labels, and a client's own look and contact end card (`montage.js`).
+- **A montage of your photos** (`montage-video`): a home's or a product's
+  photos, each moving: free local 3D moves and pans, or, on a paid plan
+  you approve, real camera moves and new angles generated by a connected
+  AI video model (Figma Weave, Higgsfield) and checked against each
+  photo.
 
 Every video gets your **sonic identity** (one genre, key, and hook, so
 your sound becomes recognizable) and **visual identity** (colors, font,
@@ -267,6 +289,7 @@ yours actually did. Setup is free: Node, Playwright, and ffmpeg.
 ```
 cd scripts/video && npm install
 node compose.js script.md                    # a narrated video page from a script
+node montage.js inspect clips/ --slug maple  # bring in a client's clips or photos; then montage.js <script.md>
 node render.js page.html out.mp4 --cover 0   # the video, its captions (.srt), and its cover
 ```
 
@@ -393,7 +416,7 @@ plugin system, copy the skill folders in by hand (see [Install](#install)).
 .claude-plugin/
   plugin.json         # plugin metadata
   marketplace.json     # lets this repo install itself via `marketplace add` (Claude Code and Codex)
-skills/                 # the 12 skills, one SKILL.md each
+skills/                 # the 14 skills, one SKILL.md each
 commands/
   marketing-setup.md    # the /marketing-skill:marketing-setup command
 references/
@@ -404,6 +427,7 @@ references/
   hooks.md               # hook patterns by goal, written to work with the sound off, and how to test them
   video-rendering.md     # the local render procedure short-form-video follows
   fyp-formats.md         # 22 everyday / FYP formats: why each works, beats, copy at two tones, weekly mix and rotation
+  montage-guide.md       # clip-montage's and montage-video's shot order, filming tips, moves, music by mood, and wording rules
 docs/                    # the longer guides: video, publishing, community posts, outreach, and the template gallery
 state/
   content-calendar.md    # calendar/history index (generated + appended to, hand-editable)
@@ -411,6 +435,7 @@ state/
   outreach-log.md         # outreach queue/history + permanent suppression list (generated + appended to, hand-editable)
   outreach/               # one file per drafted email's full content, linked from the log above
   video-log.md            # every posted video with its format, hook, and numbers; steers the next ones
+  clients/                # one profile per client (look, sound, contact details, notes); kept out of git
 scripts/
   publish_webhook.py     # stdlib-only webhook sender (see --help)
   publish_direct.py      # stdlib-only direct-to-platform scaffold (LinkedIn/X/Meta/Reddit/Discord/Slack/Telegram/dev.to/YouTube/Instagram/TikTok), needs your own API credentials (see --help)
@@ -422,11 +447,13 @@ scripts/
     voice.js             # free local voiceover (Kokoro): a script -> one WAV per line
     captions.js          # word timing for a voice line, caption chunks, and .srt files
     compose.js           # a narrated video page from a script: voice, backgrounds (photos, 3D, or pixel art), synced captions
+    montage.js           # a montage page from a client's clips or photos: intake, clip moments and sound, moves, beat-synced cuts, labels, contact end card
+    depth.js             # a photo's depth map (free local model), for the montage's 3D camera moves
     brand.js             # applies the Visual Identity to a page: colors, font, logo end card
     cut.js               # a filmed talking-head take: pauses cut, captions, and a page to render it
     beats.js             # a music track's tempo, beats, bars, and drops, to cut a video on its beat
     gallery.js           # rebuilds the template gallery in docs/gallery
-    templates/           # 7 marketing + 22 everyday + 3D and pixel-art starting pages, built by templates/build.py
+    templates/           # 8 marketing + 22 everyday + 3D and pixel-art starting pages, built by templates/build.py
 ```
 
 ## Share what you made

@@ -110,7 +110,8 @@ function parseFrontmatter(text) {
   if (!m) return { meta: {}, body: text };
   const meta = {};
   for (const line of m[1].split('\n')) {
-    const kv = /^\s*([\w-]+)\s*:\s*(.*?)\s*(?:#.*)?$/.exec(line);
+    // a comment starts at " # ", so a value can still hold "#" ("lot #12", "DRE #0123")
+    const kv = /^\s*([\w-]+)\s*:\s*(.*?)(?:\s+#\s.*)?\s*$/.exec(line);
     if (kv) meta[kv[1].toLowerCase()] = kv[2].replace(/^["']|["']$/g, '');
   }
   return { meta, body: text.slice(m[0].length) };
@@ -120,9 +121,8 @@ const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const r2 = (t) => Math.round(t * 100) / 100;
 
-// The Sonic Identity from brand-voice.md, or null while it's still the placeholder.
-function sonicIdentity() {
-  const file = path.join(ROOT, 'references', 'brand-voice.md');
+// The Sonic Identity from brand-voice.md (or a client's profile), or null while it's still the placeholder.
+function sonicIdentity(file = path.join(ROOT, 'references', 'brand-voice.md')) {
   if (!fs.existsSync(file)) return null;
   const text = fs.readFileSync(file, 'utf8');
   const section = (/^## Sonic Identity\n([\s\S]*?)(?=^## |$(?![\s\S]))/m.exec(text) || [])[1] || '';

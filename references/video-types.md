@@ -33,6 +33,11 @@ For a longer survey of the formats, see Sparkhouse's
   captions, the hook, your music, and your end card.
 - **Cut-down:** a long-form format. The short is a promo or a highlight of
   it, not the thing itself.
+- **Montage:** the user's own clips (or photos) of a place, a product,
+  or an event, cut on the beat, with labels, facts, a clip's own sound or
+  a voiceover, and a contact end card (`montage.html`, built by
+  `scripts/video/montage.js`; the `clip-montage` skill runs it for clips,
+  `montage-video` for photos).
 
 Template names refer to `scripts/video/templates/`.
 
@@ -46,6 +51,8 @@ Template names refer to `scripts/video/templates/`.
 | Build trust before a purchase | Testimonial, case study, UGC, meet the team |
 | Launch something / fill a date | Announcement, event or webinar promo, live promo |
 | Humanize the brand | Meet the team, behind the scenes, vlog, brand story |
+| Sell a home, a product, or a place from your own clips or photos | Property tour, product showcase, business showcase (below; the `clip-montage` skill, or `montage-video` for photos only) |
+| Recap an event or a day | Event recap (below; the `clip-montage` skill) |
 
 When the goal doesn't settle it, offer the user two or three fitting
 types with a line on each rather than picking silently.
@@ -171,6 +178,33 @@ and has to work with the sound off.
 - **Made by:** Render, from 22 templates for the formats that last (POV, nobody / me, expectation vs reality, tier list, this or that, hot take, text-message skit, notifications, storytime, top-5 countdown, and more). Film for a dance or a trend that needs people on camera.
 - **Beats:** each format's own, in `fyp-formats.md`, which also covers the weekly mix, rotating formats, and writing the copy in the brand's voice. A trend that's peaking this week is checked in the app before making it; this plugin can't see trends live.
 
+## Made from the user's clips or photos (clip-montage, montage-video)
+
+When the user brings their own clips of a place, a product, or an event,
+the `clip-montage` skill makes the video instead of `short-form-video`;
+with only photos, `montage-video` does. Their shot order, filming tips,
+moves, music, and wording rules are in `montage-guide.md`.
+
+### Property tour / listing video
+- **Goal:** showings and inquiries for a home for sale or rent, or bookings for a stay.
+- **Made by:** Montage (`montage.html`), from the listing's own clips (a walk-through filmed on a phone) or photos.
+- **Beats:** the strongest shot with the hook and any status ("just listed") → the way in → living spaces → main suite → outdoor space or view → the price, specs, and CTA → the agent's contact end card. Describe the home, never who should live there.
+
+### Product showcase
+- **Goal:** consideration to purchase, for a physical product.
+- **Made by:** Montage (`montage.html`), from the product's own photos and clips; a packshot on white sits on a soft backdrop (`fit: card`).
+- **Beats:** the hero shot with the hook → the problem or the moment of use → details and callouts → in use → options → the price, any real offer, and the CTA.
+
+### Business showcase
+- **Goal:** visits, bookings, or orders for a shop, a restaurant, a salon, a studio, or a service.
+- **Made by:** Montage (`montage.html`), from the business's own clips, with the music ducked under any clip where someone talks (`[sound]`).
+- **Beats:** the hero moment with the hook (the dish, the finished cut, the reveal) → the people making it → details up close → the space → customers enjoying it (with their OK) → the CTA (book, visit, order).
+
+### Event recap
+- **Goal:** reach after an event, and sign-ups for the next one.
+- **Made by:** Montage (`montage.html`), from clips filmed at the event.
+- **Beats:** the peak moment with the hook (the crowd, the reveal, the toast) → arriving or setting up → the highlights in order → a speaker's or a guest's line with its own sound → the close (a thank-you, the next date).
+
 ## Backgrounds and sound by type (for local renders)
 
 Backgrounds come from stock photos, stock clips, or AI images
@@ -200,7 +234,8 @@ When a type needs footage, the skill's Generation Status says so and gives
 a phone shot list. For a talking-head take (an FAQ answered on camera, a
 founder's story, an interview answer, an on-camera testimonial with the
 person's permission), `cut.js` then turns the raw take into the finished
-video; for anything with several shots, edit it in CapCut or similar.
+video; for several shots, `clip-montage` edits them into a montage (or
+use CapCut or similar).
 - Shoot vertical (9:16) at 1080×1920 or higher, in daylight or facing a
   window, with the phone at eye level.
 - Record audio close to the speaker (a clip-on mic if possible); viewers
@@ -210,6 +245,7 @@ video; for anything with several shots, edit it in CapCut or similar.
 - For one talking-head take, don't trim it yourself: `cut.js` removes the
   pauses and captions it. Pauses longer than about a third of a second
   are cut, so speak naturally and leave clear gaps between thoughts.
-- For several shots, edit in CapCut or similar: cut on the action, add
+- For several shots, `clip-montage` picks each one's moment and cuts it
+  on the beat. By hand, in CapCut or similar: cut on the action, add
   captions (most people watch muted), and keep the first second the most
   interesting one.

@@ -5,6 +5,109 @@ Skills that read "our changelog" for source material read this file too.
 
 ## 0.8.0 (unreleased)
 
+- **Montages from your own videos: `clip-montage`, a fourteenth skill, and
+  the default for montages.** Send the phone clips you or a client filmed
+  (a home, a product, a shop, an event), plus your own music or voiceover
+  if you have them, and get a finished vertical montage, free: it renders
+  locally, with no credits, and nothing is generated. The skill:
+  - looks at every clip frame by frame and picks each one's best moment
+    (`[from:]` to `[to:]`), two or three from a long clip;
+  - cuts on the beat of your own track (or the client's generated sound,
+    or none, for a trending sound added in the app);
+  - keeps a clip's own sound where someone talks, with the music ducked
+    under it and the exact words captioned;
+  - lays your voiceover under the whole video with synced captions;
+  - with only photos, asks for clips first and hands over to
+    `montage-video`.
+  `montage-video` now offers AI camera moves only when the user says they
+  have a paid video-model plan, and quotes each run first. Figma Weave
+  runs video models only on paid Figma plans.
+- `scripts/video/montage.js` for clips:
+  - `[to: 6]` ends a clip's stretch.
+  - `[sound]` keeps a clip's own sound in sync, and a `[say: ...]` on it
+    captions what's said.
+  - `[focus: 30%,50%]` keeps that point in frame when a landscape clip is
+    cut to 9:16.
+  - `voiceover:`, `voiceover-text:`, and `voiceover-at:` put one recording
+    under every shot, with captions, the shots stretching to cover it.
+  - `frames <clip> --every 1` lays out a frame every second with its time,
+    and prints when the clip's sound is loud.
+  - `inspect` strips a clip's metadata (a phone's location) while keeping
+    its picture, sound, and rotation, and says whether each clip has sound.
+  - A pan on a clip now slides the zoomed clip. Before, it did nothing,
+    since a clip is cut to the frame first.
+- `scripts/video/render.js` turns only the stretch a clip plays into
+  frames (`data-length`), not the whole file, so long phone clips render
+  quickly. It crops a clip to 9:16 around `data-focus`.
+
+- **Montages from a client's own photos: `montage-video`, a thirteenth
+  skill.** Hand over photos or phone clips of a home, a room, or a
+  product, and get a finished vertical reel:
+  - each photo moving with purpose (a pan across a wide room, so a 3:2
+    photo is seen whole in a 9:16 frame; a push in on a detail; a pull
+    out to reveal), each move the other way from the one before;
+  - cuts on the music's beat, or timed to a voiceover;
+  - a label on every shot, the hook on the first, and a status sticker
+    ("just listed", "20% off");
+  - the price, specs, and CTA;
+  - a "Virtually staged" badge, callouts on a product's details, and
+    before/after wipes;
+  - the client's logo, contact lines, and fine print on the end card.
+
+  The skill looks at every photo to choose and order the shots, then keeps
+  editing the video on request ("faster", "kitchen first", "calmer
+  music"), saving each version. `references/montage-guide.md` holds its
+  shot order, moves, music by mood, and the wording rules for property
+  ads (describe the home, never who should live there).
+- `scripts/video/montage.js`:
+  - `inspect <folder>` copies the photos in, upright and sized for the
+    frame, with their metadata (GPS location included) stripped, and
+    converts iPhone HEIC photos where the machine can. It writes a
+    numbered contact sheet and a starter script.
+  - `montage.js <script.md>` writes the page from a script of one shot
+    per photo. It reads a licensed track's beats with `beats.js` and cuts
+    on its bars. It holds a shot longer when its text needs the time to
+    be read.
+  - The new `montage.html` template shows photos bright, without the
+    darkening behind text. It adds `panX`, `shiftX`, `shiftY`, `pushIn`,
+    `pullOut`, and `drift` moves, `contain` and `card` fits, and cut,
+    slide, zoom, wipe, and flash transitions.
+- **3D camera moves in montages.** `scripts/video/depth.js` estimates each
+  photo's depth with Depth Anything V2 Small (Apache-2.0, runs locally;
+  `npm install @huggingface/transformers` once). The montage page draws
+  the photo from it with WebGL, using parallax occlusion mapping so near
+  things cover what's behind them. That gives `orbit` (the camera circles
+  the focus while traveling across a wide room), `dolly-in` / `dolly-out`
+  (near things grow faster than the far wall), and `rise`. They're the
+  default moves when a depth map is available, made as needed and kept
+  next to each photo, with `amount=` for strength, `[depth: file]` for a
+  depth map from elsewhere, and `depth: off` for flat moves. Without the
+  model, every shot moves flat, as before.
+- **AI camera moves in montages.** With a connected video model (Figma
+  Weave's Seedance or Veo, or Higgsfield), `montage-video` turns each photo
+  into a short clip where the camera really moves (an orbit, a dolly in, a
+  glide through a doorway) and edits the clips on the beat, two angles per
+  clip where it can. The skill:
+  - quotes every run and asks before spending credits;
+  - checks each clip against its photo with the new `montage.js frames`
+    (the photo beside the clip's first, middle, and last frames), and drops
+    any clip that changed the room;
+  - labels AI shots with an `[ai]` "AI-animated" badge.
+
+  `references/montage-guide.md` has a prompt library for the moves and
+  notes on the models.
+- **Client profiles** in `state/clients/<slug>.md` (format in its
+  README). Each holds a client's colors, font, logo, sound, contact
+  details, and the preferences they've asked for. They're kept out of
+  git. A client's video never falls back to your own brand.
+- `brand.js` end cards take contact lines, fine print, and a length.
+  `compose.js`'s `sonicIdentity()` reads a client's profile. `beats.js`
+  exports its track alignment (`alignTrack`). A frontmatter value can hold
+  a `#` ("lot #12"), since a comment now starts at ` # `.
+- The renderer warns that a background will look soft when the frame
+  enlarges it more than 1.25x, filling the frame or shown whole, rather
+  than whenever it's under 1080x1920. Blurred backdrops are skipped.
+
 - **3D and pixel-art animation, with voice.** Two templates that draw their
   own frames: `3d.html` (three.js, lit in the brand's colors: floating
   shapes, a phone with your screenshot, feature cards, a bar chart, a coin

@@ -1,6 +1,6 @@
 {
   "name": "marketing-skill",
-  "description": "Marketing skills for Claude Code: AI competitor research, content calendars, social posts, SEO briefs, ad copy, email sequences, cold outreach, short-form video scripts and rendered videos, community posts, and approval-gated publishing.",
+  "description": "Marketing skills for Claude Code: AI competitor research, content calendars, social posts, SEO briefs, ad copy, email sequences, cold outreach, short-form video scripts and rendered videos, montages from your own videos or photos, community posts, and approval-gated publishing.",
   "owner": {
     "name": "marcosmodly",
     "url": "https://github.com/marcosmodly"
@@ -10,7 +10,7 @@
       "name": "marketing-skill",
       "displayName": "Marketing Skills",
       "source": ".",
-      "description": "12 AI marketing skills for Claude Code: competitor research, social media content calendars, LinkedIn/X/newsletter repurposing, SEO content briefs, Meta/Google/LinkedIn ad copy, email drip sequences, personalized cold email outreach, TikTok/Reels/YouTube Shorts scripts and rendered videos (marketing types and everyday memeable formats), rules-aware Reddit/Product Hunt/Hacker News/Discord posts, visual briefs, and approval-gated publishing to n8n, Make, or platform APIs.",
+      "description": "14 AI marketing skills for Claude Code: competitor research, social media content calendars, LinkedIn/X/newsletter repurposing, SEO content briefs, Meta/Google/LinkedIn ad copy, email drip sequences, personalized cold email outreach, TikTok/Reels/YouTube Shorts scripts and rendered videos (marketing types and everyday memeable formats), montages edited from your own videos or photos, rules-aware Reddit/Product Hunt/Hacker News/Discord posts, visual briefs, and approval-gated publishing to n8n, Make, or platform APIs.",
       "category": "marketing",
       "tags": [
         "marketing",

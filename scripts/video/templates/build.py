@@ -3,8 +3,8 @@
 
 Every template carries the same base styles (canvas, safe area, entrances,
 type scale, count-ups, background layer, and the everyday/FYP kit), so edit
-them here and run `python3 build.py` rather than hand-editing 31 copies.
-The seven marketing templates are defined below; the 22 everyday ones are in
+them here and run `python3 build.py` rather than hand-editing 32 copies.
+The eight marketing templates are defined below; the 22 everyday ones are in
 fyp.py; and the two that draw their own frames, 3D and pixel art, are in
 scene3d.py and pixel.py, with what they share in drawn.py. Each page is still
 fully self-contained after building, so the skill can copy any one of them.
@@ -131,6 +131,9 @@ KIT = """
              animation: fadeIn .35s ease-out var(--in, 999s) both; }
   .endcard .logo { max-width: 380px; max-height: 300px; object-fit: contain; animation: popIn .55s cubic-bezier(.2,.9,.3,1.25) var(--in, 999s) both; }
   .endcard .handle { font-size: 60px; font-weight: 800; letter-spacing: -1px; animation: riseIn .45s cubic-bezier(.2,.8,.2,1) calc(var(--in, 999s) + .15s) both; }
+  .endcard .line { font-size: 44px; font-weight: 700; line-height: 1.2; animation: riseIn .45s cubic-bezier(.2,.8,.2,1) calc(var(--in, 999s) + .3s) both; }
+  .endcard .line + .line { margin-top: -22px; }
+  .endcard .fine { max-width: 780px; font-size: 30px; font-weight: 600; line-height: 1.3; color: var(--muted); animation: fadeIn .4s ease-out calc(var(--in, 999s) + .4s) both; }
 
   /* ---- everyday / FYP kit ---- */
   body.fyp { font-family: "TikTok Sans", "Inter", "Liberation Sans", "Noto Color Emoji", sans-serif; text-wrap: pretty; }
@@ -774,6 +777,369 @@ TEMPLATES["narrated.html"] = dict(
   </div>
 """)
 
+
+# ---------------------------------------------------------------- montage
+TEMPLATES["montage.html"] = dict(
+    bgs=[(0, 2.5), (2.5, 5), (5, 7.5), (7.5, 10), (10, 12.5), (12.5, 15)],
+    g1="#5a4a2a", g2="#2a4a5a",
+    doc="""  Template: montage (references/video-types.md: property tour / listing
+  video, product showcase). 15 seconds: the user's own photos (or phone
+  clips), one per shot, cut on the music's bar, each moving (a pan across a
+  wide room, a push in on a detail), with a label low on each shot, the hook
+  on the first, and the price, specs, and CTA on the last. A voiceover with
+  synced captions is optional.
+
+  Usually made by scripts/video/montage.js, not by hand: `montage.js
+  inspect <folder>` copies the photos in and writes a starter script, and
+  `montage.js <script.md>` writes this page from it, timed to the music or the
+  voice, in a client's look (state/clients/<slug>.md). By hand, put each photo
+  in its shot's slot and set the slot's style:
+    <div class="bg" style="--in:2.25s; --out:4.8s; --dur:3.2s; --kb:panX; --x0:30%; --x1:62%; --oy:50%">
+      <img class="bg-media" src="assets/maple-02.jpg" alt=""></div>
+  The photos show bright and whole: a shade only in the top band (the hook)
+  and the bottom band (the labels), and no darkening (--shade:0 skips the
+  renderer's automatic shade).
+  - Moves (--kb on the slot): panX, object-position from --x0 to --x1, so a
+    3:2 photo scans across the 9:16 frame rather than showing only its middle;
+    shiftX and shiftY, zoomed in to --zoom (default 1.2) and moved from --t0
+    to --t1 (a percentage, up to about 8% at 1.2), for photos with no room to
+    pan and for tilting up or down a tall space; pushIn and pullOut, to --zoom
+    (default 1.16) around --fx/--fy; drift; none; and the shared kbIn, kbOut,
+    kbLeft, kbRight. --ox/--oy is the object-position (which part of the
+    photo a still or zoomed shot shows).
+  - Fits (class on the slot): cover (the default, fills the frame); "fit",
+    the whole photo over a blurred copy of itself (<img class="bg-media
+    backdrop"> then <img class="bg-media whole">); "card", a product
+    packshot on a soft backdrop in the accent color, where a white background
+    melts away (<img class="bg-media whole">).
+  - Transitions (class on the slot; a fade is the default): t-cut, t-slide,
+    t-zoom, t-wipe, and t-flash (a cut, plus <div class="flash"
+    style="--in:..."> at the cut). An outgoing slot under a cut, slide, or
+    wipe stays until the incoming one covers it.
+  - Before/after: the slot holds the before photo, then <img class="bg-media
+    after"> and <div class="seam"></div>; the after photo wipes in at --at.
+  - 3D moves (a slot with --kb:none holding <canvas class="bg-media depth"
+    width="1080" height="1920" data-src="assets/maple-02.jpg"
+    data-depth="assets/maple-02.depth.png" data-move="orbit-right">): the
+    photo moved by its depth map (white near, from scripts/video/depth.js),
+    near parts more than far ones, so the camera seems to move through the
+    room. data-move is orbit-left or orbit-right (around data-focus, the
+    point of the photo that stays put, "x,y" from 0 to 1, with data-pan
+    "x0,x1" to travel across a wide photo), dolly-in, dolly-out, or rise;
+    data-pos is the object-position ("x,y"), data-zoom (default 1.08) the
+    margin that hides the edges, data-amount (default 1) the strength. The
+    script at the top of this page draws them; without WebGL they're flat.
+  - Overlays, in each shot's .scene.shot: .lt (the label: <b>Chef's
+    kitchen</b><small>quartz island</small>), .staged (the "Virtually staged"
+    badge every virtually staged photo needs), .facts with .price and .specs
+    chips, .callout (a dot at left/top px on a still shot, with its label), and
+    the hook (.cap.left.hook.now) in the first shot's .top with any status
+    .sticker.
+  - Clips: <video class="bg-media" src="assets/maple-05.mp4" data-loop="false"
+    data-offset="3.5" data-length="3.2"> plays from data-offset; the renderer
+    cuts just that stretch (data-length seconds), cropped to 9:16 around
+    data-focus="x,y" (0 to 1) when it's set. data-audio id="clip-5" keeps the
+    clip's own sound in sync (the music ducks under it), and <div class="say
+    auto" data-clip="clip-5">the words said</div> in its shot captions it.
+  - A voiceover under every shot: <div class="scene shot voiceover"><div
+    class="say auto" data-voice="assets/maple-vo.m4a" style="--voice:.3s">its
+    words</div></div> after the shots, and class "vo" on <body> to lift the
+    labels above its captions.
+  Every photo, clip, product, price, and spec is the user's own. Never ship the
+  sample text below.""",
+    body_attrs='class="montage" data-duration="15" data-drop="2.5" data-music="acoustic" data-bpm="96" data-key="D" data-mode="major" data-energy="2" data-motif="1 3 5 6 | 5 3 2 -"',
+    css="""
+  /* a montage of the user's own photos: bright and whole, shaded only in the top band (the hook)
+     and the bottom band (labels), with moves that pan a wide photo across the frame */
+  .montage .bg-media { filter: var(--grade, saturate(1.06) contrast(1.04) brightness(1.03));
+                       object-position: var(--ox, 50%) var(--oy, 50%); transform-origin: var(--fx, 50%) var(--fy, 50%); }
+  .montage .bg::after { background: linear-gradient(to bottom, rgba(8,8,12,.5), rgba(8,8,12,0) 22%, rgba(8,8,12,0) 56%, rgba(8,8,12,.62)); }
+  @keyframes panX    { from { object-position: var(--x0, 30%) var(--oy, 50%); } to { object-position: var(--x1, 70%) var(--oy, 50%); } }
+  @keyframes shiftX  { from { transform: scale(var(--zoom, 1.2)) translateX(var(--t0, 7%)); } to { transform: scale(var(--zoom, 1.2)) translateX(var(--t1, -7%)); } }
+  @keyframes shiftY  { from { transform: scale(var(--zoom, 1.2)) translateY(var(--t0, -7%)); } to { transform: scale(var(--zoom, 1.2)) translateY(var(--t1, 7%)); } }
+  @keyframes pushIn  { from { transform: scale(1); } to { transform: scale(var(--zoom, 1.16)); } }
+  @keyframes pullOut { from { transform: scale(var(--zoom, 1.16)); } to { transform: scale(1); } }
+  @keyframes drift   { from { transform: scale(1.08) translate(-1%, .5%); } to { transform: scale(1.08) translate(1%, -.5%); } }
+
+  /* fits: the whole photo over a blurred copy of itself, or a packshot on a soft backdrop */
+  .montage .bg.fit .backdrop { filter: blur(48px) saturate(1.1) brightness(.8); transform: scale(1.2); animation: none; }
+  .montage .bg.fit .whole { object-fit: contain; }
+  .montage .bg.card { background: radial-gradient(ellipse at 50% 40%, #fff 0%, color-mix(in srgb, var(--accent) 16%, #f2f0ea) 72%); }
+  .montage .bg.card .whole { left: 90px; top: 250px; width: 900px; height: 1000px; object-fit: contain; mix-blend-mode: multiply; }
+  .montage .bg.card::after { background: linear-gradient(to bottom, rgba(8,8,12,.3), rgba(8,8,12,0) 16%, rgba(8,8,12,0) 72%, rgba(8,8,12,.35)); }
+
+  /* before/after: the shot's own photo wipes in over the before photo at --at, behind a seam */
+  .montage .bg .bg-media.after { animation: var(--kb, kbIn) var(--dur, 8s) linear var(--in) both, wipeBg .9s cubic-bezier(.7,0,.25,1) var(--at, 999s) both; }
+  .montage .bg .seam { position: absolute; top: 0; bottom: 0; left: 100%; width: 10px; margin-left: -5px; z-index: 3; background: #fff;
+                       box-shadow: 0 0 30px rgba(0,0,0,.5); animation: seamBg .9s cubic-bezier(.7,0,.25,1) var(--at, 999s) both; }
+  @keyframes seamBg { from { left: 100%; opacity: 1; } 96% { opacity: 1; } to { left: 0%; opacity: 0; } }
+
+  /* how a shot comes in (a fade is the default); under a cut, slide, or wipe the outgoing slot stays put */
+  .montage .bg.t-cut   { animation: fadeIn .01s linear var(--in) both, fadeOut .01s linear var(--out, 999s) forwards; }
+  .montage .bg.t-slide { animation: slideBg .5s cubic-bezier(.7,0,.25,1) var(--in) both, fadeOut .01s linear var(--out, 999s) forwards; }
+  .montage .bg.t-zoom  { animation: zoomBg .5s cubic-bezier(.2,.8,.2,1) var(--in) both, fadeOut .01s linear var(--out, 999s) forwards; }
+  .montage .bg.t-wipe  { animation: wipeBg .6s cubic-bezier(.7,0,.25,1) var(--in) both, fadeOut .01s linear var(--out, 999s) forwards; }
+  @keyframes slideBg { from { transform: translateX(100%); } to { transform: none; } }
+  @keyframes zoomBg  { from { opacity: 0; transform: scale(1.3); } to { opacity: 1; transform: none; } }
+  @keyframes wipeBg  { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0); } }
+
+  /* a shot's text: the hook up top on the first shot, the label low in a lower-third box */
+  .scene.shot { justify-content: flex-end; gap: 22px; }
+  .shot > .top { margin-bottom: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 24px; }
+  .hook { font-size: 70px; line-height: 1.4; }
+  .lt { align-self: flex-start; max-width: 100%; padding: 20px 34px 24px 30px; border-left: 12px solid var(--accent);
+        border-radius: 0 24px 24px 0; background: rgba(12,12,16,.66); }
+  .lt b { display: block; font-size: 62px; font-weight: 800; line-height: 1.12; letter-spacing: -1px; }
+  .lt small { display: block; font-size: 38px; font-weight: 600; line-height: 1.25; color: #e4e3ea; margin-top: 8px; }
+  .staged { align-self: flex-start; padding: 8px 20px 10px; border-radius: 14px; background: rgba(12,12,16,.66); color: #fff;
+            font-size: 32px; font-weight: 700; letter-spacing: .5px; }
+  .facts { margin: auto 0; display: flex; flex-direction: column; align-items: center; gap: 30px; text-align: center; }
+  .facts.low { margin: auto 0 0; }
+  .price { width: fit-content; padding: 6px 38px 14px; border-radius: 28px; background: var(--accent); color: #fff;
+           font-size: 112px; font-weight: 900; line-height: 1.1; letter-spacing: -3px; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+  .specs { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
+  .specs span { padding: 12px 28px 14px; border-radius: 999px; background: #fff; color: #121212; font-size: 44px; font-weight: 800; white-space: nowrap; }
+  .shot .say { min-height: 200px; }
+  /* a voiceover under the whole video: its captions sit low over every shot (.scene.shot.voiceover),
+     so on a page with them (body.vo) each shot's label moves up out of their way */
+  .vo .scene.shot:not(.voiceover) { padding-bottom: 222px; }
+  .ba { align-self: flex-start; place-items: start; }
+  /* the end card brand.js adds sits on the brand's background, not over the last photo */
+  .montage .endcard::before { content: ''; position: absolute; z-index: -1; left: -90px; right: -150px; top: -330px; bottom: -470px; background: var(--bg); }
+
+  /* a callout on a still shot: a dot at its left/top (px, in the scene box) and a label beside it */
+  .callout { position: absolute; width: 0; height: 0; z-index: 3; }
+  .callout i { position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; border-radius: 50%; background: #fff;
+               border: 10px solid var(--accent); box-shadow: 0 0 0 12px rgba(255,255,255,.35); }
+  .callout span { position: absolute; left: 44px; top: -112px; white-space: nowrap; padding: 12px 26px 14px; border-radius: 18px;
+                  background: #fff; color: #121212; font-size: 42px; font-weight: 800; box-shadow: 0 14px 40px rgba(0,0,0,.3); }
+  .callout.left span { left: auto; right: 44px; }
+  .callout.below span { top: 44px; }
+""",
+    head_extra="""<script>
+/* 3D photo moves: a slot holding <canvas class="bg-media depth" data-src="the photo"
+   data-depth="its depth map" data-move="orbit-right"> (montage.js writes these) is drawn from the
+   photo moved by its depth map, the near parts more than the far ones, so the camera seems to move
+   through the space instead of over a flat picture. render.js calls window.renderFrame(t) on every
+   frame. Without WebGL the shot is drawn flat, with the same framing. */
+(() => {
+  const W = 1080, H = 1920;
+  const VERT = 'attribute vec2 p; varying vec2 uv; void main() { uv = vec2(p.x, -p.y) * .5 + .5; gl_Position = vec4(p, 0., 1.); }';
+  // each pixel of the frame looks for the nearest point of the photo that moves onto it: it steps
+  // from near to far, and the first point whose depth reaches the step is the surface it sees, so
+  // near things cover what's behind them (parallax occlusion mapping)
+  const FRAG = `precision highp float;
+    varying vec2 uv;
+    uniform sampler2D img, dep;
+    uniform vec2 origin, size, shift, center;
+    uniform float push, focus;
+    const int STEPS = 24;
+    void main() {
+      vec2 q = origin + uv * size;
+      vec2 dir = shift + (q - center) * push;
+      float z = 1.0;
+      float h = texture2D(dep, q - dir * (z - focus)).r;
+      float zPrev = z, gapPrev = h - z;
+      for (int i = 0; i < STEPS; i++) {
+        if (h >= z) break;
+        zPrev = z;
+        gapPrev = h - z;
+        z -= 1.0 / float(STEPS);
+        h = texture2D(dep, q - dir * (z - focus)).r;
+      }
+      float gap = h - z;
+      float t = gapPrev < 0.0 ? gapPrev / (gapPrev - gap) : 1.0;
+      gl_FragColor = texture2D(img, q - dir * (mix(zPrev, z, t) - focus));
+    }`;
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const pair = (v, d) => { const p = String(v || '').split(',').map(Number); return p.length === 2 && p.every(Number.isFinite) ? p : d; };
+  const seconds = (el, name, d) => {
+    const v = getComputedStyle(el).getPropertyValue(name).trim();
+    const n = v.endsWith('ms') ? parseFloat(v) / 1000 : parseFloat(v);
+    return Number.isFinite(n) ? n : d;
+  };
+  const load = (src) => new Promise((resolve, reject) => {
+    const im = new Image();
+    im.onload = () => resolve(im);
+    im.onerror = () => reject(new Error(`a 3D shot couldn't load ${src}`));
+    im.src = src;
+  });
+  let gl = null, glCanvas, loc;
+
+  function setup() {
+    glCanvas = document.createElement('canvas');
+    glCanvas.width = W;
+    glCanvas.height = H;
+    gl = glCanvas.getContext('webgl', { preserveDrawingBuffer: true, antialias: false });
+    if (!gl) return;
+    const compile = (type, src) => {
+      const sh = gl.createShader(type);
+      gl.shaderSource(sh, src);
+      gl.compileShader(sh);
+      if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
+      return sh;
+    };
+    const prog = gl.createProgram();
+    gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const p = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(p);
+    gl.vertexAttribPointer(p, 2, gl.FLOAT, false, 0, 0);
+    loc = {};
+    for (const n of ['img', 'dep', 'origin', 'size', 'shift', 'center', 'push', 'focus']) loc[n] = gl.getUniformLocation(prog, n);
+    gl.uniform1i(loc.img, 0);
+    gl.uniform1i(loc.dep, 1);
+    gl.viewport(0, 0, W, H);
+  }
+
+  function texture(source) {
+    const t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+    for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
+    return t;
+  }
+
+  // the photo at about the size it's shown, and its depth map, softened a touch against jagged edges
+  async function prepare(c) {
+    const [photo, depth] = await Promise.all([load(c.dataset.src), load(c.dataset.depth)]);
+    const w = photo.naturalWidth, h = photo.naturalHeight;
+    const k = Math.min(1, 4096 / Math.max(w, h), 1.3 * Math.max(W / w, H / h));
+    const pc = document.createElement('canvas');
+    pc.width = Math.round(w * k);
+    pc.height = Math.round(h * k);
+    pc.getContext('2d').drawImage(photo, 0, 0, pc.width, pc.height);
+    const dc = document.createElement('canvas');
+    dc.width = Math.max(64, Math.round(pc.width / 3));
+    dc.height = Math.max(64, Math.round(pc.height / 3));
+    const dctx = dc.getContext('2d', { willReadFrequently: true });
+    dctx.filter = `blur(${Math.max(1, Math.round(dc.width / 600))}px)`;
+    dctx.drawImage(depth, 0, 0, dc.width, dc.height);
+    const focus = pair(c.dataset.focus, [0.5, 0.5]);
+    const s = Math.max(W / w, H / h);
+    const slot = c.closest('.bg') || c;
+    return {
+      ctx: c.getContext('2d'), photo: pc, img: gl && texture(pc), dep: gl && texture(dc),
+      move: c.dataset.move || 'orbit-right', amount: parseFloat(c.dataset.amount) || 1, zoom: parseFloat(c.dataset.zoom) || 1.08,
+      // the share of the photo the frame shows, filling it
+      size: [W / s / w, H / s / h], pos: pair(c.dataset.pos, [0.5, 0.5]), pan: pair(c.dataset.pan, null),
+      // the focus stays put; nearer things move one way, farther ones the other
+      focus, fz: dctx.getImageData(Math.round(focus[0] * (dc.width - 1)), Math.round(focus[1] * (dc.height - 1)), 1, 1).data[0] / 255,
+      in: seconds(slot, '--in', 0), dur: seconds(slot, '--dur', 4), out: seconds(slot, '--out', Infinity),
+    };
+  }
+
+  function draw(sh, t) {
+    const p = clamp((t - sh.in) / sh.dur, 0, 1);
+    const k = sh.amount;
+    let zoom = sh.zoom, shift = [0, 0], push = 0, pos = sh.pos;
+    if (sh.move === 'orbit-left' || sh.move === 'orbit-right') {
+      // the camera slides around the focus: going right, near things slide left
+      shift = [(sh.move === 'orbit-right' ? -1 : 1) * 0.1 * k * (p - 0.5), 0];
+      if (sh.pan) pos = [sh.pan[0] + (sh.pan[1] - sh.pan[0]) * p, pos[1]];
+    } else if (sh.move === 'dolly-in' || sh.move === 'dolly-out') {
+      // the camera moves in: near things grow faster than far ones
+      const e = sh.move === 'dolly-in' ? p : 1 - p;
+      push = 0.3 * k * e;
+      zoom *= 1 + 0.05 * k * e;
+    } else if (sh.move === 'rise') {
+      // the camera lifts: near things drop away faster
+      shift = [0, 0.16 * k * (p - 0.5)];
+    }
+    // the frame's window on the photo, zoomed around the focus where it sits in the frame
+    const size = [sh.size[0] / zoom, sh.size[1] / zoom];
+    const base = [pos[0] * (1 - sh.size[0]), pos[1] * (1 - sh.size[1])];
+    const at = [0, 1].map((i) => clamp((sh.focus[i] - base[i]) / sh.size[i], 0, 1));
+    const origin = [0, 1].map((i) => clamp(base[i] + at[i] * (sh.size[i] - size[i]), 0, 1 - size[i]));
+    if (!gl) {
+      sh.ctx.drawImage(sh.photo, origin[0] * sh.photo.width, origin[1] * sh.photo.height, size[0] * sh.photo.width, size[1] * sh.photo.height, 0, 0, W, H);
+      return;
+    }
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, sh.img);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, sh.dep);
+    gl.uniform2f(loc.origin, origin[0], origin[1]);
+    gl.uniform2f(loc.size, size[0], size[1]);
+    gl.uniform2f(loc.shift, shift[0] * size[0], shift[1] * size[1]);
+    gl.uniform2f(loc.center, sh.focus[0], sh.focus[1]);
+    gl.uniform1f(loc.push, push);
+    gl.uniform1f(loc.focus, sh.fz);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    sh.ctx.drawImage(glCanvas, 0, 0);
+  }
+
+  // this script runs in <head>, so it waits for the shots further down the page
+  let shots = [];
+  const parsed = new Promise((resolve) => (document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', resolve) : resolve()));
+  window.renderReady = parsed.then(async () => {
+    const canvases = [...document.querySelectorAll('canvas.depth[data-src]')];
+    if (!canvases.length) return;
+    try {
+      setup();
+    } catch (e) {
+      gl = null;
+      console.warn(`3D moves drawn flat: ${e.message}`);
+    }
+    shots = await Promise.all(canvases.map(prepare));
+    for (const sh of shots) draw(sh, sh.in);
+  });
+  window.renderFrame = async (t) => {
+    try {
+      await window.renderReady;
+    } catch {
+      return; // render.js reports why it failed
+    }
+    // only the shots on screen (a slot fades out over .45s after its --out)
+    for (const sh of shots) if (t >= sh.in - 0.05 && t <= sh.out + 0.5) draw(sh, t);
+  };
+})();
+</script>
+""",
+    body="""
+  <!-- shot 1, 0–2.5s: the hook, on screen from frame 0, and a status sticker -->
+  <div class="scene shot" style="--out:2.35s">
+    <div class="top">
+      <div class="cap left hook now"><span>just listed in maple grove</span></div>
+      <div class="sticker yellow pop" style="--in:.35s" data-sfx="pop">open house sat 1–4</div>
+    </div>
+    <div class="lt pop" style="--in:.6s"><b>Welcome home</b></div>
+  </div>
+
+  <!-- shot 2, 2.5–5s -->
+  <div class="scene shot" style="--out:4.85s">
+    <div class="lt pop" style="--in:2.7s"><b>Sun-filled living room</b><small>vaulted ceilings</small></div>
+  </div>
+
+  <!-- shot 3, 5–7.5s -->
+  <div class="scene shot" style="--out:7.35s">
+    <div class="lt pop" style="--in:5.2s"><b>Chef's kitchen</b><small>quartz island · gas range</small></div>
+  </div>
+
+  <!-- shot 4, 7.5–10s: a virtually staged photo carries the badge -->
+  <div class="scene shot" style="--out:9.85s">
+    <div class="staged fade" style="--in:7.6s">Virtually staged</div>
+    <div class="lt pop" style="--in:7.7s"><b>Main suite</b><small>walk-in closet</small></div>
+  </div>
+
+  <!-- shot 5, 10–12.5s -->
+  <div class="scene shot" style="--out:12.35s">
+    <div class="lt pop" style="--in:10.2s"><b>Private backyard</b></div>
+  </div>
+
+  <!-- shot 6, 12.5–15s: the price, the specs, and the CTA -->
+  <div class="scene shot">
+    <div class="facts">
+      <div class="price pop" style="--in:12.6s" data-sfx="chime">$689,000</div>
+      <div class="specs rise" style="--in:12.9s"><span>4 bd</span><span>3 ba</span><span>2,450 sq ft</span></div>
+      <div class="cap hl pop" style="--in:13.3s"><span>book a showing · link in bio</span></div>
+    </div>
+  </div>
+""")
 
 def bg_slots(windows):
     """One empty background slot per scene window, fading in a little before the scene and out as it ends."""

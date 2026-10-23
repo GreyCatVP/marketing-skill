@@ -86,8 +86,9 @@ animation" below), with music composed for your project, and a voiceover if
 you record or generate one. It doesn't film your product or people, but it does finish
 footage you film: `cut.js` takes a talking-head take from your phone, cuts
 out the pauses, and makes the video from it with its own sound, captions,
-your hook, music, and end card, and screen recordings play in the how-to
-phone frame without being cropped. The output is 1080×1920
+your hook, music, and end card; `montage.js` edits several clips into a
+montage (the `clip-montage` skill); and screen recordings play in the
+how-to phone frame without being cropped. The output is 1080×1920
 (9:16), 30fps H.264 with AAC audio mixed to about −14 LUFS, which is what
 YouTube Shorts, Instagram Reels, and TikTok all expect.
 
@@ -99,6 +100,7 @@ cd scripts/video
 npm install                       # Playwright, and three.js for the 3D template
 npx playwright install chromium   # skip if Google Chrome is installed; it's used as a fallback
 npm install kokoro-js             # optional: free generated voiceovers (about 600 MB)
+npm install @huggingface/transformers   # optional: 3D photo moves in montages (depth maps from huggingface.co; add --ignore-scripts if it stops on a GPU download)
 ```
 
 For stock backgrounds, also get free API keys from
@@ -126,6 +128,10 @@ node voice.js script.md --out assets --voice af_heart     # a free voiceover, on
 node voice.js --audition samples "One line to try."       # the same line in four voices, to pick one
 node compose.js script.md                                 # a narrated video page from a script: voice, backgrounds, synced captions
 node compose.js script.md --style 3d                      # the same, drawn as 3D scenes (or --style pixel, as pixel art)
+node montage.js inspect clips/ --slug maple              # copy a client's clips or photos in: metadata stripped, contact sheet
+node montage.js frames assets/maple-02.mp4 --every 1     # a clip's frame every second with its time, and when its sound is loud
+node montage.js state/videos/2026-10-21-maple.md         # a montage page from them: clip moments, moves, beat-synced cuts, labels, end card
+node depth.js assets/maple-02.jpg                        # a photo's depth map (montage.js makes them itself, for 3D moves)
 node render.js page.html --voice-lengths                  # each voice line's start, length, and room in its scene
 node captions.js assets/voice-1.wav --text "the line"     # when each word of a line is said
 node brand.js page.html                                   # the Visual Identity: colors, font, a logo end card
@@ -270,6 +276,7 @@ in `scripts/video/templates/`:
 | `narrated.html` | per script | A voiceover over one background per line, with captions synced to the voice: explainers, tips, text-led brand stories (built by `compose.js`) | the identity, energy −1 |
 | `3d.html` | per script | The same, over 3D scenes in the brand's colors: explainers, launches, a product reveal with your screenshot (`compose.js`, `style: 3d`) | the identity, energy −1 |
 | `pixel.html` | per script | The same, over pixel-art game scenes with a dialog box for captions: playful explainers, tips, brand stories (`compose.js`, `style: pixel`) | `chiptune` |
+| `montage.html` | per script | A client's own clips or photos (a home, a product, a shop, an event), each clip at its best moment and each photo moving, cut on the beat, with labels, a clip's own sound or a voiceover, price and specs, and a contact end card (built by `montage.js`, for `clip-montage` and `montage-video`) | the client's identity |
 
 The skill swaps each template's default sound for your sonic identity.
 
@@ -363,6 +370,110 @@ details. Each template's comment lists every shot and what it takes.
   the prompt. That spends the tool's credits. The local renderer doesn't
   draw characters beyond the pixel robot.
 
+### A montage from your clips (the default)
+
+The `clip-montage` skill edits the phone videos you or a client film (a
+home or a room, a product, a shop or a restaurant, an event) into a
+vertical montage, with your own music and voiceover if you have them.
+It's free: everything renders locally, and nothing is generated. It's
+the default for any montage. With only photos, it asks for a few clips
+first and otherwise hands over to `montage-video` (below).
+
+```
+node montage.js inspect ~/Desktop/taco-night --slug taco-night
+node montage.js frames state/videos/assets/taco-night-02.mp4 --every 1
+node montage.js state/videos/2026-10-23-taco-night.md
+```
+
+- **inspect** copies every clip in with its picture and sound as they
+  are and its metadata stripped (a phone's GPS location included), and
+  prints each one's length, shape, and whether it has sound.
+- **frames --every 1** lays out a frame every second with its time, and
+  prints when the sound is loud, so the skill can pick each clip's best
+  moment without playing it.
+- **The script** gives each shot its stretch, `[from: 3.5] [to: 6.5]`,
+  fitted to the beat. A long clip can give several shots. `[sound]` keeps
+  a clip's own sound in sync (someone talking, the sizzle) with the music
+  ducked under it, and a `[say: ...]` on it captions the exact words.
+  `[focus: 30%,50%]` keeps that point in frame when a landscape clip is
+  cut to 9:16. A slow `push-in` on top of a clip works too.
+- **Your music:** `music: assets/track.mp3` (its beat is read and the
+  cuts land on it), the client's sound, or `none` to add a trending sound
+  in the app.
+- **Your voiceover:** `voiceover: assets/vo.m4a`, one recording (a voice
+  memo is fine) under the whole video, with `voiceover-text:` (its words)
+  for synced captions. The music ducks under it, and the shots stretch to
+  cover it.
+- **Long clips** render fast: only the stretch a shot plays is turned
+  into frames, not the whole file.
+
+### A montage from your photos (property and product)
+
+The `montage-video` skill makes a vertical reel from a client's own photos
+when there are no clips: a home for sale or rent, a single room, or a
+product. `montage.js` does the work in two steps:
+
+```
+node montage.js inspect ~/Desktop/maple-photos --slug maple
+node montage.js state/videos/2026-10-21-maple.md
+```
+
+- **inspect** copies every photo and clip into `state/videos/assets/`
+  (`maple-01.jpg`, ...). Photos come out upright, sized for the frame,
+  and with their metadata stripped, a phone photo's GPS location
+  included. iPhone HEIC photos are converted when the machine has a
+  converter. It prints each file's size, shape, and brightness, flags
+  dark or low-resolution ones, and writes a numbered contact sheet and a
+  starter script.
+- **The script** lists one shot per line: the file, a label, and tags
+  for the move (`pan-left`, `push-in focus=40%,55%`, ...), the fit
+  (`contain` shows a whole photo, `card` sets a packshot on a soft
+  backdrop), a voiceover line (`[say: ...]`), a hold, a transition, a
+  "Virtually staged" badge, a callout, or a before/after wipe. The
+  frontmatter sets the hook, a status sticker, the price, the specs, the
+  CTA, the music (the client's sound, a genre, or a licensed track), the
+  voice (none, a free local voice, or your recordings), and the pace or
+  target length. Every option is listed at the top of
+  `scripts/video/montage.js`.
+- **The page** shows the photos bright, without the darkening other
+  templates use behind text. Wide photos pan across the 9:16 frame so the
+  whole room is seen.
+- **3D moves:** with the depth model set up (`npm install
+  @huggingface/transformers`, about 100 MB downloaded on first use),
+  `depth.js` estimates how far each point of a photo is (Depth Anything V2
+  Small, an open model that runs locally), and the page draws the photo
+  from it with WebGL. Near things move more than far ones, so the camera
+  seems to circle the room (`orbit`), move into it (`dolly-in`), or lift
+  (`rise`) rather than slide over a flat picture. The moves stay small,
+  since a photo shows one viewpoint: nothing behind the sofa or around a
+  corner. A depth map from any other app works too (`[depth: file]`).
+  Without the model, shots move flat. 3D shots render about three times
+  slower on a machine without a graphics card. Every cut lands on the music's beat (a licensed
+  track's beats are read with `beats.js`), or follows the voice. A shot is
+  held longer when its label needs time to be read. It ends on an end
+  card with the client's logo, handle, contact lines, and fine print.
+  Render it like any page.
+- **AI camera moves:** with a connected video model (Figma Weave's
+  Seedance or Veo, or Higgsfield), each photo becomes a short clip where
+  the camera really moves, orbiting or gliding into the room from new
+  angles. Generating spends the user's credits on a paid plan (Weave runs
+  video models only on paid Figma plans), so the skill offers it only
+  when you say you have one, and quotes each run for your approval first.
+  Filmed clips (`clip-montage`) give real camera moves for free. `montage.js frames <clip> --photo <photo>` puts the
+  clip's frames beside the photo, so any clip that changed the room is
+  caught and dropped. AI shots carry an "AI-animated" badge (`[ai]`).
+- **Clients:** each one has a profile in `state/clients/<slug>.md` with
+  their colors, font, logo, sound, contact details, and the preferences
+  they've asked for (`state/clients/README.md`). A script picks one with
+  `client: <slug>`. Profiles are kept out of git.
+- **Editing:** change the script and run `montage.js` again. The timing is
+  recomputed, so "faster", "kitchen first", or "different music" is a
+  one-line edit. Render each round as a new version (`maple-v2.mp4`).
+
+Both skills' shot order, filming tips, moves, music by mood, and the
+wording rules for property ads (describe the home, never who should live
+there) are in [`references/montage-guide.md`](../references/montage-guide.md).
+
 ### How a page works
 
 A comment at the top of `promo.html` documents how a page works: CSS
@@ -374,7 +485,7 @@ calls with each frame's time (see `3d.html` and `pixel.html`). The
 templates are built from one shared base by `templates/build.py` (the
 everyday ones are defined in `templates/fyp.py`, and the drawn ones in
 `scene3d.py` and `pixel.py`); edit those and run `python3 build.py`
-rather than hand-editing 31 copies.
+rather than hand-editing 32 copies.
 
 The skill saves its pages and renders under `state/videos/`, with media in
 `state/videos/assets/`. Rendered MP4s and downloaded media are git-ignored;

@@ -39,6 +39,10 @@ Skills that read "our changelog" for source material read this file too.
 - `scripts/video/render.js` turns only the stretch a clip plays into
   frames (`data-length`), not the whole file, so long phone clips render
   quickly. It crops a clip to 9:16 around `data-focus`.
+- Explainer v3 (`media/explainer/`): all 14 skills in nine voiced lines,
+  the two montage skills included, with frames from the 3D and pixel-art
+  templates. The voice is Kokoro-82M (`af_heart`), the model
+  `scripts/video/voice.js` uses, and the music is the same licensed track.
 
 - **Montages from a client's own photos: `montage-video`, a thirteenth
   skill.** Hand over photos or phone clips of a home, a room, or a

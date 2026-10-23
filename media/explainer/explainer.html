@@ -1,11 +1,11 @@
 <!doctype html>
 <!--
-  Marketing Skills for Claude Code, explainer v2 (1920x1080).
+  Marketing Skills for Claude Code, explainer v3 (1920x1080).
 
-  v2 answers the feedback on v1: the music is a licensed track instead of the
-  generated loop, there is a voiceover, every scene shows real output instead
-  of mock screens, and nothing on screen is smaller than 40px, so it reads on
-  a phone.
+  v3 walks through all 14 skills, the two new montage skills included, in
+  nine voiced lines. Like v2: the music is the licensed track, every scene
+  shows the plugin's real output or real file names, and nothing on screen
+  is smaller than 40px, so it reads on a phone. v1 and v2 are in git history.
 
   Timing follows the voiceover. LINES holds how long each spoken line runs;
   each scene starts LEAD seconds before its line and holds TAIL seconds after
@@ -49,7 +49,11 @@
   .hl { color: var(--accent); }
   .card { background: var(--card); border: 2px solid var(--line); border-radius: 28px; box-shadow: 0 30px 60px -40px rgba(60,40,20,.35); }
   .pill { display: inline-flex; align-items: center; gap: 14px; border-radius: 999px; white-space: nowrap; }
+  .chip { padding: 20px 32px; font-size: 44px; font-weight: 700; background: var(--card); border: 2px solid var(--line); }
   .typed { display: inline-block; overflow: hidden; white-space: pre; vertical-align: bottom; }
+  .label { font: 500 42px/1 "JetBrains Mono"; color: var(--ink2); white-space: nowrap; }
+  .h2 { font-size: 120px; line-height: 1; }
+  .new { display: inline-block; font: 800 40px/1 "Inter"; color: #fff; background: var(--accent); padding: 10px 22px 12px; border-radius: 999px; letter-spacing: .02em; }
 
   /* paper texture: a faint dot grid, nothing that glows */
   #grain { position: absolute; inset: -40px; background-image: radial-gradient(circle, rgba(22,19,15,.06) 1.4px, transparent 1.6px); background-size: 36px 36px; }
@@ -65,22 +69,28 @@
   .tree { font: 500 46px/1 "JetBrains Mono"; }
   .tree div { height: 76px; display: flex; align-items: center; white-space: nowrap; }
   .tree i { font-style: normal; color: var(--accent); margin-right: 22px; }
-  /* 3 */
-  .head { font: 700 40px/1 "JetBrains Mono"; color: var(--accent); }
-  .ban { display: inline-block; position: relative; font: 600 48px/1 "Inter"; padding: 18px 28px; border: 2px solid var(--line); border-radius: 18px; background: var(--card); margin: 0 18px 18px 0; }
-  .ban s { position: absolute; left: 14px; right: 14px; top: 50%; height: 6px; margin-top: -3px; background: var(--bad); border-radius: 3px; transform-origin: 0 50%; }
-  /* 4 */
-  .rule { display: flex; align-items: center; gap: 26px; font-size: 42px; font-weight: 600; height: 72px; white-space: nowrap; }
-  .rule b { font: 700 40px/1 "JetBrains Mono"; color: var(--ink2); width: 40px; }
-  .stamp { position: absolute; font: 800 150px/1 "Inter"; letter-spacing: -.02em; padding: 14px 44px 26px; border: 12px solid currentColor; border-radius: 30px; color: var(--ok); transform-origin: 50% 50%; }
-  .bubble { position: absolute; border-radius: 34px; padding: 30px 40px; font-size: 44px; font-weight: 600; line-height: 1.3; }
+  .tree .new { margin-left: 22px; }
+  /* 3, 4: a card per skill */
+  .sk { position: absolute; padding: 34px 32px; }
+  .sk .n { font: 700 40px/1 "JetBrains Mono"; color: var(--accent); white-space: nowrap; }
+  .sk .t { font-size: 56px; font-weight: 800; line-height: 1.1; margin-top: 26px; letter-spacing: -.01em; }
+  .sk .b { font-size: 44px; font-weight: 600; line-height: 1.25; margin-top: 18px; color: var(--ink2); }
   /* 5 */
+  .stamp { position: absolute; font: 800 130px/1 "Inter"; letter-spacing: -.02em; padding: 14px 40px 24px; border: 12px solid currentColor; border-radius: 30px; color: var(--ok); transform-origin: 50% 50%; }
+  .stamp.no { color: var(--bad); }
+  .bubble { position: absolute; border-radius: 34px; padding: 30px 40px; font-size: 44px; font-weight: 600; line-height: 1.3; }
+  /* 6 */
   .phone { position: absolute; width: 300px; height: 533px; border-radius: 40px; overflow: hidden; border: 8px solid var(--ink); background: var(--ink); box-shadow: 0 40px 60px -30px rgba(40,25,10,.45); }
   .phone img { width: 100%; height: 100%; display: block; }
-  /* 6 */
-  .st { position: absolute; top: 850px; height: 96px; border-radius: 999px; display: grid; place-items: center; font-size: 42px; font-weight: 700;
+  /* 7: montage.js's own output */
+  .out { font: 500 40px/1 "JetBrains Mono"; height: 66px; display: flex; align-items: center; white-space: pre; }
+  .out .p { color: var(--accent); }
+  .out .d { color: var(--ink2); }
+  .out .g { color: var(--ok); }
+  /* 8 */
+  .st { position: absolute; top: 850px; height: 96px; border-radius: 999px; display: grid; place-items: center; font-size: 44px; font-weight: 700;
         background: var(--card); border: 3px solid var(--line); color: var(--ink2); white-space: nowrap; }
-  /* 7 */
+  /* 9 */
   .cmd { font: 500 44px/1 "JetBrains Mono"; height: 92px; display: flex; align-items: center; white-space: pre; }
   .cmd .p { color: var(--accent); }
 </style>
@@ -89,61 +99,104 @@
 
 <div id="grain"></div>
 
-<!-- 1. the hook -->
+<!-- 1. the hook: 12 skills last time, 14 now -->
 <div class="scene" id="s1">
-  <div class="abs serif big" style="left:140px;top:380px" id="h1a" data-lines="The marketing work|I kept putting off."></div>
-  <div class="abs" style="left:140px;top:330px" id="h1b">
-    <div class="serif" style="font-size:260px;line-height:1" data-lines="12 skills."></div>
-    <div style="font-size:64px;font-weight:700;margin-top:40px" id="h1c">One plugin for <span class="hl">Claude Code</span>.</div>
+  <div class="abs serif big" style="left:140px;top:380px" id="h1a" data-lines="Last time:|12 skills."></div>
+  <div class="abs" style="left:140px;top:300px" id="h1b">
+    <div class="serif" style="font-size:260px;line-height:1" data-lines="14 skills."></div>
+    <div style="font-size:64px;font-weight:700;margin-top:40px" id="h1c">One plugin for Claude Code. Now it edits <span class="hl">real video</span>.</div>
   </div>
 </div>
 
-<!-- 2. the skills, as the real folder listing -->
+<!-- 2. every skill, as the real folder listing -->
 <div class="scene" id="s2">
   <div class="abs mono" style="left:140px;top:110px;font-size:46px;font-weight:700" id="treeHead">skills/</div>
-  <div class="abs tree" style="left:140px;top:200px" id="treeA"></div>
-  <div class="abs tree" style="left:1000px;top:200px" id="treeB"></div>
-  <div class="abs" style="left:140px;top:720px;font-size:64px;font-weight:700" id="treeCap">Each one is a plain <span class="mono hl" style="font-size:60px">SKILL.md</span> file.</div>
+  <div class="abs tree" style="left:140px;top:190px" id="treeA"></div>
+  <div class="abs tree" style="left:1040px;top:190px" id="treeB"></div>
+  <div class="abs" style="left:140px;top:790px;font-size:60px;font-weight:700" id="treeCap">Plain <span class="mono hl" style="font-size:56px">SKILL.md</span> files. Each reads your <span class="mono hl" style="font-size:56px">brand-voice.md</span> first.</div>
 </div>
 
-<!-- 3. brand voice -->
+<!-- 3. research and plan -->
 <div class="scene" id="s3">
-  <div class="abs mono" style="left:140px;top:120px;font-size:42px;color:var(--ink2)" id="bvFile">references/brand-voice.md</div>
-  <div class="abs serif" style="left:140px;top:190px;font-size:130px;line-height:1.02" data-lines="Set your voice once." id="bvHead"></div>
-  <div class="abs" style="left:140px;top:420px" id="bvRows">
-    <div class="head" style="margin-bottom:28px">## Target Audience</div>
-    <div class="head" style="margin-bottom:28px">## Brand Voice &amp; Tone</div>
-    <div class="head">## Banned Words &amp; Phrases</div>
+  <div class="abs serif h2" style="left:140px;top:100px" data-lines="Research and plan." id="rpHead"></div>
+  <div class="sk card" style="left:140px;top:330px;width:540px;height:400px" id="k1">
+    <div class="n">competitor-research</div><div class="t">A battlecard</div><div class="b">SWOT, messaging, and cited sources</div>
   </div>
-  <div class="abs" style="left:900px;top:420px;width:900px" id="bans">
-    <span class="ban">game-changer<s></s></span><span class="ban">revolutionary<s></s></span><span class="ban">synergy<s></s></span><span class="ban">supercharge<s></s></span><span class="ban">seamless<s></s></span>
+  <div class="sk card" style="left:700px;top:330px;width:540px;height:400px" id="k2">
+    <div class="n">seo-brief</div><div class="t">Keyword to outline</div><div class="b">Intent, meta, and no made-up volumes</div>
   </div>
-  <div class="abs" style="left:140px;top:840px;font-size:64px;font-weight:700" id="bvCap">Every skill reads it <span class="hl">before it writes</span>.</div>
+  <div class="sk card" style="left:1260px;top:330px;width:540px;height:400px" id="k3">
+    <div class="n">content-calendar</div><div class="t">A month of posts</div><div class="b">Checked against your calendar, no repeats</div>
+  </div>
 </div>
 
-<!-- 4. this very post: the rules check -->
+<!-- 4. write -->
 <div class="scene" id="s4">
-  <div class="abs" style="left:140px;top:100px;font-size:60px;font-weight:800" id="rHead">r/claudeskills rules</div>
-  <div class="abs" style="left:140px;top:200px" id="rules"></div>
-  <div class="stamp" style="left:1240px;top:180px" id="go">GO</div>
-  <div class="abs pill" style="left:1240px;top:440px;padding:20px 32px;font-size:44px;font-weight:700;background:var(--card);border:2px solid var(--line)" id="flair">flair: Skill Share</div>
-  <div class="bubble card" style="left:1000px;top:620px;width:800px" id="ask">"I can't open r/claudeskills from here. Can you paste the rules?"</div>
+  <div class="abs serif h2" style="left:140px;top:90px" data-lines="Write." id="wHead"></div>
+  <div class="sk card" style="left:140px;top:270px;width:800px;height:280px" id="w1">
+    <div class="n">content-repurposer</div><div class="t" style="font-size:50px">One article into a LinkedIn post, an X thread, and a newsletter</div>
+  </div>
+  <div class="sk card" style="left:980px;top:270px;width:800px;height:280px" id="w2">
+    <div class="n">ad-copy-generator</div><div class="t" style="font-size:50px">Ad variants for Meta, Google, and LinkedIn</div>
+  </div>
+  <div class="sk card" style="left:140px;top:590px;width:800px;height:280px" id="w3">
+    <div class="n">email-sequence</div><div class="t" style="font-size:50px">A drip campaign with a real arc</div>
+  </div>
+  <div class="sk card" style="left:980px;top:590px;width:800px;height:280px" id="w4">
+    <div class="n">email-outreach</div><div class="t" style="font-size:50px">Real prospects, never contacted twice</div>
+  </div>
 </div>
 
-<!-- 5. short-form video: real frames from the plugin's own templates -->
+<!-- 5. community posts: the rules first, then a plain Go or No-Go -->
 <div class="scene" id="s5">
-  <div class="abs serif" style="left:140px;top:90px;font-size:130px;line-height:1" data-lines="TikTok, Reels, Shorts." id="vHead"></div>
-  <div class="phone" style="left:140px;top:300px"><img src="assets/frames/tier-list.jpg" alt=""></div>
-  <div class="phone" style="left:480px;top:300px"><img src="assets/frames/text-chat.jpg" alt=""></div>
-  <div class="phone" style="left:820px;top:300px"><img src="assets/frames/pov.jpg" alt=""></div>
-  <div class="phone" style="left:1160px;top:300px"><img src="assets/frames/countdown.jpg" alt=""></div>
-  <div class="phone" style="left:1500px;top:300px"><img src="assets/frames/hot-take.jpg" alt=""></div>
-  <div class="abs" style="left:140px;top:880px;font-size:60px;font-weight:700" id="vCap"><span class="hl">28 templates</span>, rendered on your machine.</div>
+  <div class="abs label" style="left:140px;top:110px" id="cLabel">community-post-generator</div>
+  <div class="abs serif h2" style="left:140px;top:180px" data-lines="Reads the rules first." id="cHead"></div>
+  <div class="abs" style="left:140px;top:380px;width:1000px;display:flex;flex-wrap:wrap;gap:22px" id="plats">
+    <span class="pill chip">r/subreddit</span><span class="pill chip">Product Hunt</span><span class="pill chip">Hacker News</span>
+    <span class="pill chip">Indie Hackers</span><span class="pill chip">dev.to</span><span class="pill chip">Discord</span>
+    <span class="pill chip">Slack</span><span class="pill chip">Telegram</span>
+  </div>
+  <div class="stamp" style="left:1260px;top:330px" id="go">GO</div>
+  <div class="stamp no" style="left:1200px;top:600px" id="nogo">NO-GO</div>
+  <div class="abs" style="left:140px;top:870px;font-size:60px;font-weight:700" id="cCap">A plain answer <span class="hl">before it drafts</span>.</div>
 </div>
 
-<!-- 6. approval: the real checkpoint from EXAMPLE.md -->
+<!-- 6. short-form video: real frames from the plugin's own templates -->
 <div class="scene" id="s6">
+  <div class="abs serif h2" style="left:140px;top:90px" data-lines="TikTok, Reels, Shorts." id="vHead"></div>
+  <div class="phone" style="left:140px;top:290px"><img src="assets/frames/tier-list.jpg" alt=""></div>
+  <div class="phone" style="left:480px;top:290px"><img src="assets/frames/3d.jpg" alt=""></div>
+  <div class="phone" style="left:820px;top:290px"><img src="assets/frames/text-chat.jpg" alt=""></div>
+  <div class="phone" style="left:1160px;top:290px"><img src="assets/frames/pixel.jpg" alt=""></div>
+  <div class="phone" style="left:1500px;top:290px"><img src="assets/frames/pov.jpg" alt=""></div>
+  <div class="abs" style="left:140px;top:880px;font-size:60px;font-weight:700" id="vCap"><span class="hl">32 templates</span>, now in 3D and pixel art.</div>
+  <div class="abs" style="left:140px;top:880px;font-size:60px;font-weight:700" id="vCap2"><span class="mono hl" style="font-size:54px">visual-brief-generator</span>: prompts for any AI video tool.</div>
+</div>
+
+<!-- 7. new: montages from your own clips (montage.js's own output) -->
+<div class="scene" id="s7">
+  <div class="abs" style="left:140px;top:80px;display:flex;align-items:center;gap:24px" id="mLabel"><span class="new">NEW</span><span class="label">clip-montage · montage-video</span></div>
+  <div class="abs serif h2" style="left:140px;top:150px" data-lines="Your own clips, on the beat." id="mHead"></div>
+  <div class="abs" style="left:140px;top:320px;display:flex;gap:22px" id="ins">
+    <span class="pill chip">your phone videos</span><span class="pill chip">your song</span><span class="pill chip">your voice</span>
+  </div>
+  <div class="abs card" style="left:140px;top:450px;width:1640px;padding:30px 48px" id="mTerm">
+    <div class="out"><span class="p">$</span> node montage.js taco-night.md</div>
+    <div class="out">  1.  0.0–3.6s   grill.mp4    <span class="g">own sound, captioned</span></div>
+    <div class="out">  2.  3.6–6.1s   tacos.mp4    <span class="d">best moment, from 0.5s</span></div>
+    <div class="out">  3.  6.1–9.2s   patio.mp4    <span class="d">push-in</span></div>
+    <div class="out">  sound: <span class="g">your song, cut on its beat</span></div>
+  </div>
+  <div class="abs pill chip" style="left:140px;top:900px;background:var(--accent-soft);border-color:#eab39b" id="mFree">Free, renders locally</div>
+  <div class="abs pill chip" style="left:720px;top:900px" id="mPhotos">Only photos? They move like a camera.</div>
+</div>
+
+<!-- 8. publishing, with the real approval checkpoint from EXAMPLE.md -->
+<div class="scene" id="s8">
   <div class="bubble card" style="left:140px;top:90px;width:1100px" id="c1">Ready to send. Here's exactly what's going out.</div>
+  <div class="abs pill chip mono" style="left:1300px;top:90px" id="p1">publish-pipeline</div>
+  <div class="abs pill chip mono" style="left:1300px;top:200px" id="p2">full-pipeline</div>
+  <div class="abs pill chip" style="left:1300px;top:310px" id="p3">n8n · Make · APIs</div>
   <div class="abs pill" style="left:140px;top:300px;padding:22px 34px;font-size:46px;font-weight:700;color:var(--warn);background:#f6e7c8;border:2px solid #e2c27f" id="c2">Nothing has been sent yet.</div>
   <div class="bubble" style="left:620px;top:450px;width:1160px;background:var(--accent);color:#fff" id="c3">Yes, send the LinkedIn post and newsletter blurb.</div>
   <div class="abs pill" style="left:140px;top:690px;padding:22px 34px;font-size:46px;font-weight:700;color:var(--ok);background:#d9eedf;border:2px solid #9fd1b0" id="c4">Sent · 200 OK</div>
@@ -153,26 +206,23 @@
   <div class="st" style="left:1460px;width:220px" id="st3">Sent</div>
 </div>
 
-<!-- 7. install -->
-<div class="scene" id="s7">
-  <div class="abs serif" style="left:140px;top:110px;font-size:130px;line-height:1" data-lines="Two commands." id="iHead"></div>
-  <div class="abs card" style="left:140px;top:330px;width:1640px;padding:40px 50px" id="term">
-    <div class="cmd"><span class="typed" data-type><span class="p">$</span> claude plugin marketplace add marcosmodly/marketing-skill</span></div>
-    <div class="cmd"><span class="typed" data-type><span class="p">$</span> claude plugin install marketing-skill@marketing-skill</span></div>
+<!-- 9. install, then the outro -->
+<div class="scene" id="s9">
+  <div id="inst">
+    <div class="abs serif h2" style="left:140px;top:110px" data-lines="Two commands." id="iHead"></div>
+    <div class="abs card" style="left:140px;top:320px;width:1640px;padding:40px 50px" id="term">
+      <div class="cmd"><span class="typed" data-type><span class="p">$</span> claude plugin marketplace add marcosmodly/marketing-skill</span></div>
+      <div class="cmd"><span class="typed" data-type><span class="p">$</span> claude plugin install marketing-skill@marketing-skill</span></div>
+    </div>
+    <div class="abs" style="left:140px;top:690px;display:flex;gap:28px" id="chips">
+      <span class="pill chip">Claude Code</span>
+      <span class="pill chip">OpenAI Codex</span>
+      <span class="pill chip" style="background:var(--accent-soft);border-color:#eab39b">No API keys</span>
+    </div>
   </div>
-  <div class="abs" style="left:140px;top:700px;display:flex;gap:28px" id="chips">
-    <span class="pill" style="padding:22px 36px;font-size:46px;font-weight:700;background:var(--card);border:2px solid var(--line)">Claude Code</span>
-    <span class="pill" style="padding:22px 36px;font-size:46px;font-weight:700;background:var(--card);border:2px solid var(--line)">OpenAI Codex</span>
-    <span class="pill" style="padding:22px 36px;font-size:46px;font-weight:700;background:var(--accent-soft);border:2px solid #eab39b">No API keys to start</span>
-  </div>
-</div>
-
-<!-- 8. outro -->
-<div class="scene" id="s8">
   <div class="abs serif" style="left:140px;top:200px;font-size:170px;line-height:1.02" data-lines="Free and|open source." id="oHead"></div>
   <div class="abs mono" style="left:140px;top:600px;font-size:60px;font-weight:700" id="oUrl">github.com/marcosmodly/<span class="hl">marketing-skill</span></div>
-  <div class="abs" style="left:140px;top:720px;font-size:46px;color:var(--ink2);font-weight:600" id="oLic">MIT license · 12 skills · works in Claude Code and Codex</div>
-  <div class="abs serif" style="left:140px;top:850px;font-size:64px;font-style:italic;color:var(--accent)" id="oWink">(the music is better this time)</div>
+  <div class="abs" style="left:140px;top:720px;font-size:46px;color:var(--ink2);font-weight:600" id="oLic">MIT license · 14 skills · Claude Code and Codex</div>
 </div>
 
 <div id="wipeB"></div>
@@ -188,11 +238,12 @@ window.addEventListener('error', (e) => window.__errors.push(`${e.message} (line
 
 // ---------------------------------------------------------------- timing
 // Seconds of speech in each voiceover line, measured with `node render.js --voice-lengths assets`.
-// The voice is ElevenLabs ("Brian S."), one take split into its eight lines.
-const LINES = [7.58, 14.68, 9.06, 12.72, 10.63, 12.08, 6.49, 6.65];
+// The voice is Kokoro-82M ("af_heart", an open model run locally) at 1.06x, one file per line.
+const LINES = [7.3, 5.44, 11.03, 13.72, 6.98, 11.48, 12.35, 10.39, 7.83];
+const N = LINES.length;
 const VOICE = 'assets/voice-{n}.wav';
-const LEAD = 0.7;                       // scene on screen before its line starts
-const TAIL = 0.9;                       // hold after the line, before the next scene
+const LEAD = 0.55;                      // scene on screen before its line starts
+const TAIL = 0.7;                       // hold after the line, before the next scene
 
 // The music, and its rhythm from scripts/video/beats.js (times in the track). The file isn't
 // committed (its license doesn't allow redistributing it); put it at TRACK to render.
@@ -204,33 +255,38 @@ const TRACK_BEATS = [0.557, 1.103, 1.66, 2.218, 2.775, 3.32, 3.878, 4.435, 4.992
 
 // Scenes follow the voice; with music, each scene change moves onto the next beat, and the
 // track is placed so its own ending lands with the video's (coming in late if it's shorter).
-const BEAT = TRACK ? (TRACK_BEATS[TRACK_BEATS.length - 1] - TRACK_BEATS[0]) / (TRACK_BEATS.length - 1) : 0;
 const START = [];
 const HOLD = 1.6;                       // the last frame's minimum hold before the fade
 let musicStart = 0;
 let musicAt = 0;
 let beatsInVideo = [];
 {
-  let t = 0.35;
-  const plain = [];
-  for (const d of LINES) { plain.push(t); t += LEAD + d + TAIL; }
+  // the scene starts for a track placed with musicStart / musicAt; returns where the video ends
+  const place = () => {
+    beatsInVideo = TRACK ? TRACK_BEATS.filter((b) => b >= musicStart).map((b) => b - musicStart + musicAt) : [];
+    const nextBeat = (x) => beatsInVideo.find((b) => b >= x - 0.12) ?? x;
+    START.length = 0;
+    let t = 0.35;
+    LINES.forEach((d, i) => {
+      START.push(i === 0 || !TRACK ? t : nextBeat(t));
+      t = START[i] + LEAD + d + TAIL;
+    });
+    START.push(t);                      // the outro's end
+    return t - TAIL + HOLD + 0.6;
+  };
+  let end = place();
   if (TRACK) {
-    // each snap to the next beat adds half a beat on average
-    const estimate = t - TAIL + HOLD + 0.6 + 7 * BEAT / 2;
-    if (estimate <= TRACK_LENGTH) musicStart = TRACK_LENGTH - estimate;
-    else musicAt = estimate - TRACK_LENGTH;
-    beatsInVideo = TRACK_BEATS.filter((b) => b >= musicStart).map((b) => b - musicStart + musicAt);
+    // place the track so it ends with the video, then again with the cuts that placement gives
+    // (each snap to the next beat moves the end a little)
+    for (let i = 0; i < 3; i++) {
+      musicStart = Math.max(0, TRACK_LENGTH - end);
+      musicAt = Math.max(0, end - TRACK_LENGTH);
+      end = place();
+    }
   }
-  const nextBeat = (x) => beatsInVideo.find((b) => b >= x - 0.12) ?? x;
-  t = 0.35;
-  LINES.forEach((d, i) => {
-    START.push(i === 0 || !TRACK ? t : nextBeat(t));
-    t = START[i] + LEAD + d + TAIL;
-  });
-  START.push(t);                        // the outro's end
 }
 const MUSIC_END = TRACK ? musicAt + TRACK_LENGTH - musicStart : 0;
-const END = Math.max(START[8] - TAIL + HOLD, MUSIC_END - 0.6); // hold the last frame (to the music's own ending), then fade
+const END = Math.max(START[N] - TAIL + HOLD, MUSIC_END - 0.6); // hold the last frame (to the music's own ending), then fade
 document.body.dataset.duration = (END + 0.6).toFixed(2);
 if (TRACK) Object.assign(document.body.dataset, { musicSrc: TRACK, musicStart: musicStart.toFixed(3), musicAt: musicAt.toFixed(3) });
 const S = (k) => START[k - 1];          // scene k starts
@@ -288,6 +344,12 @@ function type(target, t0, t1) {
   const len = n.textContent.length;
   key(n, [[t0, { width: '0ch', ease: `steps(${len}, end)` }], [t1, { width: `${len}ch` }]]);
 }
+// a stamp slamming down
+function stamp(target, t, sound) {
+  key(target, [[t, { opacity: 0, transform: 'rotate(-10deg) scale(2.6)', ease: 'cubic-bezier(.5,0,.75,0)' }], [t + 0.18, { opacity: 1, transform: 'rotate(-10deg) scale(1)', ease: E.back }],
+    [t + 0.36, { opacity: 1, transform: 'rotate(-10deg) scale(1.04)' }]]);
+  sfx(sound, t + 0.18);
+}
 const sfx = (name, t) => {
   const i = document.createElement('i');
   i.dataset.sfx = name;
@@ -303,13 +365,8 @@ const voice = (k) => {
 // a scene is on screen from its start to the next scene's start; the wipe hides both cuts
 function scene(id, k) {
   key(id, [[S(k) - 0.01, { opacity: 0, ease: 'steps(1,end)' }], [S(k), { opacity: 1, ease: 'steps(1,end)' }],
-    [S(k + 1) - 0.01, { opacity: 1, ease: 'steps(1,end)' }], [S(k + 1), { opacity: k === 8 ? 1 : 0 }]]);
+    [S(k + 1) - 0.01, { opacity: 1, ease: 'steps(1,end)' }], [S(k + 1), { opacity: k === N ? 1 : 0 }]]);
 }
-const ICONS = {
-  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
-  lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
-};
-const icon = (n) => `<svg class="ico" viewBox="0 0 24 24">${ICONS[n]}</svg>`;
 const h = (html) => { const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstElementChild; };
 
 // =============================================================== build
@@ -318,8 +375,8 @@ function build() {
     el.innerHTML = el.dataset.lines.split('|').map((l) => `<span class="mask"><span>${l}</span></span>`).join('');
   }
   wipes();
-  s1(); s2(); s3(); s4(); s5(); s6(); s7(); s8();
-  if (VOICE) for (let k = 1; k <= 8; k++) voice(k);
+  s1(); s2(); s3(); s4(); s5(); s6(); s7(); s8(); s9();
+  if (VOICE) for (let k = 1; k <= N; k++) voice(k);
   key('#prog', [[S(1), { transform: 'scaleX(0)', ease: E.lin }], [END, { transform: 'scaleX(1)' }]]);
   key('#black', [[0, { opacity: 1, ease: E.out3 }], [0.35, { opacity: 0 }], [END, { opacity: 0, ease: E.inOut }], [END + 0.6, { opacity: 1 }]]);
 }
@@ -328,7 +385,7 @@ function build() {
 function wipes() {
   const a = [];
   const b = [];
-  for (let k = 2; k <= 8; k++) {
+  for (let k = 2; k <= N; k++) {
     const t = S(k);
     for (const [arr, d] of [[b, -0.05], [a, 0]]) {
       arr.push([t - 0.42 + d, { transform: 'translateX(-1920px)', ease: 'cubic-bezier(.7,0,.3,1)' }],
@@ -346,112 +403,129 @@ function wipes() {
 function s1() {
   scene('#s1', 1);
   rise('#h1a', V(1) - 0.3, 0.14);
-  // "...so I built twelve skills": the first line gives way to the answer
-  // the answer lands on the beat coming in, when that falls mid-line; otherwise on a beat
+  // "...it had twelve skills. Now it has fourteen": the old count gives way to the new one,
+  // on the beat coming in when that falls mid-line; otherwise on a beat
   const lift = TRACK_LIFT - musicStart + musicAt;
-  const swap = TRACK && lift > at(1, 0.3) && lift < at(1, 0.8) ? lift : at(1, 0.48);
+  const swap = TRACK && lift > at(1, 0.45) && lift < at(1, 0.8) ? lift : at(1, 0.55);
   key('#h1a', [[swap - 0.01, { opacity: 1, transform: 'translateY(0px)', ease: E.in }], [swap + 0.35, { opacity: 0, transform: 'translateY(-60px)' }]]);
   rise('#h1b', swap + 0.2, 0.1, 0.9);
-  life('#h1c', swap + 0.6);
+  life('#h1c', at(1, 0.78));
 }
 
 function s2() {
   scene('#s2', 2);
-  const names = ['competitor-research', 'content-calendar', 'content-repurposer', 'seo-brief', 'ad-copy-generator', 'email-sequence',
-    'email-outreach', 'community-post-generator', 'visual-brief-generator', 'short-form-video', 'full-pipeline', 'publish-pipeline'];
-  life('#treeHead', S(2) + 0.35, { from: { opacity: 0, transform: 'translateX(-30px)' } });
-  // one folder per beat
-  const times = beatRun(V(2), 12, (D(2) * 0.72) / 12);
+  const names = ['ad-copy-generator', 'clip-montage', 'community-post-generator', 'competitor-research', 'content-calendar', 'content-repurposer', 'email-outreach',
+    'email-sequence', 'full-pipeline', 'montage-video', 'publish-pipeline', 'seo-brief', 'short-form-video', 'visual-brief-generator'];
+  const isNew = (n) => n === 'clip-montage' || n === 'montage-video';
+  life('#treeHead', S(2) + 0.25, { from: { opacity: 0, transform: 'translateX(-30px)' } });
+  // the folders tick in, two to a beat; the new ones get their tag
+  const times = beatRun(V(2) - 0.2, 7, (D(2) * 0.7) / 7);
   names.forEach((n, i) => {
-    const row = h(`<div><i>${i === 5 || i === 11 ? '└─' : '├─'}</i>${n}/</div>`);
-    $(i < 6 ? '#treeA' : '#treeB').appendChild(row);
-    life(row, times[i], { from: { opacity: 0, transform: 'translateX(-40px)' }, dur: 0.5 });
+    const row = h(`<div><i>${i === 6 || i === 13 ? '└─' : '├─'}</i>${n}/${isNew(n) ? '<span class="new">NEW</span>' : ''}</div>`);
+    $(i < 7 ? '#treeA' : '#treeB').appendChild(row);
+    life(row, times[i % 7] + (i < 7 ? 0 : 0.12), { from: { opacity: 0, transform: 'translateX(-40px)' }, dur: 0.5 });
   });
-  life('#treeCap', at(2, 0.78));
+  life('#treeCap', at(2, 0.55));
 }
 
 function s3() {
   scene('#s3', 3);
-  life('#bvFile', S(3) + 0.3, { from: { opacity: 0, transform: 'translateX(-30px)' } });
-  rise('#bvHead', V(3) - 0.2);
-  $$('#bvRows .head').forEach((r, i) => life(r, at(3, 0.18 + i * 0.12), { from: { opacity: 0, transform: 'translateX(-30px)' } }));
-  $$('#bans .ban').forEach((b, i) => {
-    const t = at(3, 0.42 + i * 0.07);
-    pop(b, t - 0.25, 0.8);
-    key($('s', b), [[t, { transform: 'scaleX(0)', ease: E.out3 }], [t + 0.25, { transform: 'scaleX(1)' }]]);
-    key(b, [[t, { color: 'rgb(22,19,15)', ease: E.out3 }], [t + 0.3, { color: 'rgb(150,140,128)' }]]);
+  rise('#rpHead', V(3) - 0.3);
+  // each card as its skill is named
+  [['#k1', 0.0], ['#k2', 0.36], ['#k3', 0.7]].forEach(([c, f]) => {
+    life(c, at(3, f) - 0.1, { from: { opacity: 0, transform: 'translateY(60px) scale(.97)' }, ease: E.back });
+    sfx('swish', at(3, f) - 0.1);
   });
-  life('#bvCap', at(3, 0.74));
 }
 
 function s4() {
   scene('#s4', 4);
-  // the rule titles from the r/claudeskills sidebar, as they were checked for this post
-  const rules = ['Stay on topic', 'Be kind', 'Sharing your own skill? Show your work', 'No spam', 'Put in some effort', 'Use post flair',
-    'No piracy or terms of service breaches', "Don't ask for or send referral codes"];
-  life('#rHead', S(4) + 0.3, { from: { opacity: 0, transform: 'translateX(-30px)' } });
-  const times = beatRun(V(4), 8, 0.32);
-  rules.forEach((r, i) => {
-    const row = h(`<div class="rule"><b>${i + 1}</b>${r}</div>`);
-    $('#rules').appendChild(row);
-    life(row, times[i], { from: { opacity: 0, transform: 'translateX(-40px)' }, dur: 0.5 });
+  rise('#wHead', V(4) - 0.3);
+  [['#w1', 0.0], ['#w2', 0.33], ['#w3', 0.58], ['#w4', 0.78]].forEach(([c, f]) => {
+    life(c, at(4, f) - 0.1, { from: { opacity: 0, transform: 'translateY(60px) scale(.97)' }, ease: E.back });
+    sfx('swish', at(4, f) - 0.1);
   });
-  const tGo = at(4, 0.3);
-  key('#go', [[tGo, { opacity: 0, transform: 'rotate(-10deg) scale(2.6)', ease: 'cubic-bezier(.5,0,.75,0)' }], [tGo + 0.18, { opacity: 1, transform: 'rotate(-10deg) scale(1)', ease: E.back }],
-    [tGo + 0.36, { opacity: 1, transform: 'rotate(-10deg) scale(1.04)' }]]);
-  sfx('ding', tGo + 0.18);
-  life('#flair', tGo + 0.6);
-  life('#ask', at(4, 0.62), { from: { opacity: 0, transform: 'translateY(40px) scale(.96)' }, ease: E.back });
-  sfx('ping', at(4, 0.62));
 }
 
 function s5() {
   scene('#s5', 5);
-  rise('#vHead', V(5) - 0.3);
-  $$('#s5 .phone').forEach((p, i) => {
-    const t = V(5) + 0.3 + i * 0.22;
-    key(p, [[t, { opacity: 0, transform: 'translateY(160px) rotate(4deg)', ease: E.out }], [t + 0.9, { opacity: 1, transform: 'translateY(0px) rotate(0deg)' }],
-      // a slow drift so the row doesn't sit dead still
-      [S(6), { opacity: 1, transform: `translateY(${i % 2 ? -14 : 14}px) rotate(0deg)`, ease: E.lin }]]);
-  });
-  life('#vCap', at(5, 0.6));
+  life('#cLabel', S(5) + 0.25, { from: { opacity: 0, transform: 'translateX(-30px)' } });
+  rise('#cHead', V(5) - 0.2);
+  const times = beatRun(at(5, 0.18), 8, 0.28);
+  $$('#plats .chip').forEach((c, i) => pop(c, times[Math.floor(i / 2)] + (i % 2) * 0.12, 0.8));
+  stamp('#go', at(5, 0.6), 'ding');
+  stamp('#nogo', at(5, 0.84), 'buzzer');
+  life('#cCap', at(5, 0.9));
 }
 
 function s6() {
   scene('#s6', 6);
-  life('#c1', V(6) - 0.2, { from: { opacity: 0, transform: 'translateY(40px) scale(.96)' }, ease: E.back });
-  life('#c2', at(6, 0.12));
-  life('#c3', at(6, 0.3), { from: { opacity: 0, transform: 'translateY(40px) scale(.96)' }, ease: E.back });
-  sfx('click', at(6, 0.3));
-  pop('#c4', at(6, 0.42));
-  sfx('chime', at(6, 0.42));
+  rise('#vHead', V(6) - 0.3);
+  $$('#s6 .phone').forEach((p, i) => {
+    const t = V(6) + 0.3 + i * 0.22;
+    key(p, [[t, { opacity: 0, transform: 'translateY(160px) rotate(4deg)', ease: E.out }], [t + 0.9, { opacity: 1, transform: 'translateY(0px) rotate(0deg)' }],
+      // a slow drift so the row doesn't sit dead still
+      [S(7), { opacity: 1, transform: `translateY(${i % 2 ? -14 : 14}px) rotate(0deg)`, ease: E.lin }]]);
+  });
+  // the templates, then visual briefs as the line turns to them
+  const turn = at(6, 0.72);
+  key('#vCap', [[at(6, 0.4), { opacity: 0, transform: 'translateY(40px)', ease: E.out }], [at(6, 0.4) + 0.7, { opacity: 1, transform: 'none' }],
+    [turn - 0.3, { opacity: 1, transform: 'none', ease: E.in }], [turn, { opacity: 0, transform: 'translateY(-30px)' }]]);
+  life('#vCap2', turn + 0.05);
+}
+
+function s7() {
+  scene('#s7', 7);
+  life('#mLabel', S(7) + 0.25, { from: { opacity: 0, transform: 'translateX(-30px)' } });
+  rise('#mHead', V(7) - 0.2);
+  $$('#ins .chip').forEach((c, i) => pop(c, at(7, 0.12) + i * 0.25, 0.8));
+  life('#mTerm', at(7, 0.3), { from: { opacity: 0, transform: 'translateY(40px)' } });
+  // montage.js's lines print on the beat
+  const times = beatRun(at(7, 0.34), 5, 0.4);
+  $$('#mTerm .out').forEach((r, i) => {
+    life(r, times[i], { from: { opacity: 0, transform: 'translateX(-30px)' }, dur: 0.45 });
+    sfx('tick', times[i]);
+  });
+  pop('#mFree', at(7, 0.66), 0.85);
+  pop('#mPhotos', at(7, 0.8), 0.85);
+}
+
+function s8() {
+  scene('#s8', 8);
+  life('#c1', V(8) - 0.2, { from: { opacity: 0, transform: 'translateY(40px) scale(.96)' }, ease: E.back });
+  pop('#p1', at(8, 0.0) + 0.1, 0.9);
+  pop('#p3', at(8, 0.15), 0.9);
+  pop('#p2', at(8, 0.48), 0.9);
+  life('#c2', at(8, 0.62));
+  life('#c3', at(8, 0.74), { from: { opacity: 0, transform: 'translateY(40px) scale(.96)' }, ease: E.back });
+  sfx('click', at(8, 0.74));
+  pop('#c4', at(8, 0.86));
+  sfx('chime', at(8, 0.86));
   // the statuses: the drafting skills stop at Ready for Approval; only a reply moves it on
   const pills = ['#st0', '#st1', '#st2', '#st3'];
   pills.forEach((p, i) => {
-    pop(p, at(6, 0.52) + i * 0.12, 0.8);
-    const lit = at(6, 0.62) + i * 0.45;
+    pop(p, at(8, 0.66) + i * 0.1, 0.9);
+    const lit = at(8, 0.74) + i * 0.3;
     const color = i === 3 ? '44,138,86' : '210,96,58';
     key(p, [[lit, { borderColor: 'rgb(217,206,189)', color: 'rgb(92,85,75)', ease: E.out3 }], [lit + 0.2, { borderColor: `rgb(${color})`, color: `rgb(${color})` }]]);
   });
 }
 
-function s7() {
-  scene('#s7', 7);
-  rise('#iHead', V(7) - 0.3);
-  life('#term', S(7) + 0.4);
+function s9() {
+  scene('#s9', 9);
+  rise('#iHead', V(9) - 0.3);
+  life('#term', S(9) + 0.3);
   const [a, b] = $$('#term [data-type]');
-  type(a, V(7) + 0.2, V(7) + 1.6);
-  type(b, V(7) + 1.8, V(7) + 3.1);
-  sfx('typing', V(7) + 0.25);
-  $$('#chips .pill').forEach((c, i) => pop(c, at(7, 0.55) + i * 0.2, 0.8));
-}
-
-function s8() {
-  scene('#s8', 8);
-  rise('#oHead', V(8) - 0.3, 0.12);
-  life('#oUrl', at(8, 0.35));
-  life('#oLic', at(8, 0.5));
-  life('#oWink', at(8, 0.78), { from: { opacity: 0, transform: 'translateY(20px) rotate(-2deg)' }, show: { opacity: 1, transform: 'rotate(-2deg)' } });
+  type(a, V(9) + 0.1, V(9) + 1.3);
+  type(b, V(9) + 1.4, V(9) + 2.5);
+  sfx('typing', V(9) + 0.15);
+  $$('#chips .pill').forEach((c, i) => pop(c, at(9, 0.28) + i * 0.18, 0.8));
+  // "It's free and open source": the install gives way to the outro
+  const swap = at(9, 0.53);
+  key('#inst', [[swap - 0.01, { opacity: 1, transform: 'translateY(0px)', ease: E.in }], [swap + 0.35, { opacity: 0, transform: 'translateY(-60px)' }]]);
+  rise('#oHead', swap + 0.2, 0.12);
+  life('#oUrl', at(9, 0.72));
+  life('#oLic', at(9, 0.86));
 }
 
 build();

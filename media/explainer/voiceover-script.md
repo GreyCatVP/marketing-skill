@@ -1,27 +1,30 @@
-# Voiceover script (v2)
+# Voiceover script (v3)
 
-Eight lines, one per scene, about 1:45 read at a normal pace. Read it the
-way you'd explain it to a friend; it doesn't need to sound like an ad.
+Nine lines, one per scene, about 1:27 of speech in a 1:40 video. v3 walks
+through all 14 skills, the two montage skills new since v2 included. Read it
+the way you'd explain it to a friend; it doesn't need to sound like an ad.
 
-1. I wanted Claude Code to handle the marketing work I kept putting off. So I built twelve skills for it, and put them in one plugin.
+1. Last time I shared my marketing plugin for Claude Code, it had twelve skills. Now it has fourteen, and it edits real video.
 
-2. Competitor research, content calendars, SEO briefs, ad copy, email sequences, cold outreach, community posts, visual briefs, short-form video, and publishing. Each one is a plain SKILL.md file.
+2. Every skill is a plain markdown file, and each one reads your brand voice before it writes a word.
 
-3. You set up your brand voice once. Your audience, your tone, the words you never want to see. Every skill reads that file before it writes anything.
+3. Competitor research builds a battlecard from live sources. SEO brief finds the keyword, the intent, and the outline. Content calendar plans a month of posts, no repeats.
 
-4. When I shared this on Reddit, the community post skill read the subreddit's rules first and gave me a Go before drafting anything. It couldn't reach Reddit from my sandbox, so instead of guessing, it asked me for a screenshot of the rules.
+4. Repurposer turns one article into a LinkedIn post, an X thread, and a newsletter. Ad copy writes variants for Meta, Google, and LinkedIn. Email sequence writes the drip, and cold outreach never contacts anyone twice.
 
-5. The short-form video skill writes scripts for TikTok, Reels, and Shorts, and it can render the video on your machine. There are twenty-eight templates, from tier lists to text-message skits.
+5. Community posts read the real rules of a subreddit, Product Hunt, or Hacker News first, and tell you when it's a no-go.
 
-6. Nothing posts or sends on its own. Drafts wait for your approval, and only a reply from you, naming what to send, moves them forward. If a scheduled run fires with nobody around, the drafts just wait.
+6. Short-form video renders TikToks, Reels, and Shorts on your machine, from thirty-two templates, now with 3D and pixel art. Visual brief writes prompts for any AI video tool.
 
-7. It's two commands to install in Claude Code, and it works in Codex too. You don't need any API keys to start.
+7. And the new ones. Send clip montage your phone videos and your song: it picks the best moments, cuts on the beat, and keeps the sound when someone talks. Only photos? Montage video moves them like a camera.
 
-8. It's free and open source, and the link is in the post. And yes, the music is better this time.
+8. Publish pipeline sends it to n8n, Make, or straight to the platforms, and full pipeline runs research to post in one go. Nothing goes out until you approve it.
+
+9. Two commands to install, in Claude Code or Codex, with no API keys. It's free and open source, and the link's in the post.
 
 ## Recording
 
-- Record each line as its own file, named `voice-1.m4a` to `voice-8.m4a`.
+- Record each line as its own file, named `voice-1.m4a` to `voice-9.m4a`.
   If you flub one, just record that line again.
 - Use a quiet room. A closet full of clothes works well. Hold the phone
   about 20 cm from your mouth, a little off to the side.
@@ -40,7 +43,7 @@ way you'd explain it to a friend; it doesn't need to sound like an ad.
 
 ## Getting the files here
 
-On GitHub, open the `claude/inspiring-hopper-vhkgl4` branch, go to
-`media/explainer/assets/`, choose **Add file → Upload files**, add the
-eight voice files and the music file, and commit to that branch. You can
-also attach them in the chat if your app allows audio attachments.
+Put the voice files in `assets/` as `voice-1.m4a` ... `voice-9.m4a` (or
+`.wav`), and the music at `assets/music/funky-diesel.mp3`. Both are
+git-ignored. You can also attach them in the chat if your app allows audio
+attachments.

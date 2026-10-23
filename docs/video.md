@@ -318,7 +318,11 @@ permissioned material from you.
 ### 3D and pixel-art animation
 
 Two templates draw their own frames instead of showing photos: `3d.html`
-with WebGL (three.js) and `pixel.html` on a canvas. Both are narrated like
+with WebGL (three.js) and `pixel.html` on a canvas. The 3D one stars your
+brand's **mascot**: a robot in your colors that walks, waves, points at
+your product, holds up your phone or laptop screen, cheers under confetti,
+and lip-syncs to the voiceover, so a video without footage still has a
+character to watch instead of floating text. Both are narrated like
 `narrated.html`: a voiceover line by line, word-by-word captions synced to
 the voice, the hook on screen from the first frame. The text stays on top
 as ordinary page text, so the QA pass, sound cues, and captions work the
@@ -328,47 +332,87 @@ Behind each line is a **shot**, from a small library in each template:
 
 | Style | Shots | Sound |
 |---|---|---|
-| `3d` | `shapes` (glossy shapes floating), `hero` (a phone turning to camera, with your screenshot on it), `cards` (your points flying in as cards), `chart` (bars growing to your real numbers), `coin` (a coin or badge with your logo spinning in), `rings` (flying through a tunnel of rings), `globe` (a dotted globe with arcs between places) | Your sonic identity |
+| `3d` | `mascot` (the mascot in a light studio or at night, doing `do=wave`, `talk`, `point`, `present`, `cheer`, `think`, `shrug`, `sad`, `walk`, `dance`, `thumbs`, or `wow`, holding `prop=phone`, `laptop`, or `sign`, or presenting `prop=screen`, all with your screenshot), `desk` (the mascot typing at a monitor showing your screen at night, spinning round to wave, then the camera flies into the screen), `title` (big 3D letters of your word dropping onto the floor), and the abstract ones: `shapes`, `hero` (a phone with your screenshot), `cards`, `chart` (your real numbers), `coin` (your logo), `rings`, `globe` | Your sonic identity |
 | `pixel` | `walk` (a robot walking through a scrolling landscape, by day, sunset, or night), `boss` (the robot beating a slime: the problem, defeated), `coins` (a chest bursting with coins), `levelup` (a burst of light), `city` (a night city), `space` (a rocket through the stars), `photo` (your image, pixelated) | `chiptune`, in your identity's key and hook |
 
-Both take their colors from your Visual Identity: the 3D scenes are lit in
-your accent color, and the pixel robot wears it. The robot is an original
-character; nothing is borrowed from a real game.
+Both take their colors from your Visual Identity: the 3D mascot and its
+scenes wear your accent color, and so does the pixel robot. Both robots
+are original characters; nothing is borrowed from a real game or studio.
+The mascot's mouth follows the words of the captions, which are timed to
+the voice, so it lip-syncs to a generated voice or your own recording.
 
 The quickest way to make one is a script with a style:
 
 ```
 ---
 title: late invoices
-style: pixel                     # or 3d
-hook: freelancing is basically a video game
+style: 3d                        # or pixel
+hook: you're losing money on every late invoice
 cta: one money habit a week
 ---
-1. Every freelancer starts at level one.
-2. The first boss? Invoices paid late. [shot: boss]
-3. Send yours the day the work ends, and the coins roll in. [shot: coins]
-4. Follow for one money habit a week.
+1. Most freelancers lose money on invoices they send late. [shot: mascot do=sad]
+2. I built a tool for it at 2 a.m. [shot: desk src=assets/app.png]
+3. One tap and the invoice is out. [shot: mascot do=point prop=screen src=assets/app.png]
+4. Paid. [shot: title text="Paid"]
+5. Follow for one money habit a week. [shot: mascot do=cheer]
 ```
 
 `compose.js` voices it, gives every line a shot (the ones named, the rest
-in turn), times everything to the voice, and writes the page.
-`[shot: hero src=assets/app.png]`, `[shot: cards items="Plan,Film,Post"]`,
-`[shot: chart values=12,30,85]`, and `[shot: walk time=night]` set a shot's
-details. Each template's comment lists every shot and what it takes.
+in turn: with `style: 3d` the mascot waves, talks, points, and cheers),
+times everything to the voice, and writes the page.
+`[shot: mascot do=talk prop=laptop src=assets/app.png]`,
+`[shot: cards items="Plan,Film,Post"]`, `[shot: chart values=12,30,85]`,
+and `[shot: walk time=night]` set a shot's details. Each template's
+comment lists every shot and what it takes.
 
-- **Your material only:** a screenshot on the 3D phone, a logo on the coin,
-  numbers on the chart, and a pixelated photo must be the real ones. Without
-  them, the phone shows a generic interface and the chart a plain rising
-  icon, never made-up data.
+- **Your material only:** a screenshot on the mascot's phone, laptop,
+  monitor, or screen, a logo on the coin or sign, numbers on the chart, and
+  a pixelated photo must be the real ones. Without them, the screens show
+  a generic interface and the chart a plain rising icon, never made-up
+  data. The mascot is your brand's character, never a stand-in for a
+  customer or a team member.
 - **Render time:** pixel art renders as fast as any template. 3D is
   fastest on a computer with a graphics card; without one (most cloud
-  machines) it's drawn in software, at about 3 frames a second on a 4-core
-  machine: around 3 minutes for a 15-second video.
-- **Other styles** (cartoon characters, anime, claymation, a 3D animated
-  character): those need a video model, through a connected tool such as
-  Higgsfield or Figma Weave (see the start of this guide), with the style in
-  the prompt. That spends the tool's credits. The local renderer doesn't
-  draw characters beyond the pixel robot.
+  machines) it's drawn in software: the mascot's scenes take about half a
+  second a frame per core, so a 20-second video takes a few minutes on a
+  4-core machine. `--draft` checks the motion in a fraction of that.
+- **Other styles** (cartoon characters, anime, claymation, or your own
+  mascot's design in place of the robot): those need a video model,
+  through a connected tool such as Higgsfield or Figma Weave (see the
+  start of this guide), with the style in the prompt. That spends the
+  tool's credits.
+
+### The bold look (a cover that stops the scroll)
+
+The big creator ads open on a face, a product, and a few huge words:
+`I BUILT AN AI THAT MAKES VIRAL VIDEO ADS`, white capitals boxed in
+black, the selling words in yellow, a series tag in the corner. Add
+`captions: bold` to any script for that look:
+
+```
+---
+title: week 2
+captions: bold
+hook: I built an *AI* that makes *viral* video ads
+series: week 2
+brand: Your Name
+---
+1. I built an *AI* that makes *viral* video ads. [bg: assets/me-laptop.jpg screen=assets/app.png at=412,700,980,690,990,1100,405,1120]
+2. ...
+```
+
+- Each line's whole caption is on screen at once, each word popping as
+  it's said, and the first one from frame 0, so the first frame is the
+  cover. `*Words*` in asterisks stay yellow (they aren't spoken).
+- `series:` and `brand:` put a tag in each top corner.
+- `screen=` and `at=` put your screenshot on the laptop or phone in your
+  own photo, from the screen's four corners in the photo's pixels
+  (clockwise from the top left). Any photo of you holding the device
+  works; the screen's content gets replaced.
+- No photo of you? The mascot holds your product instead:
+  `[shot: mascot do=talk prop=laptop src=assets/app.png]` with
+  `style: 3d`.
+- A filmed take gets the same look with `cut.js ... --bold`.
 
 ### A montage from your clips (the default)
 

@@ -34,7 +34,21 @@
  *   1. Every freelancer starts at level one. [shot: walk time=sunset]
  *   2. We built it for this screen. [shot: hero src=assets/app-screen.png]
  *   3. Plan it, film it, post it. [shot: cards items="Plan,Film,Post"]
- * The shots and their settings are listed at the top of each template.
+ * The shots and their settings are listed at the top of each template. With "style: 3d" and no
+ * shots named, the brand's 3D mascot presents: it waves, talks with the voice, points, and cheers.
+ *   1. We built an editor that edits for you. [shot: desk src=assets/app-screen.png]
+ *   2. Here it is. [shot: mascot do=present prop=screen src=assets/app-screen.png]
+ *
+ * The bold look ("captions: bold"): each line's whole caption on screen at once in heavy
+ * capitals boxed in black, each word popping as it's said, and the first line from frame 0, so
+ * it makes the cover. *Words* in asterisks stay yellow, in the lines and the hook (the asterisks
+ * aren't spoken). When the hook is the first line, it shows once, as that line's caption.
+ * "series: week 2" and "brand: Your Name" put a tag in each top corner for the whole video.
+ *
+ * A screen in a photo: [bg: assets/me-laptop.jpg screen=assets/app.png at=x1,y1,x2,y2,x3,y3,x4,y4]
+ * puts the user's screenshot on the laptop or phone screen in their own photo, from the screen's
+ * four corners in the photo's pixels (top left, top right, bottom right, bottom left), moving
+ * with the photo's zoom. Check the fit with render.js --stills.
  *
  * Voices come from voice.js (Kokoro, free and local; `npm install kokoro-js` once) unless
  * `recordings` points at the user's own files. The music follows the Sonic Identity saved in
@@ -66,14 +80,16 @@ const STYLES = {
   photo: { template: 'narrated.html' },
   '3d': {
     template: '3d.html', canvas: '<canvas class="art" width="1080" height="1920" data-lint="off"></canvas>',
-    shots: ['shapes', 'hero', 'cards', 'chart', 'coin', 'rings', 'globe'],
-    first: 'shapes', last: 'coin', cycle: ['globe', 'rings', 'cards', 'shapes'],
-    sfx: { cards: 'swish:card-1', coin: 'ding:land' },
+    shots: ['mascot', 'desk', 'title', 'shapes', 'hero', 'cards', 'chart', 'coin', 'rings', 'globe'],
+    // the mascot presents, with a few abstract shots between its lines for pace
+    first: 'mascot do=wave', last: 'mascot do=cheer',
+    cycle: ['mascot do=talk', 'globe', 'mascot do=point', 'cards', 'mascot do=thumbs', 'rings', 'mascot do=present', 'shapes'],
+    sfx: { cards: 'swish:card-1', coin: 'ding:land', 'mascot:cheer': 'pop:land', 'mascot:walk': 'pop:stop', desk: 'whoosh:enter', title: 'pop:done' },
   },
   pixel: {
     template: 'pixel.html', canvas: '<canvas class="art" width="135" height="240" data-lint="off"></canvas>',
     shots: ['walk', 'boss', 'coins', 'levelup', 'city', 'space', 'photo'],
-    first: 'walk', last: 'space', cycle: ['boss', 'coins', 'levelup', 'city'],
+    first: 'walk', last: 'space', cycle: ['boss', 'coins', 'levelup', 'city'], // pixel's own shots, no mascot
     sfx: { boss: 'hurt:hit', coins: 'coin:open', levelup: 'powerup:up' },
     music: 'chiptune', // in the identity's key and hook, the way everyday posts borrow a genre
   },
@@ -116,6 +132,19 @@ function parseFrontmatter(text) {
   }
   return { meta, body: text.slice(m[0].length) };
 }
+
+// "assets/me.jpg screen=assets/app.png at=1,2,3,4,5,6,7,8" -> { query: 'assets/me.jpg', screen, at }
+function parseBg(text) {
+  const opts = {};
+  const query = text.replace(/\s+([\w-]+)=("[^"]*"|\S+)/g, (_, k, v) => { opts[k.toLowerCase()] = v.replace(/^"|"$/g, ''); return ''; }).trim();
+  return { query, ...opts };
+}
+
+// *keywords* in a line: the text without the asterisks (what's spoken and captioned), and the
+// words to keep lit in the bold look
+const plainText = (s) => s.replace(/\*([^*]+)\*/g, '$1');
+const wordKey = (w) => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+const keywords = (s) => [...s.matchAll(/\*([^*]+)\*/g)].flatMap((m) => m[1].split(/\s+/)).map(wordKey).filter(Boolean);
 
 const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'narrated';
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -167,14 +196,51 @@ function fetchBackground(query, assets, type) {
   }
 }
 
-function bgSlot(i, a, b, last, media) {
+// The user's screenshot on the screen in their photo: a projective map from the screenshot's own
+// corners to the four in data-at (photo pixels, after the photo is cropped to fill the frame),
+// set before the first frame. It sits in .bg-insert, which zooms with the photo.
+const INSERT_JS = `<script>
+window.renderReady = Promise.all([...document.querySelectorAll('.bg-insert')].map(async (box) => {
+  const photo = box.parentElement.querySelector('img.bg-media');
+  const shot = box.querySelector('img');
+  await Promise.all([photo.decode(), shot.decode()]);
+  const k = Math.max(1080 / photo.naturalWidth, 1920 / photo.naturalHeight);
+  const [ox, oy] = [(1080 - photo.naturalWidth * k) / 2, (1920 - photo.naturalHeight * k) / 2];
+  const at = box.dataset.at.split(/[\\s,]+/).map(Number);
+  const [w, h] = [shot.naturalWidth, shot.naturalHeight];
+  const rows = [], rhs = [];
+  [[0, 0], [w, 0], [w, h], [0, h]].forEach(([x, y], i) => {
+    const [u, v] = [ox + at[2 * i] * k, oy + at[2 * i + 1] * k];
+    rows.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); rhs.push(u);
+    rows.push([0, 0, 0, x, y, 1, -v * x, -v * y]); rhs.push(v);
+  });
+  for (let c = 0; c < 8; c++) { // Gaussian elimination with partial pivoting
+    let p = c;
+    for (let r = c + 1; r < 8; r++) if (Math.abs(rows[r][c]) > Math.abs(rows[p][c])) p = r;
+    [rows[c], rows[p]] = [rows[p], rows[c]]; [rhs[c], rhs[p]] = [rhs[p], rhs[c]];
+    for (let r = 0; r < 8; r++) {
+      if (r === c) continue;
+      const f = rows[r][c] / rows[c][c];
+      for (let j = c; j < 8; j++) rows[r][j] -= f * rows[c][j];
+      rhs[r] -= f * rhs[c];
+    }
+  }
+  const [a, b, c, d, e, f, g, hh] = rhs.map((v, i) => v / rows[i][i]);
+  shot.style.width = w + 'px';
+  shot.style.height = h + 'px';
+  shot.style.transform = 'matrix3d(' + [a, d, 0, g, b, e, 0, hh, 0, 0, 1, 0, c, f, 0, 1].join(',') + ')';
+}));
+</script>
+`;
+
+function bgSlot(i, a, b, last, media, insert) {
   const start = i === 0 ? 0 : r2(a - 0.25);
   const end = last ? null : r2(b - 0.2);
   const dur = r2((last ? b : b + 0.45) - start);
   const style = `--in:${start}s; ${end !== null ? `--out:${end}s; ` : ''}--dur:${dur}s`;
   const inner = !media ? ''
     : VIDEO_EXT.test(media) ? `<video class="bg-media" src="${esc(media)}"></video>`
-      : `<img class="bg-media" src="${esc(media)}" alt="">`;
+      : `<img class="bg-media" src="${esc(media)}" alt="">${insert ? `<div class="bg-insert" data-at="${esc(insert.at)}"><img src="${esc(insert.screen)}" alt=""></div>` : ''}`;
   return `  <!-- background, ${r2(a)}–${r2(b)}s -->\n  <div class="${i === 0 ? 'bg now' : 'bg'}" style="${style}">${inner}</div>`;
 }
 
@@ -191,13 +257,15 @@ async function main() {
   const style = STYLES[styleName];
   if (!style) fail(`Unknown style "${styleName}" (use ${Object.keys(STYLES).join(', ')}).`);
   const lines = parseScript(body).map(({ n, text }) => {
-    const bg = /\[bg:\s*([^\]]+)\]/i.exec(text);
+    const bg = parseBg(((/\[bg:\s*([^\]]+)\]/i.exec(text) || [])[1] || meta.bg || '').trim());
     const shot = /\[shot:\s*([^\]]+)\]/i.exec(text);
+    const said = text.replace(/\s*\[(bg|shot):[^\]]*\]/gi, '').trim();
     return {
-      n, text: text.replace(/\s*\[(bg|shot):[^\]]*\]/gi, '').trim(),
-      bg: bg ? bg[1].trim() : meta.bg || '', shot: shot ? parseShot(shot[1]) : null,
+      n, text: plainText(said), kw: keywords(said),
+      bg: bg.query, screen: bg.screen, at: bg.at, shot: shot ? parseShot(shot[1]) : null,
     };
   }).filter((l) => l.text);
+  const bold = String(meta.captions || '').toLowerCase() === 'bold';
   if (!lines.length) fail(`No lines in ${scriptFile}; number them "1. ...", one per scene.`);
   if (style.shots) {
     if (lines.some((l) => l.bg)) console.warn(`Note: [bg: ...] and bg: are for photo backgrounds; style ${styleName} draws each line's background, so they're ignored (use [shot: ...]).`);
@@ -206,8 +274,7 @@ async function main() {
     let k = 0;
     lines.forEach((l, i) => {
       if (l.shot) return;
-      const name = i === 0 ? style.first : i === lines.length - 1 && lines.length > 1 ? style.last : style.cycle[k++ % style.cycle.length];
-      l.shot = { name, attrs: {} };
+      l.shot = parseShot(i === 0 ? style.first : i === lines.length - 1 && lines.length > 1 ? style.last : style.cycle[k++ % style.cycle.length]);
     });
   } else if (lines.some((l) => l.shot)) {
     console.warn('Note: [shot: ...] needs "style: 3d" or "style: pixel" in the frontmatter; ignored for photo backgrounds.');
@@ -221,6 +288,8 @@ async function main() {
   for (const l of lines) {
     const src = l.shot && l.shot.attrs.src;
     if (src && !fs.existsSync(path.join(dir, src))) console.warn(`Note: ${src} (line ${l.n}'s ${l.shot.name} shot) not found next to the page; put it in assets/`);
+    if (l.screen && !fs.existsSync(path.join(dir, l.screen))) console.warn(`Note: ${l.screen} (line ${l.n}'s screen) not found next to the page; put it in assets/`);
+    if (l.screen && !/^(\s*-?[\d.]+\s*,){7}\s*-?[\d.]+\s*$/.test(l.at || '')) fail(`Line ${l.n}: screen= needs at=x1,y1,x2,y2,x3,y3,x4,y4, the screen's corners in the photo's pixels (top left, top right, bottom right, bottom left).`);
   }
 
   // ---- the voice: the user's recordings, or a generated voice
@@ -302,16 +371,21 @@ async function main() {
   const head = html.slice(html.indexOf('<html>'), html.indexOf('</head>') + '</head>'.length);
   const bodyClass = (/<body[^>]*\bclass="([^"]*)"/.exec(html.slice(html.indexOf('</head>'))) || [])[1] || 'fyp';
   const attrs = [
-    `class="${bodyClass}"`, `data-duration="${duration}"`, `data-drop="${drop}"`,
+    `class="${bodyClass}${bold ? ' bold' : ''}"`, `data-duration="${duration}"`, `data-drop="${drop}"`,
     ...(musicSrc ? [`data-music-src="${esc(musicSrc)}"`, 'data-music="none"'] : [`data-music="${sound.music}"`]),
     ...['bpm', 'key', 'mode', 'energy', 'motif'].filter((k) => sound[k] !== undefined).map((k) => `data-${k}="${esc(String(sound[k]))}"`),
   ].join(' ');
+  // the bold look shows the first line from frame 0; a hook that is that line isn't shown twice
+  const hookIsLine = bold && meta.hook && wordKey(plainText(meta.hook)) === wordKey(scenes[0].text);
+  const lit = (text) => esc(text).replace(/\*([^*]+)\*/g, '<b class="kw">$1</b>');
   const sceneHtml = scenes.map((s, i) => {
     const last = i === scenes.length - 1;
     const parts = [];
-    if (i === 0 && meta.hook) parts.push(`    <div class="cap hook"><span>${esc(meta.hook)}</span></div>`);
-    if (last && meta.cta) parts.push(`    <div class="end"><div class="cap hl pop" style="--in:${s.start}s" data-sfx="chime"><span>${esc(meta.cta)}</span></div></div>`);
-    parts.push(`    <div class="say auto" data-voice="${esc(s.clip)}" style="--voice:${s.start}s">${esc(s.text)}</div>`);
+    if (i === 0 && meta.hook && !hookIsLine) parts.push(`    <div class="cap hook"><span>${lit(meta.hook)}</span></div>`);
+    if (last && meta.cta) parts.push(`    <div class="end"><div class="cap hl pop" style="--in:${s.start}s" data-sfx="chime"><span>${esc(plainText(meta.cta))}</span></div></div>`);
+    const cls = bold ? `say auto line${i === 0 ? ' now' : ''}` : 'say auto';
+    const kw = s.kw.length ? ` data-kw="${esc([...new Set(s.kw)].join(','))}"` : '';
+    parts.push(`    <div class="${cls}" data-voice="${esc(s.clip)}" style="--voice:${s.start}s"${kw}>${esc(s.text)}</div>`);
     return `  <!-- line ${s.n}, ${s.start}–${s.end}s -->\n  <div class="scene narr center"${last ? '' : ` style="--out:${r2(s.end - 0.15)}s"`}>\n${parts.join('\n')}\n  </div>`;
   }).join('\n\n');
   // what's behind the text: a drawn style's canvas and one shot per line, or a photo slot per line
@@ -319,11 +393,16 @@ async function main() {
     ? [`  ${style.canvas}`, '  <div class="art-scrim" data-lint="off"></div>', '',
       ...scenes.map((s, i) => {
         const settings = Object.entries(s.shot.attrs).map(([k, v]) => ` data-${k}="${esc(v)}"`).join('');
-        const sfx = style.sfx[s.shot.name] ? ` data-sfx="${style.sfx[s.shot.name]}"` : '';
+        const cue = style.sfx[`${s.shot.name}:${s.shot.attrs.do || ''}`] || style.sfx[s.shot.name];
+        const sfx = cue ? ` data-sfx="${cue}"` : '';
         return `  <div class="shot" data-shot="${s.shot.name}" style="--in:${i === 0 ? 0 : s.start}s"${settings}${sfx}></div>`;
       })].join('\n')
     : ['  <div class="glow g1"></div>', '  <div class="glow g2"></div>',
-      ...scenes.map((s, i) => bgSlot(i, i === 0 ? 0 : scenes[i - 1].end, s.end, i === scenes.length - 1, s.media))].join('\n');
+      ...scenes.map((s, i) => bgSlot(i, i === 0 ? 0 : scenes[i - 1].end, s.end, i === scenes.length - 1, s.media,
+        s.screen && s.media && !VIDEO_EXT.test(s.media) ? { screen: s.screen, at: s.at } : null))].join('\n');
+  const corners = [['brand', meta.brand], ['series', meta.series]].filter(([, v]) => v)
+    .map(([k, v]) => `  <div class="corner ${k}" style="--out:${duration}s">${esc(v)}</div>`).join('\n');
+  const inserts = !style.shots && scenes.some((s) => s.screen && s.media) ? INSERT_JS : '';
   const doc = `<!doctype html>
 <!--
   Narrated video, written by scripts/video/compose.js from ${path.relative(dir, path.resolve(scriptFile))}.
@@ -334,9 +413,10 @@ async function main() {
 ${head}
 <body ${attrs}>
 ${layers}
+${corners}
 
 ${sceneHtml}
-</body>
+${inserts}</body>
 </html>
 `;
   // the brand's colors, font, and end card, from the Visual Identity
@@ -350,7 +430,7 @@ ${sceneHtml}
   console.log(`  sound: ${musicSrc ? `licensed track ${musicSrc}` : `${sound.music}${sound.music !== 'none' ? `, ${sound.bpm} BPM, ${sound.key} ${sound.mode || ''}, energy ${sound.energy}, cuts on the beat` : ''}`}${identity ? ' (the Sonic Identity)' : ' (the template default; no Sonic Identity saved yet)'}`);
   console.log(`  look: ${branded.changes.length ? branded.changes.join('; ') : 'the template default; no Visual Identity saved yet'}`);
   for (const p of branded.problems) console.warn(`Note: ${p}`);
-  if (!meta.hook) console.warn('Note: no hook in the frontmatter, so the first frame has no text. Add "hook: ..." to stop the scroll.');
+  if (!meta.hook && !bold) console.warn('Note: no hook in the frontmatter, so the first frame has no text. Add "hook: ..." to stop the scroll.');
   if (musicSrc) console.warn(`Note: set data-music-start from beats.js (node beats.js ${musicSrc} --align ${drop} --duration ${duration}) and record the track's license with media.js credit.`);
   if (!args.noCheck) {
     const check = run('render.js', [page, '--check'], { stdio: 'inherit' });

@@ -368,7 +368,7 @@ async function prepareMedia(page) {
 
   const images = await page.evaluate(async () => Promise.all([...document.images].map(async (img) => {
     try { await img.decode(); } catch { /* reported below */ }
-    return { src: img.getAttribute('src'), w: img.naturalWidth, h: img.naturalHeight, bg: !!img.closest('.bg'),
+    return { src: img.getAttribute('src'), w: img.naturalWidth, h: img.naturalHeight, bg: !!img.closest('.bg') && !img.closest('.bg-insert'),
              fit: getComputedStyle(img).objectFit, blurred: /blur\(/.test(getComputedStyle(img).filter) };
   })));
   for (const img of images) {
@@ -882,7 +882,13 @@ async function prepareVoices(page, settings) {
     if (next) hold = Math.min(hold, next.time);
     const html = captions.captionMarkup(chunks, clip.time, hold);
     await page.evaluate(([index, markup]) => {
-      document.querySelector(`[data-voice-index="${index}"]`).innerHTML = markup;
+      const el = document.querySelector(`[data-voice-index="${index}"]`);
+      // a whole-line caption (the bold look) is one box around every chunk; its data-kw words stay lit
+      el.innerHTML = el.classList.contains('line') ? `<span class="ln">${markup}</span>` : markup;
+      const kw = new Set((el.dataset.kw || '').split(',').map((w) => w.trim()).filter(Boolean));
+      for (const w of kw.size ? el.querySelectorAll('i') : []) {
+        if (kw.has(w.textContent.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''))) w.classList.add('kw');
+      }
     }, [clip.index, html]);
     chunks.forEach((c, i) => cues.push({
       start: clip.time + c.start,

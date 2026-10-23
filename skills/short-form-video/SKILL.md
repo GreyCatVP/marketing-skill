@@ -104,13 +104,25 @@ command below.
    - The look, if the video will be rendered locally: real backgrounds
      (stock photos, stock video clips, or AI-generated images; see
      `references/video-rendering.md`) behind the text, the plain gradient,
-     or animation drawn in 3D or pixel art, narrated with a voiceover.
-     Backgrounds are the default when a source is available; they make the
-     video feel produced rather than like a slide. When the user asks for
-     3D, pixel art, an 8-bit or retro game look, or an animated video, use
-     an animation style ("3D or pixel-art animation: a style" in
-     `video-rendering.md`); for a style the renderer can't draw (cartoon or
-     anime characters, claymation), see step 3.
+     or animation drawn in 3D (the brand's own mascot, a robot in its
+     colors that walks, waves, points at the product, holds up the user's
+     screen, and lip-syncs to the voice) or pixel art, narrated with a
+     voiceover. Backgrounds are the default when a source is available;
+     they make the video feel produced rather than like a slide. When the
+     user asks for 3D, a mascot or animated character, pixel art, an 8-bit
+     or retro game look, or an animated video, use an animation style ("3D
+     or pixel-art animation: a style" in `video-rendering.md`); with no
+     footage and no face to show, the 3D mascot is the strongest default,
+     since a character holds attention better than floating text. For a
+     style the renderer can't draw (cartoon or anime characters,
+     claymation, the user's own mascot design), see step 3.
+   - The cover: for an ad, a launch, or anything meant to stop the scroll,
+     offer the bold look (`captions: bold`, "The bold look" in
+     `video-rendering.md`): huge boxed capitals with the selling words in
+     yellow over a face or product, the first line on screen from frame 0.
+     The face is the user's own photo or take (their screenshot can go on
+     the laptop or phone screen in their photo), or the mascot holding
+     their product.
    - The hook/angle and core message — what should stop the scroll in the
      first second, and what's the one thing a viewer should walk away
      knowing or feeling.
@@ -201,11 +213,11 @@ command below.
      epistemic bar `community-post-generator` applies to secondhand claims
      about platform rules.
    - **Animation styles the renderer can't draw** (cartoon or anime
-     characters, claymation, a mascot animated in 3D): only a connected
-     video model can make these, prompted with the style, under the same
-     credit rule as above. Offer the local 3D or pixel-art styles as the
-     free alternative, and never imitate a specific studio's or game's
-     characters.
+     characters, claymation, or the user's own mascot design in place of
+     the plugin's robot): only a connected video model can make these,
+     prompted with the style, under the same credit rule as above. Offer
+     the local 3D mascot or pixel art as the free alternative, and never
+     imitate a specific studio's or game's characters.
    - **When the type needs real footage** ("Film" in `video-types.md`, such
      as behind the scenes, a vlog, UGC, or an on-camera testimonial), no
      tool can stand in for it. Say so, and plan to deliver a phone shot

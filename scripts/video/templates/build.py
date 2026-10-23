@@ -6,7 +6,8 @@ type scale, count-ups, background layer, and the everyday/FYP kit), so edit
 them here and run `python3 build.py` rather than hand-editing 32 copies.
 The eight marketing templates are defined below; the 22 everyday ones are in
 fyp.py; and the two that draw their own frames, 3D and pixel art, are in
-scene3d.py and pixel.py, with what they share in drawn.py. Each page is still
+scene3d.py and pixel.py, with what they share in drawn.py (the 3D mascot,
+and the desk and title shots, are in mascot.py). Each page is still
 fully self-contained after building, so the skill can copy any one of them.
 """
 import os
@@ -99,6 +100,10 @@ HEAD = """<!doctype html>
   @keyframes kbLeft  {{ from {{ transform: scale(1.14) translateX(3%); }} to {{ transform: scale(1.14) translateX(-3%); }} }}
   @keyframes kbRight {{ from {{ transform: scale(1.14) translateX(-3%); }} to {{ transform: scale(1.14) translateX(3%); }} }}
   .bg.tint::before {{ content: ''; position: absolute; inset: 0; z-index: 1; background: var(--accent); mix-blend-mode: soft-light; opacity: .5; }}
+  /* the user's screenshot on a screen in their photo: placed by compose.js from the screen's four corners,
+     moving with the photo's own zoom */
+  .bg-insert {{ position: absolute; inset: 0; z-index: 0; animation: var(--kb, kbIn) var(--dur, 8s) linear var(--in) both; }}
+  .bg-insert img {{ position: absolute; left: 0; top: 0; transform-origin: 0 0; filter: var(--grade, saturate(.9) contrast(1.05) brightness(.9)); }}
   .bg::after {{ content: ''; position: absolute; inset: 0; z-index: 2;
                background: linear-gradient(to bottom, rgba(10,10,14,.72), rgba(10,10,14,.12) 30%, rgba(10,10,14,.22) 62%, rgba(10,10,14,.88)),
                            rgba(10,10,14,var(--shade, .35)); }}
@@ -163,6 +168,37 @@ KIT = """
            animation: wordIn .22s cubic-bezier(.2,1.5,.4,1) var(--in) both, wordDone .12s linear calc(var(--in) + .4s) forwards; }
   @keyframes wordIn { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
   @keyframes wordDone { to { color: #fff; } }
+
+  /* the bold look (compose.js "captions: bold"): heavy capitals boxed in black, the script's
+     *keywords* in yellow, a whole line on screen at once with each word popping as it's said,
+     and the first line on screen from frame 0 (class "now"), which makes the cover */
+  .bold .hook, .bold .say.line { text-transform: uppercase; }
+  .bold .hook { font-size: 62px; font-weight: 900; line-height: 1.34; }
+  .bold .hook > span { background: #0b0b0d; color: #fff; }
+  /* the words carry their own black boxes, so photos keep their light: no darkening, a natural grade */
+  body.bold { --grade: saturate(1.04) contrast(1.03); }
+  .bold .bg::after { background: linear-gradient(to bottom, rgba(10,10,14,.45), rgba(10,10,14,0) 22%, rgba(10,10,14,0) 72%, rgba(10,10,14,.4)); }
+  .bold .say.line { display: block; min-height: 0; font-size: 72px; font-weight: 900; line-height: 1.3; letter-spacing: -.5px;
+                    -webkit-text-stroke: 0; animation: lineIn .2s ease-out var(--voice, 0s) both; }
+  .bold .say.line.now { animation: none; }
+  .bold .say.line > .ln { background: #0b0b0d; color: #fff; padding: .02em .26em .07em; border-radius: .2em;
+                          -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  .bold .say.line .cc { display: inline; animation: none; }
+  .bold .say.line .cc i { color: #fff; animation: boldWord .3s ease-out var(--in) both; }
+  .bold .kw, .bold .say.line .cc i.kw { color: var(--kw, #ffd23f); }
+  /* a filmed take's captions (cut.js --bold) come a few words at a time, each chunk boxed the same way */
+  .bold .say.auto:not(.line) { font-size: 70px; font-weight: 900; line-height: 1.24; text-transform: uppercase; -webkit-text-stroke: 0; }
+  .bold .say.auto:not(.line) > .cc { width: fit-content; max-width: 100%; justify-self: center; background: #0b0b0d; color: #fff;
+                                     padding: .04em .28em .08em; border-radius: .2em; }
+  .bold .say.auto:not(.line) .cc i { color: #fff; animation: boldWord .3s ease-out var(--in) both; }
+  .bold .say.auto:not(.line) .cc i.kw { color: var(--kw, #ffd23f); }
+  @keyframes lineIn { from { opacity: 0; transform: translateY(24px) scale(.96); } to { opacity: 1; transform: none; } }
+  @keyframes boldWord { 40% { transform: translateY(-6px) scale(1.1); } }
+  /* a brand name and a series tag in the top corners ("week 2"), there for the whole video */
+  .corner { position: absolute; top: 254px; z-index: 6; font-size: 44px; font-weight: 900; line-height: 1.1; text-transform: uppercase;
+            color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.5), 0 4px 22px rgba(0,0,0,.45); animation: fadeOut .3s ease-in var(--out, 999s) forwards; }
+  .corner.brand { left: 90px; }
+  .corner.series { right: 150px; }
 
   /* labels and reactions */
   .sticker { width: fit-content; background: var(--accent); color: #fff; font-size: 44px; font-weight: 800; line-height: 1.2;

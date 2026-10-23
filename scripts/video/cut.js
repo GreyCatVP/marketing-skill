@@ -12,11 +12,14 @@
  *   node cut.js <take.mp4> [--out <cut.mp4>] [--min-pause 0.35] [--pad 0.12]
  *   node cut.js <take.mp4> --text "what's said, word for word" --page <page.html>
  *               [--hook "the line on screen from frame 0"] [--cta "follow for part 2"]
+ *               [--bold] [--series "week 2"] [--brand "Your Name"]
  *
  * --min-pause: pauses at least this long are cut (shorter ones are breathing room and stay).
  * --pad: how much of each pause stays on either side of the cut, so words aren't clipped.
  * Without --out, the cut goes next to the take as <name>-cut.mp4, or into the page's assets/
- * folder with --page. The script is the person's real words: never edit them into something
+ * folder with --page. --bold gives it the bold look: heavy capitals boxed in black, a few words
+ * at a time, with *words* in asterisks (in --text or --hook) kept yellow; --series and --brand
+ * put a tag in each top corner. The script is the person's real words: never edit them into something
  * they didn't say, and only film or post people with their permission.
  */
 const fs = require('fs');
@@ -39,7 +42,8 @@ function parseArgs(argv) {
   const args = { positional: [] };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (['--out', '--min-pause', '--pad', '--text', '--page', '--hook', '--cta'].includes(a)) args[a.slice(2).replace(/-(\w)/g, (m, c) => c.toUpperCase())] = argv[++i];
+    if (a === '--bold') args.bold = true;
+    else if (['--out', '--min-pause', '--pad', '--text', '--page', '--hook', '--cta', '--series', '--brand'].includes(a)) args[a.slice(2).replace(/-(\w)/g, (m, c) => c.toUpperCase())] = argv[++i];
     else if (a === '-h' || a === '--help') args.help = true;
     else args.positional.push(a);
   }
@@ -52,6 +56,11 @@ function ffmpeg(args) {
 }
 
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+// *words* in asterisks: kept yellow in the bold look, never part of the words timed to the voice
+const plainText = (s) => s.replace(/\*([^*]+)\*/g, '$1');
+const lit = (s) => esc(s).replace(/\*([^*]+)\*/g, '<b class="kw">$1</b>');
+const keywords = (s) => [...new Set([...s.matchAll(/\*([^*]+)\*/g)].flatMap((m) => m[1].split(/\s+/))
+  .map((w) => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')).filter(Boolean))];
 const r2 = (t) => Math.round(t * 100) / 100;
 
 // The stretches to keep: spoken runs, joined across pauses shorter than minPause, each padded.
@@ -102,12 +111,17 @@ function writePage(page, clipSrc, length, args) {
     }).filter(([, v]) => v !== undefined && v !== '' && !Number.isNaN(v))));
   }
   const duration = r2(length + TAIL);
-  const attrs = ['class="fyp"', `data-duration="${duration}"`, `data-drop="${Math.min(2, r2(length / 3))}"`,
+  const attrs = [`class="fyp${args.bold ? ' bold' : ''}"`, `data-duration="${duration}"`, `data-drop="${Math.min(2, r2(length / 3))}"`,
     ...['music', 'bpm', 'key', 'mode', 'energy', 'motif'].filter((k) => sound[k] !== undefined).map((k) => `data-${k}="${esc(String(sound[k]))}"`)].join(' ');
   const parts = [];
-  if (args.hook) parts.push(`    <div class="cap hook"><span>${esc(args.hook)}</span></div>`);
-  if (args.cta) parts.push(`    <div class="end"><div class="cap hl pop" style="--in:${r2(Math.max(0, length - 2.5))}s" data-sfx="chime"><span>${esc(args.cta)}</span></div></div>`);
-  if (args.text) parts.push(`    <div class="say auto" data-clip="take">${esc(args.text.trim())}</div>`);
+  if (args.hook) parts.push(`    <div class="cap hook"><span>${lit(args.hook)}</span></div>`);
+  if (args.cta) parts.push(`    <div class="end"><div class="cap hl pop" style="--in:${r2(Math.max(0, length - 2.5))}s" data-sfx="chime"><span>${esc(plainText(args.cta))}</span></div></div>`);
+  if (args.text) {
+    const kw = keywords(args.text);
+    parts.push(`    <div class="say auto" data-clip="take"${kw.length ? ` data-kw="${esc(kw.join(','))}"` : ''}>${esc(plainText(args.text).trim())}</div>`);
+  }
+  const corners = [['brand', args.brand], ['series', args.series]].filter(([, v]) => v)
+    .map(([k, v]) => `\n  <div class="corner ${k}" style="--out:${r2(length)}s">${esc(v)}</div>`).join('');
   const doc = `<!doctype html>
 <!--
   A filmed take, written by scripts/video/cut.js: the jump-cut clip full-frame with its own
@@ -119,7 +133,7 @@ ${head}
   <div class="glow g1"></div>
   <div class="glow g2"></div>
   <!-- the take, the whole video long; a light scrim so the captions read without hiding faces -->
-  <div class="bg now" style="--in:0s; --dur:${duration}s; --kb:none; --shade:.12"><video class="bg-media" id="take" src="${esc(clipSrc)}" data-audio data-loop="false"></video></div>
+  <div class="bg now" style="--in:0s; --dur:${duration}s; --kb:none; --shade:.12"><video class="bg-media" id="take" src="${esc(clipSrc)}" data-audio data-loop="false"></video></div>${corners}
 
   <div class="scene narr center">
 ${parts.join('\n')}
@@ -160,7 +174,7 @@ async function main() {
   for (const s of segments) console.log(`  kept ${s.start.toFixed(2)}–${s.end.toFixed(2)}s`);
 
   if (args.text) {
-    const timing = await captions.alignWords(out, args.text, { shift: 0 });
+    const timing = await captions.alignWords(out, plainText(args.text), { shift: 0 });
     for (const n of timing.notes) console.warn(`Note: ${n}`);
     const chunks = captions.chunkWords(timing.words);
     console.log(`Captions (timed by ${timing.method}):`);

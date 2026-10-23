@@ -5,11 +5,12 @@ The engine is a library of shots, each a pure function of time, so render.js can
 exactly: shapes, hero (a phone with the user's screenshot), cards, chart, coin, rings, and globe.
 """
 from drawn import NARRATED_CSS, TIMELINE_JS, drawn_body
+from mascot import MASCOT_DOC, MASCOT_JS
 
 THREE_VERSION = "0.186.1"  # pinned to the version in scripts/video/package.json
 
 # the shots, as listed in the template's comment
-SHOT_DOC = """  Shots (data-shot), each running from its --in until the next shot starts:
+SHOT_DOC = f"""  Shots (data-shot), each running from its --in until the next shot starts:
     shapes  glossy shapes floating in the brand's colors. Any line; a good hook.
     hero    a phone turning toward the camera. data-src="assets/screen.png" puts
             the user's real screenshot on its screen; without one it shows a
@@ -24,6 +25,7 @@ SHOT_DOC = """  Shots (data-shot), each running from its --in until the next sho
     rings   flying through a tunnel of rings. Energy, a transition, a hook.
     globe   a dotted globe with arcs between places, for reach and "anywhere".
             Events: --arc-1, --arc-2...
+{MASCOT_DOC}
   data-sfx on a shot cues a sound on one of its events, e.g. data-sfx="ding:land"
   (the events are set when the page loads, so render.js finds them)."""
 
@@ -513,7 +515,9 @@ SHOTS.globe = async (el, shot) => {
   };
 };
 
+""" + MASCOT_JS + r"""
 const draw = (view, lt) => {
+  document.body.dataset.tone = view.tone || 'dark'; // a light set gets a lighter scrim behind the captions
   view.update(lt);
   renderer.render(view.scene, view.camera);
 };
@@ -536,6 +540,10 @@ SCENE3D_TEMPLATES["3d.html"] = dict(
   scenes drawn with three.js in the brand's colors, word-by-word captions
   synced to the voice, and the hook on screen from the very first frame.
 
+  The brand's mascot presents: a robot in the brand's colors that walks, waves,
+  lip-syncs to the voice, and holds up the user's own screen, in a light studio
+  or at a desk at night (the mascot, desk, and title shots below).
+
   Usually made by scripts/video/compose.js with "style: 3d" in the script's
   frontmatter: it voices the script, gives each line a shot ([shot: hero] on
   a line picks one), times everything to the voice, and writes this page.
@@ -552,10 +560,12 @@ SCENE3D_TEMPLATES["3d.html"] = dict(
   {THREE_VERSION} comes from scripts/video/node_modules (npm install), or from
   jsDelivr when the page is opened in a browser. Colors come from --accent and
   --bg, so brand.js restyles the 3D too. Screenshots and logos must be the
-  user's real ones; the shots never show people.""",
+  user's real ones; the shots never show people (the mascot is the brand's
+  robot, never a stand-in for a customer or a team member).""",
     body_attrs='class="fyp" data-duration="17" data-drop="3.4" data-music="tech" data-bpm="112" data-key="C" data-mode="major" data-energy="2" data-motif="1 5 3 5 | 6 5 3 2"',
     css=NARRATED_CSS + """  .art-scrim { position: absolute; inset: 0; pointer-events: none;
                background: linear-gradient(to bottom, rgba(0,0,0,.28), rgba(0,0,0,0) 22%, rgba(0,0,0,0) 56%, rgba(0,0,0,.5) 78%, rgba(0,0,0,.3)); }
+  body[data-tone="light"] .art-scrim { opacity: .4; }
 """,
     head_extra=f"""<script type="importmap">{{"imports": {{"three": "https://cdn.jsdelivr.net/npm/three@{THREE_VERSION}/build/three.module.js",
   "three/addons/": "https://cdn.jsdelivr.net/npm/three@{THREE_VERSION}/examples/jsm/"}}}}</script>
@@ -563,10 +573,10 @@ SCENE3D_TEMPLATES["3d.html"] = dict(
 """,
     body=drawn_body(
         '<canvas class="art" width="1080" height="1920" data-lint="off"></canvas>',
-        [(0, "shapes", ""),
-         (3.4, "cards", ' data-items="Research,Write,Post" data-sfx="swish:card-1 swish:card-3"'),
-         (6.4, "hero", ""),
-         (10.0, "globe", ""),
-         (14.0, "coin", ' data-sfx="ding:land"')],
+        [(0, "mascot", ' data-do="wave"'),
+         (3.4, "desk", ' data-sfx="whoosh:enter"'),
+         (6.4, "mascot", ' data-do="present" data-prop="screen"'),
+         (10.0, "title", ' data-text="Posted" data-sfx="pop:letter-1 pop:done"'),
+         (14.0, "mascot", ' data-do="cheer" data-sfx="pop:land"')],
         LINES, "your whole week of marketing, done", "free on GitHub · link in bio"),
 )

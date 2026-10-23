@@ -9,6 +9,10 @@ way the plugin makes any narrated video, from one script:
   and `button` shots are the launch-video moves it borrows.
 - `explainer.html`: the page `compose.js` wrote from it. Don't edit its
   timing by hand; edit the script and compose again.
+- `marketing-skill-v3.mp4`: the video, a lighter encode for the repo
+  (the full-quality render is what gets posted), with its captions in
+  `marketing-skill-v3.srt`; `poster.jpg` is the strip the main README
+  shows.
 - `assets/skills.png` (the real `skills/` folder, from
   `skills-screen.html`), `renders.png` and `templates.png` (real frames
   from the template gallery) are what the screens show.

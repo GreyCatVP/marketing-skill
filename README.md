@@ -26,6 +26,14 @@ Made something with it? [Share it in Show and tell](https://github.com/marcosmod
 
 ## See it
 
+[![The plugin's 80-second tour: its 3D mascot presenting all fourteen skills](media/explainer/v3/poster.jpg)](media/explainer/v3/marketing-skill-v3.mp4)
+
+**[▶ Watch the 80-second tour](media/explainer/v3/marketing-skill-v3.mp4)**:
+the plugin's mascot presenting all fourteen skills, made by the plugin
+itself from [one script](media/explainer/v3/script.md), with a voiceover,
+captions synced to it, and music cut on the beat.
+<sub>Music from #Uppbeat (free for Creators!): https://uppbeat.io/music/tracks/21-on-the-block/funky-diesel License code: WKCBH1LMDV3AQDIE · Voiceover: AI voice (Kokoro)</sub>
+
 32 video templates, rendered on your machine with music composed in your
 brand's own sound. Each frame below is one template, mid-video:
 
@@ -45,7 +53,7 @@ product, points at your screen, cheers, and lip-syncs to the voice.
 
 ![3D and pixel-art templates](docs/gallery/animation.jpg)
 
-[The plugin's own explainer](media/explainer/marketing-skill-explainer.mp4)
+The [earlier landscape explainer](media/explainer/marketing-skill-explainer.mp4)
 was made with the same renderer.
 
 ## What you can do with it

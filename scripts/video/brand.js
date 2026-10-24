@@ -156,7 +156,8 @@ function applyIdentity(html, id, { pageDir = '.', endcard, lines = [], fine = ''
   if (id.character && /data-shot="(mascot|desk|title|icons|button)"/.test(html)) {
     const tag = /<body([^>]*)>/.exec(html.slice(html.indexOf('</head>')));
     if (tag && !/data-character=/.test(tag[1])) {
-      const src = placeFile(id.character, pageDir, 'character');
+      // under its own name: a Mixamo download's name says which move its clip is ("Waving.fbx")
+      const src = placeFile(id.character, pageDir, path.basename(id.character, path.extname(id.character)));
       if (!src) problems.push(`character ${id.character} not found; the robot mascot stands in`);
       else {
         html = onBody(html, (attrs) => `${attrs} data-character="${esc(src)}"`);

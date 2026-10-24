@@ -89,3 +89,18 @@ set, it looks like:
 - Logo: state/videos/assets/logo.png
 - Handle: @yourbrand
 - Character: state/videos/assets/mascot.glb (optional: the brand's own rigged 3D character, in place of the robot in 3D videos)
+
+## Video Setup
+Not yet configured. What a video can be made with: where videos get
+posted (which decides 9:16 or 16:9), who presents them (you on camera,
+your own 3D character, the plugin's robot, a realistic AI avatar, or no
+presenter), a video whose style to follow, the paid tools you have, and
+whose voice. `/marketing-skill:marketing-setup` or `short-form-video`
+asks (see `references/video-setup.md`) and saves the answers here. Once
+set, it looks like:
+
+- Posted to: TikTok, Reels, Shorts (9:16); Reddit (16:9)
+- Presenter: own character (see Character under Visual Identity)
+- Style reference: /Users/me/Videos/launch-we-like.mp4
+- Paid tools: HeyGen (avatars), Epidemic Sound (music)
+- Voice: Kokoro af_heart

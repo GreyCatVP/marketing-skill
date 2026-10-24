@@ -151,6 +151,15 @@ platforms above — but these three post actual video, and each one's
 access story is genuinely different from the other two, not a shared
 "video posting" tier:
 
+**AI-made videos get labeled.** A video with realistic AI-made content
+(an AI avatar presenting, a cloned voice, a lifelike generated scene)
+takes `--ai-generated`. On YouTube that sets the video's own disclosure
+(`status.containsSyntheticMedia`). TikTok and Instagram have their own AI
+labels that this script can't set through the API, so with
+`--ai-generated` it stops for those two and says to post from the app with
+the label on. The plugin's 3D mascot, pixel art, and motion graphics are
+clearly animated and don't need it.
+
 **YouTube is the most self-serve of the three.** It uses the standard
 YouTube Data API v3 (there's no separate "Shorts API" — a video becomes a
 Short by being vertical and short enough, optionally reinforced with a

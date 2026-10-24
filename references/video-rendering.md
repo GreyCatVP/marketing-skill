@@ -184,8 +184,9 @@ cta: try it free · link in bio
   motion first; pixel art is as quick as any template.
 - **The user's own character in the robot's place:** when they have
   their mascot or avatar as a rigged 3D model, it stars instead of the
-  robot, rendered locally like everything else. Ask for it as one `.glb`
-  file (glTF binary; a `.vrm` from VRoid works too), put it in `assets/`,
+  robot, rendered locally like everything else. Ask for it as one file:
+  a `.glb` (glTF binary), a `.vrm` from VRoid, or a `.fbx` as Mixamo
+  downloads it. Put it in `assets/`,
   and add `character: assets/<name>.glb` to the script's frontmatter
   (`character=` on one shot puts it in just that shot; a `Character:`
   line in the Visual Identity puts it in every 3D video). Every shot the
@@ -201,8 +202,12 @@ cta: try it free · link in bio
     surprised when the action calls for it; with no blend shapes it opens
     its jaw bone, or nods on the words.
   - Where to get one: a character uploaded to Mixamo (free) comes back
-    rigged and with animations (download as FBX, then export as glTF
-    binary from Blender), Ready Player Me and VRoid export rigged avatars,
+    rigged, with animations to pick from; its `.fbx` download works as it
+    is (choose "With Skin"). Mixamo names every clip "mixamo.com", so name
+    the file after the move ("Waving.fbx", "Samba Dancing.fbx") and it
+    plays for that action; one file holds one animation, so for several,
+    combine them into one `.glb` in Blender, or use the one that fits the
+    video. Ready Player Me and VRoid export rigged avatars,
     and any rigged model from a 3D artist works. Use the user's own
     character, one they made or bought the rights to, never a famous
     studio's or game's. A model without a skeleton still works, moving

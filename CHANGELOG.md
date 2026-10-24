@@ -32,6 +32,28 @@ Skills that read "our changelog" for source material read this file too.
   screen=assets/app.png at=...]` puts their screenshot on the laptop or
   phone they're holding, from the screen's four corners, moving with the
   photo's zoom.
+- **Video setup questions for new users**: `/marketing-skill:marketing-setup`
+  (when content types include video) and `short-form-video` (for whatever
+  isn't answered yet) ask where videos get posted (9:16 or 16:9), who
+  presents them (you on camera, your own 3D character, the robot, a
+  realistic AI avatar, or no presenter), a video whose style to follow,
+  which paid tools the user has, and whose voice, in one message with
+  defaults, and save the answers under a new Video Setup section in
+  `brand-voice.md` (`references/video-setup.md` has the questions, what
+  each costs, and what to check before using an answer). `clip-montage`
+  and `montage-video` take a style reference too.
+- A character straight from Mixamo: `character: assets/Waving.fbx` loads
+  Mixamo's `.fbx` download as it is (no Blender step), and a clip with a
+  tool's default name ("mixamo.com", "Take 001") takes the file's name, so
+  `Waving.fbx` plays for `wave` and `Samba Dancing.fbx` for `dance`.
+- `short-form-video` now makes 16:9 videos for YouTube, Reddit, LinkedIn,
+  X, and websites instead of handing them to `visual-brief-generator`
+  (which only writes briefs), and triggers on launch videos, "make it
+  like this video", and "use our own character".
+- `publish_direct.py --ai-generated`: a video with realistic AI-made
+  content (an AI avatar, a cloned voice) sets YouTube's synthetic-content
+  disclosure, and stops for TikTok and Instagram, whose AI label the API
+  can't set, so it's posted from the app with the label on.
 - **Copy a reference video's editing**: `scripts/video/reference.js
   <video>` reads how a video is edited: every hard cut and transition
   (a dissolve, a push through, flying into a screen), how long scenes

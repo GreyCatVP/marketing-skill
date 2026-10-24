@@ -87,97 +87,121 @@ Then the big one:
 video.
 
 23
-00:00:32,430 --> 00:00:33,670
-It writes the script,
+00:00:32,420 --> 00:00:32,768
+First,
 
 24
-00:00:33,670 --> 00:00:34,490
-voices it,
+00:00:32,768 --> 00:00:34,540
+it asks what you've got:
 
 25
-00:00:34,490 --> 00:00:36,770
-and renders the video on your own machine.
+00:00:34,540 --> 00:00:35,470
+where you post,
 
 26
-00:00:36,920 --> 00:00:38,120
-Thirty-two templates,
+00:00:35,470 --> 00:00:36,152
+who presents,
 
 27
-00:00:38,120 --> 00:00:40,590
-from tier lists to text-message skits.
+00:00:36,152 --> 00:00:37,180
+a video you like,
 
 28
-00:00:40,770 --> 00:00:42,730
-And a 3D mascot that walks,
+00:00:37,180 --> 00:00:38,910
+and the tools you pay for.
 
 29
-00:00:42,730 --> 00:00:43,051
-talks,
+00:00:39,090 --> 00:00:40,330
+It writes the script,
 
 30
-00:00:43,051 --> 00:00:45,020
-and lip-syncs to the voice.
+00:00:40,330 --> 00:00:41,150
+voices it,
 
 31
-00:00:45,210 --> 00:00:46,850
-Or bring your own character,
+00:00:41,150 --> 00:00:43,430
+and renders the video on your own machine.
 
 32
-00:00:46,850 --> 00:00:49,510
-from a cartoon to a realistic avatar.
+00:00:43,580 --> 00:00:44,780
+Thirty-two templates,
 
 33
-00:00:49,650 --> 00:00:51,270
-Send it a video you love,
+00:00:44,780 --> 00:00:47,250
+from tier lists to text-message skits.
 
 34
-00:00:51,270 --> 00:00:53,360
-and it copies how it's edited.
+00:00:47,430 --> 00:00:49,390
+And a 3D mascot that walks,
 
 35
-00:00:53,550 --> 00:00:55,210
-Nothing posts or sends
+00:00:49,390 --> 00:00:49,711
+talks,
 
 36
-00:00:55,210 --> 00:00:56,700
-until you say yes.
+00:00:49,711 --> 00:00:51,700
+and lip-syncs to the voice.
 
 37
-00:00:56,880 --> 00:00:57,474
-It's free,
+00:00:51,890 --> 00:00:53,530
+Or bring your own character,
 
 38
-00:00:57,474 --> 00:00:58,550
-open source,
+00:00:53,530 --> 00:00:56,190
+from a cartoon to a realistic avatar.
 
 39
-00:00:58,550 --> 00:01:00,580
-and it works in Codex too.
+00:00:56,320 --> 00:00:57,940
+Send it a video you love,
 
 40
-00:01:00,780 --> 00:01:00,931
-Oh,
+00:00:57,940 --> 00:01:00,030
+and it copies how it's edited.
 
 41
-00:01:00,931 --> 00:01:01,990
-and this video?
+00:01:00,220 --> 00:01:01,880
+Nothing posts or sends
 
 42
-00:01:01,990 --> 00:01:03,360
-It made this too.
+00:01:01,880 --> 00:01:03,360
+until you say yes.
 
 43
-00:01:03,550 --> 00:01:04,330
-If it helps,
+00:01:03,540 --> 00:01:04,134
+It's free,
 
 44
-00:01:04,330 --> 00:01:07,250
-a star on GitHub helps other people find it.
+00:01:04,134 --> 00:01:05,210
+open source,
 
 45
-00:01:07,430 --> 00:01:08,780
-What should it make next?
+00:01:05,210 --> 00:01:07,250
+and it works in Codex too.
 
 46
-00:01:08,780 --> 00:01:10,353
+00:01:07,450 --> 00:01:07,601
+Oh,
+
+47
+00:01:07,601 --> 00:01:08,660
+and this video?
+
+48
+00:01:08,660 --> 00:01:10,020
+It made this too.
+
+49
+00:01:10,210 --> 00:01:10,990
+If it helps,
+
+50
+00:01:10,990 --> 00:01:13,910
+a star on GitHub helps other people find it.
+
+51
+00:01:14,090 --> 00:01:15,440
+What should it make next?
+
+52
+00:01:15,440 --> 00:01:17,013
 Tell me in the comments.

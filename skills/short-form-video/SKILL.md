@@ -1,6 +1,6 @@
 ---
 name: short-form-video
-description: "Creates ready-to-post vertical video packages for TikTok, Instagram Reels, and YouTube Shorts, both marketing videos (ads, explainers, how-tos, testimonials, launches) and everyday memeable FYP posts (POV, tier lists, text-message skits, storytimes, hot takes, and more): a hook-first script and shot list, plus a per-platform caption, hashtags sized to each platform's current norms, and a best-time-to-post window. If the user opts in, makes the actual video too: with a connected video-generation tool (Higgsfield, Figma Weave, Canva, or similar), or rendered locally with an original soundtrack and voiceover, as animated text, a narrated 3D animation, or pixel art; otherwise recommends free tools such as CapCut and still delivers the script and packages. Use when the user asks for a TikTok, Reel, or YouTube Short, a short-form or vertical video script, video hooks, a 3D or pixel-art animated video, a meme or trend-style post, everyday content for the feed, or a viral video for social media."
+description: "Creates ready-to-post short videos for TikTok, Instagram Reels, and YouTube Shorts (9:16), or 16:9 for YouTube, Reddit, LinkedIn, and websites: marketing videos (ads, explainers, how-tos, testimonials, product launches and demos) and everyday FYP posts (POV, tier lists, text-message skits, storytimes): a hook-first script and shot list, per-platform captions and hashtags, and a posting window. If the user opts in, it makes the video: rendered locally with an original soundtrack and voiceover (animated text, a narrated 3D mascot or the user's own 3D character, pixel art, or the product's own screens), edited like a reference video the user sends, or with a connected tool (Higgsfield, HeyGen, Figma Weave, Canva). Use when the user asks for a TikTok, Reel, or Short, a short video for YouTube, Reddit, or LinkedIn, a launch or demo video, a 3D or pixel-art animated video, a video like one they send, a meme or trend-style post, or a viral video."
 allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write, Bash
 ---
 
@@ -56,10 +56,26 @@ command below.
    as `/marketing-skill:marketing-setup`) before continuing, then save the
    answers into that file and flip the marker to `CONFIGURED` with today's
    date. Otherwise, read it for tone, audience, and banned words below,
-   and for its Sonic Identity (genre, tempo, key, energy, hook) if a video
-   will be rendered.
+   for its Sonic Identity (genre, tempo, key, energy, hook) if a video
+   will be rendered, and for its Video Setup (where videos get posted,
+   who presents them, a style reference, paid tools, whose voice) and the
+   Character under its Visual Identity.
 
 2. **Confirm scope.**
+   - **What they have to make it with.** A new user doesn't know what
+     this plugin can do with their own material, so ask before writing:
+     the questions in `${CLAUDE_PLUGIN_ROOT}/references/video-setup.md`
+     that Video Setup hasn't answered or this request changes, in one
+     short numbered message with the default for each ("reply 'defaults'
+     to skip"): where it'll be posted (9:16 or 16:9), who presents it
+     (them on camera, their own 3D character, the plugin's robot, a
+     realistic AI avatar from a paid tool, or no presenter), a video whose
+     style to follow, and any paid tool they want used for this one. Say
+     which choices are free and which spend their credits. Use what they
+     already said in the request rather than asking again, and offer to
+     save new answers to Video Setup. Before using an answer, check it as
+     that file's "Before using an answer" says (the file exists, it's
+     theirs to use, the tool is connected).
    - Source topic, product, or content (paste, file, URL, or "our
      product"/"our feature" — check `README*`, `CHANGELOG*`, and
      `docs/**/*.md` at the project root first if so, same convention as
@@ -74,7 +90,13 @@ command below.
      in ten posts an experiment. With fewer rows, say the log is too thin
      yet and use the general guidance.
    - Which platform(s) — default to all three (YouTube Shorts, Instagram
-     Reels, TikTok) unless the user names only one or two.
+     Reels, TikTok) unless the user names only one or two. Where it's
+     posted decides the shape: 9:16 for those three; 16:9 (`format:
+     landscape`) for a regular YouTube video, Reddit, LinkedIn, X, a
+     website, or a README; both cuts from one script when it's going to
+     both. For a 16:9 destination, write that platform's post (title,
+     text, and its own rules; `community-post-generator` for Reddit and
+     other communities) in place of the three packages in step 5.
    - Marketing video or everyday post. A marketing video sells or explains
      something (an ad, an explainer, a how-to, a testimonial, a launch). An
      everyday post is the memeable, comment-driven content that fills most
@@ -92,7 +114,9 @@ command below.
      structure in step 4 and how the video can actually get made: rendered
      from text, rendered with the user's real assets, generated, or filmed.
    - **A reference video** ("make it like this one", a video they
-     attach or link): read how it's edited before anything else. Save it
+     attach or link, or the Style reference saved in Video Setup unless
+     this video should look different): read how it's edited before
+     anything else. Save it
      locally and run `node ${CLAUDE_PLUGIN_ROOT}/scripts/video/reference.js
      <video>`, then read the `reference.md` it writes and look at its
      `sheet-*.jpg` (one frame per scene). Match its format, length, pacing,
@@ -123,7 +147,10 @@ command below.
      or retro game look, or an animated video, use an animation style ("3D
      or pixel-art animation: a style" in `video-rendering.md`); with no
      footage and no face to show, the 3D mascot is the strongest default,
-     since a character holds attention better than floating text. If the
+     since a character holds attention better than floating text. The
+     presenter the user chose wins: their own takes, their character, a
+     realistic avatar's clip, or, for "no presenter", no mascot at all
+     (the product's screens, or words over backgrounds). If the
      user has their own mascot or avatar as a rigged 3D model (a `.glb`
      from Blender, Mixamo, Ready Player Me, or VRoid), it takes the
      robot's place ("The user's own character" in `video-rendering.md`):
@@ -206,7 +233,7 @@ command below.
      tool connected" as if there were nothing to set up.
    - **Local rendering (no connector needed):** this plugin's own
      `${CLAUDE_PLUGIN_ROOT}/scripts/video/render.js` turns an animated HTML
-     page into a finished 9:16 MP4 with an original soundtrack in the
+     page into a finished 9:16 (or 16:9) MP4 with an original soundtrack in the
      project's sonic identity, over stock photos, stock clips, or AI images,
      or as narrated 3D or pixel-art animation with a voiceover.
      Be plain about what it makes: motion graphics or drawn animation, not
@@ -379,6 +406,13 @@ command below.
      bare 2xx status alone (TikTok and Instagram both process the video
      *after* this script's request returns — see `publish_direct.py`'s own
      notes for each).
+   - **AI labels.** A video with realistic AI-made content (an AI avatar
+     presenting, a cloned voice, a lifelike generated scene) gets the
+     platform's AI label: `publish_direct.py --ai-generated` sets YouTube's
+     disclosure and stops for TikTok and Instagram so it's posted from the
+     app with the label on. Say so in the hand-off when posting manually.
+     The 3D mascot, the user's own 3D character, pixel art, and motion
+     graphics are clearly animated and don't need it.
    - **Log it.** When a video goes out (or the user says it did), add a row
      to `${CLAUDE_PLUGIN_ROOT}/state/video-log.md`: date, platform, file,
      format, hook and its pattern, variant, sound, length, and link or ID.
@@ -398,6 +432,10 @@ Trigger on requests like:
 - "Help me go viral with a video about..."
 - "Make a POV / tier list / text-message skit / storytime about..."
 - "Make a 3D animated video / a pixel-art or 8-bit video with a voiceover about..."
+- "Make a launch video / a product demo for my app, plugin, or tool"
+- "Make it like this video" (with a video attached), "edit ours like theirs"
+- "Use our own mascot / character / avatar (here's the .glb)"
+- "Make a 16:9 version for YouTube / Reddit / LinkedIn"
 - "We need something memeable / relatable for the feed this week"
 
 **Do not** trigger when the user hands over their own clips of a place, a
@@ -405,13 +443,15 @@ product, or an event to be edited into a montage (a listing video, a
 recap, highlights, a reel of the shop) — that's `clip-montage` — or only
 photos of a property, a room, or a product — that's `montage-video`.
 Both keep a profile per client and edit the montage with them. **Do
-not** trigger on a request for a long-form video brief, a static
-image brief, or a platform other than these three — that's
-`visual-brief-generator`'s job. Do not trigger on "post this to
+not** trigger on a request for a long-form video brief (a script for a
+video over about three minutes, to film or generate elsewhere) or a
+static image brief — that's `visual-brief-generator`'s job. A short video
+rendered here for YouTube, Reddit, LinkedIn, X, or a website (16:9) is
+this skill's, from the same script as the vertical cut. Do not trigger on "post this to
 Instagram" with no video involved (a photo/carousel/text-adjacent post) —
 that's `content-repurposer`/`publish_direct.py`'s territory, not this
-skill's; this skill is specifically for the vertical-video format on
-these three platforms.
+skill's; this skill is for short videos: vertical for these three
+platforms, 16:9 for the others.
 
 ## Platform specs (current, as of this writing — verify before a real campaign)
 

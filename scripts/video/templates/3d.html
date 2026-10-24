@@ -77,9 +77,9 @@
             cheering. The call to action. Event: --click.
   The user's own character in the mascot's place: data-character="assets/
   hero.glb" on <body> (every mascot shot) or on one shot. A rigged glTF
-  model from Blender, Mixamo, Ready Player Me, or VRoid, exported as one
-  .glb file (glTF binary; Draco or meshopt compression is fine; a VRoid
-  .vrm works as it is). Its own clips play when their names match
+  model from Blender, Mixamo, Ready Player Me, or VRoid, as one .glb file
+  (glTF binary; Draco or meshopt compression is fine), or as it comes: a
+  VRoid .vrm, or Mixamo's .fbx download. Its own clips play when their names match
   an action (Wave, Walking, Dance, ThumbsUp, Idle...); otherwise its skeleton
   is posed like the robot's. Its blend shapes (jawOpen, viseme_aa, blink,
   smile) or jaw bone lip-sync it to the voice.
@@ -527,6 +527,7 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
@@ -2811,7 +2812,7 @@ function loadCharacterFile(src) {
     loader.setDRACOLoader(draco);
     loader.setMeshoptDecoder(MeshoptDecoder);
     // read with XHR, not fetch: a page opened from a file (as render.js opens it) may read local
-    // files through XHR only. A .glb carries its textures inside, so nothing else is fetched.
+    // files through XHR only. A .glb (or a Mixamo .fbx) carries its textures inside, so nothing else is fetched.
     const bytes = new Promise((resolve, reject) => {
       const x = new XMLHttpRequest();
       x.open('GET', src);
@@ -2820,7 +2821,18 @@ function loadCharacterFile(src) {
       x.onerror = () => reject(new Error('not found, or the browser may not read it'));
       x.send();
     });
-    charFiles.set(src, bytes.then((b) => loader.parseAsync(b, src.replace(/[^/]*$/, '')))
+    // a .fbx (what Mixamo downloads) is read as it is, with its clips, into the same shape as a glTF
+    const parse = /\.fbx$/i.test(src)
+      ? (b) => { const group = new FBXLoader().parse(b, src.replace(/[^/]*$/, '')); return { scene: group, animations: group.animations || [] }; }
+      : (b) => loader.parseAsync(b, src.replace(/[^/]*$/, ''));
+    // a clip with a tool's default name ("mixamo.com", "Take 001") takes the file's name, so a
+    // Mixamo download called "Waving.fbx" plays for wave
+    const named = (g) => {
+      const file = decodeURIComponent(src.split('/').pop()).replace(/\.[^.]+$/, '');
+      for (const c of g.animations || []) if (/^(|layer\d*|take\d*|default|animation|anim\d*|action\d*|scene)$/.test(clipKey(c.name))) c.name = file;
+      return g;
+    };
+    charFiles.set(src, bytes.then(parse).then(named)
       .catch((e) => { throw new Error(`character ${src} didn't load: ${e.message || e}`); }));
   }
   return charFiles.get(src);

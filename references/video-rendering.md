@@ -182,12 +182,37 @@ cta: try it free · link in bio
   every half second per core in software), so tell the user to expect a
   few minutes for a 20-second video, and use `--draft` to check the
   motion first; pixel art is as quick as any template.
-- **Other animation styles** (cartoon or anime characters, claymation, or
-  the user's own mascot design in place of the robot) can't be drawn
-  locally. They need a connected video model (Higgsfield or Figma Weave,
-  step 3 of the skill) with the style in the prompt, which spends the
-  user's credits; offer the 3D mascot or pixel art as the free
-  alternative.
+- **The user's own character in the robot's place:** when they have
+  their mascot or avatar as a rigged 3D model, it stars instead of the
+  robot, rendered locally like everything else. Ask for it as one `.glb`
+  file (glTF binary; a `.vrm` from VRoid works too), put it in `assets/`,
+  and add `character: assets/<name>.glb` to the script's frontmatter
+  (`character=` on one shot puts it in just that shot; a `Character:`
+  line in the Visual Identity puts it in every 3D video). Every shot the
+  robot appears in takes it: `mascot` with all its actions and props,
+  `desk`, `title`, `icons`, and `button`.
+  - Its own animation clips play when their names match an action
+    (`Wave`, `Walking`, `Dance`, `ThumbsUp`, `Jump` for `cheer`, `Idle`).
+    Otherwise its skeleton is posed like the robot's (bones are matched
+    by name: Mixamo's, Blender's `.L`/`.R`, VRoid's, Ready Player Me's),
+    on top of its idle clip if it has one.
+  - It lip-syncs through its blend shapes (`jawOpen`, `viseme_aa`, `A`,
+    `mouthOpen`), blinks (`eyeBlink`, `Blink`), and smiles or looks sad or
+    surprised when the action calls for it; with no blend shapes it opens
+    its jaw bone, or nods on the words.
+  - Where to get one: a character uploaded to Mixamo (free) comes back
+    rigged and with animations (download as FBX, then export as glTF
+    binary from Blender), Ready Player Me and VRoid export rigged avatars,
+    and any rigged model from a 3D artist works. Use the user's own
+    character, one they made or bought the rights to, never a famous
+    studio's or game's. A model without a skeleton still works, moving
+    as a whole.
+- **Other animation styles** (cartoon or anime characters drawn in 2D,
+  claymation, or the user's own mascot when it's only a drawing, with no
+  3D model) can't be drawn locally. They need a connected video model
+  (Higgsfield or Figma Weave, step 3 of the skill) with the style in the
+  prompt, which spends the user's credits; offer the 3D mascot or pixel
+  art as the free alternative.
 
 ## The bold look: the cover that stops the scroll
 
@@ -450,11 +475,54 @@ ship one.
   frame, the music one energy step lower, and the brand's end card. It runs
   `--check`; render as usual. Captions use the person's real words only,
   never a tidied version, and only post people who agreed to it.
+- **A realistic avatar's clip** (a talking presenter made by a connected
+  AI avatar tool such as HeyGen, Synthesia, D-ID, or Hedra) goes through
+  `cut.js` the same way, with the script it was given as `--text`. Label
+  it as AI-generated when posting, and use a stock avatar or the user's
+  own likeness with their consent, never a real person who didn't agree.
 - **By hand:** `<video class="bg-media" id="take" src="assets/take.mp4"
   data-audio>` plays a clip's own sound in sync with it (from its
   `data-offset`, while the clip is on screen), leveled like a voiceover
   with the music ducked under it, and `<div class="say auto"
   data-clip="take">what's said</div>` captions it.
+
+## Copy a reference video's editing
+
+When the user sends a video they like ("make ours like this"), read how
+it's edited before writing anything:
+
+```
+node ${CLAUDE_PLUGIN_ROOT}/scripts/video/reference.js <video> [--out <dir>]
+```
+
+It writes `reference.md`, `reference.json`, and `sheet-1.jpg`... (one
+frame per scene, labeled with its number, time, and length; `~` marks a
+scene that arrives by a transition rather than a cut) in
+`<video name>-reference/` next to the video. It measures:
+
+- the scenes: every hard cut and every transition (a dissolve, a push
+  through, a whip, flying into a screen), how long scenes hold (half the
+  running time is in scenes at least this long), bursts of quick cuts (a
+  montage inside the video), whether it speeds up, and how long the hook
+  holds before the first change;
+- the camera: one moving camera from scene to scene, fast cutting, or
+  cuts between moving or steady shots;
+- the look: dark, mid, or light, and its main colors;
+- the sound: the tempo, whether the cuts land on the beat more often than
+  chance, and the loudness.
+
+Then look at the sheets for what numbers can't show: the captions (size,
+case, boxed or plain, where they sit, a phrase or a word at a time), the
+framing, what's on screen, and the transitions. `reference.md` ends with
+a plan in compose.js's own settings (format, line count and length, the
+shots that move the same way, the sets for its palette, the music tempo,
+the caption style); follow it, adjusting for the user's own content and
+brand. Tell the user what you're matching in a line or two.
+
+Copy how it's edited, never what's in it: none of its footage, music,
+characters, logos, or words go into the new video. Where the reference
+does something the renderer can't (a photoreal 3D room, real footage of
+people), say so and offer the nearest thing it can.
 
 ## The hook, the look, and the cover
 

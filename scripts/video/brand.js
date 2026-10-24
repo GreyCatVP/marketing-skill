@@ -24,6 +24,7 @@
  *   - Font: Space Grotesk          (any Google Fonts family; everyday posts keep TikTok Sans)
  *   - Logo: state/videos/assets/logo.png
  *   - Handle: @yourbrand
+ *   - Character: state/videos/assets/hero.glb   (your own rigged 3D character, in the mascot's place)
  */
 const fs = require('fs');
 const path = require('path');
@@ -51,7 +52,7 @@ function visualIdentity(file = path.join(ROOT, 'references', 'brand-voice.md')) 
   const color = (v) => (v && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v) ? v : undefined);
   const id = {
     accent: color(field('Accent')), bg: color(field('Background')), text: color(field('Text')),
-    font: field('Font'), logo: field('Logo'), handle: field('Handle'),
+    font: field('Font'), logo: field('Logo'), handle: field('Handle'), character: field('Character'),
   };
   if (id.font && !/^[A-Za-z0-9 ]+$/.test(id.font)) id.font = undefined;
   return Object.values(id).some(Boolean) ? id : null;
@@ -91,18 +92,18 @@ function contrastProblems(id, defaults = { accent: '#e07a55', bg: '#0f0f13', tex
 
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-// Finds the logo file and copies it into the page's assets/ folder if it isn't there.
-// Returns its src relative to the page, or null.
-function placeLogo(logo, pageDir) {
-  const candidates = path.isAbsolute(logo) ? [logo] : [path.join(pageDir, logo), path.join(ROOT, logo), path.resolve(logo)];
+// Finds a brand file (the logo, the character) and copies it into the page's assets/ folder as
+// <name>.<ext> if it isn't there. Returns its src relative to the page, or null.
+function placeFile(file, pageDir, name) {
+  const candidates = path.isAbsolute(file) ? [file] : [path.join(pageDir, file), path.join(ROOT, file), path.resolve(file)];
   const found = candidates.find((f) => fs.existsSync(f));
   if (!found) return null;
   const assets = path.join(pageDir, 'assets');
   if (path.dirname(path.resolve(found)) === path.resolve(assets)) return `assets/${path.basename(found)}`;
   fs.mkdirSync(assets, { recursive: true });
-  const name = `logo${path.extname(found)}`;
-  fs.copyFileSync(found, path.join(assets, name));
-  return `assets/${name}`;
+  const to = `${name}${path.extname(found)}`;
+  fs.copyFileSync(found, path.join(assets, to));
+  return `assets/${to}`;
 }
 
 // Rewrites the attributes of the page's real <body> tag, the one after </head> (the templates'
@@ -151,6 +152,19 @@ function applyIdentity(html, id, { pageDir = '.', endcard, lines = [], fine = ''
   }
   if (css.length || fontLink) html = html.replace('</head>', `${fontLink}<style id="brand">\n${css.join('\n')}\n</style>\n</head>`);
 
+  // the brand's own 3D character takes the mascot's place in a 3D video, unless the page names one
+  if (id.character && /data-shot="(mascot|desk|title|icons|button)"/.test(html)) {
+    const tag = /<body([^>]*)>/.exec(html.slice(html.indexOf('</head>')));
+    if (tag && !/data-character=/.test(tag[1])) {
+      const src = placeFile(id.character, pageDir, 'character');
+      if (!src) problems.push(`character ${id.character} not found; the robot mascot stands in`);
+      else {
+        html = onBody(html, (attrs) => `${attrs} data-character="${esc(src)}"`);
+        changes.push(`character ${src}`);
+      }
+    }
+  }
+
   // the real <body> tag, after </head> (the template's doc comment mentions <body data-*> too)
   const body = /<body([^>]*)>/.exec(html.slice(html.indexOf('</head>')));
   const duration = body && parseFloat((/data-duration="([\d.]+)"/.exec(body[1]) || [])[1]);
@@ -158,7 +172,7 @@ function applyIdentity(html, id, { pageDir = '.', endcard, lines = [], fine = ''
   const wantCard = endcard ?? !everyday;
   if (wantCard && (id.logo || id.handle || lines.length || fine) && duration > 2) {
     const at = duration;
-    const logo = id.logo ? placeLogo(id.logo, pageDir) : null;
+    const logo = id.logo ? placeFile(id.logo, pageDir, 'logo') : null;
     if (id.logo && !logo) problems.push(`logo ${id.logo} not found; the end card shows the handle only`);
     const parts = [];
     if (logo) parts.push(`<img class="logo" src="${esc(logo)}" alt="">`);

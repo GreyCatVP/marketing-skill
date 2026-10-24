@@ -32,6 +32,33 @@ Skills that read "our changelog" for source material read this file too.
   screen=assets/app.png at=...]` puts their screenshot on the laptop or
   phone they're holding, from the screen's four corners, moving with the
   photo's zoom.
+- **Copy a reference video's editing**: `scripts/video/reference.js
+  <video>` reads how a video is edited: every hard cut and transition
+  (a dissolve, a push through, flying into a screen), how long scenes
+  hold, bursts of quick cuts, one moving camera or cut after cut, the hook's
+  length, how dark it is and its main colors, its tempo and whether it cuts
+  on the beat, and its loudness. It writes `reference.md` with a plan in
+  compose.js's own settings to match, and sheets of one labeled frame per
+  scene for reading the captions and framing. The `short-form-video` skill
+  runs it when the user sends a video and says "make it like this". It
+  copies the editing, never the footage, music, characters, or words.
+- Realistic avatars: a talking clip from a connected AI avatar tool
+  (HeyGen, Synthesia, D-ID, Hedra) goes through `cut.js` like a filmed
+  take, labeled as AI when posted; a realistic rigged `.glb` works as the
+  mascot.
+- **Your own character in the mascot's place**: `character:
+  assets/hero.glb` in a script (or `Character:` in the Visual Identity, or
+  `character=` on one shot) puts the user's own rigged 3D character in
+  every shot the robot appears in, from `templates/character.py`. It
+  loads any rigged glTF (`.glb`, or a VRoid `.vrm`; Draco and meshopt
+  compression work), matches its bones by name (Mixamo, Blender `.L`/`.R`,
+  VRoid, Ready Player Me), and stands it at the robot's height, facing the
+  camera. Its own clips play when their names match an action (`Wave`,
+  `Walking`, `Dance`, `ThumbsUp`, `Jump`, `Idle`); otherwise two-bone IK
+  poses its arms and legs from the robot's poses, at its own proportions.
+  Props come down below its chin with its hands on them, and it lip-syncs
+  through its blend shapes (`jawOpen`, `viseme_aa`, `A`), its jaw bone, or
+  a nod on the words. A model without a skeleton moves as a whole.
 - **The product demo, a launch video's look**: five screen shots for
   showing a product working instead of a presenter, in `templates/demo.py`.
   `terminal` types the product's real commands and prints their output,

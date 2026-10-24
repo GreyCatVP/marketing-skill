@@ -119,49 +119,65 @@ talks,
 and lip-syncs to the voice.
 
 31
-00:00:45,210 --> 00:00:46,870
-Nothing posts or sends
+00:00:45,210 --> 00:00:46,850
+Or bring your own character,
 
 32
-00:00:46,870 --> 00:00:48,360
-until you say yes.
+00:00:46,850 --> 00:00:49,510
+from a cartoon to a realistic avatar.
 
 33
-00:00:48,540 --> 00:00:49,134
-It's free,
+00:00:49,650 --> 00:00:51,270
+Send it a video you love,
 
 34
-00:00:49,134 --> 00:00:50,210
-open source,
+00:00:51,270 --> 00:00:53,360
+and it copies how it's edited.
 
 35
-00:00:50,210 --> 00:00:52,250
-and it works in Codex too.
+00:00:53,550 --> 00:00:55,210
+Nothing posts or sends
 
 36
-00:00:52,450 --> 00:00:52,601
-Oh,
+00:00:55,210 --> 00:00:56,700
+until you say yes.
 
 37
-00:00:52,601 --> 00:00:53,660
-and this video?
+00:00:56,880 --> 00:00:57,474
+It's free,
 
 38
-00:00:53,660 --> 00:00:55,030
-It made this too.
+00:00:57,474 --> 00:00:58,550
+open source,
 
 39
-00:00:55,220 --> 00:00:56,000
-If it helps,
+00:00:58,550 --> 00:01:00,580
+and it works in Codex too.
 
 40
-00:00:56,000 --> 00:00:58,920
-a star on GitHub helps other people find it.
+00:01:00,780 --> 00:01:00,931
+Oh,
 
 41
-00:00:59,100 --> 00:01:00,450
-What should it make next?
+00:01:00,931 --> 00:01:01,990
+and this video?
 
 42
-00:01:00,450 --> 00:01:02,023
+00:01:01,990 --> 00:01:03,360
+It made this too.
+
+43
+00:01:03,550 --> 00:01:04,330
+If it helps,
+
+44
+00:01:04,330 --> 00:01:07,250
+a star on GitHub helps other people find it.
+
+45
+00:01:07,430 --> 00:01:08,780
+What should it make next?
+
+46
+00:01:08,780 --> 00:01:10,353
 Tell me in the comments.

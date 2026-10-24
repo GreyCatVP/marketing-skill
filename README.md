@@ -26,13 +26,15 @@ Made something with it? [Share it in Show and tell](https://github.com/marcosmod
 
 ## See it
 
-[![The plugin's one-minute launch video: a desk at night, the camera pushing into the monitor, Claude Code installing the plugin and running its skills, and the templates' real frames floating past](media/explainer/v4/poster-landscape.jpg)](media/explainer/v4/marketing-skill-v4-landscape.mp4)
+[![The plugin's 71-second launch video: a desk at night, the camera pushing into the monitor, the templates' real frames floating past, a realistic character in the mascot's place, and Claude reading how a reference video is edited](media/explainer/v4/poster-landscape.jpg)](media/explainer/v4/marketing-skill-v4-landscape.mp4)
 
-**[▶ Watch the one-minute launch video](media/explainer/v4/marketing-skill-v4-landscape.mp4)**:
-the plugin installing and running its skills in Claude Code, edited like
-a product launch, with one camera moving from screen to screen. The
-plugin made it itself from [one script](media/explainer/v4/script.md),
-with a voiceover, subtitles synced to it, and music cut on the beat.
+**[▶ Watch the 71-second launch video](media/explainer/v4/marketing-skill-v4-landscape.mp4)**:
+the plugin installing and running its skills in Claude Code, your own
+character in the mascot's place, and Claude copying how a video you like
+is edited, all cut like a product launch, with one camera moving from
+screen to screen. The plugin made it itself from
+[one script](media/explainer/v4/script.md), with a voiceover, subtitles
+synced to it, and music cut on the beat.
 
 [![The vertical cut for TikTok, Reels, and Shorts: the plugin's 3D mascot at a desk, on a stage, on a rooftop, in a living room, and in a park, under big bold captions](media/explainer/v3/poster.jpg)](media/explainer/v3/marketing-skill-v3.mp4)
 
@@ -40,6 +42,14 @@ with a voiceover, subtitles synced to it, and music cut on the beat.
 (9:16, for TikTok, Reels, and Shorts): the plugin's 3D mascot presenting
 all fourteen skills under the bold captions, made from
 [its own script](media/explainer/v3/script.md) the same way.
+
+[![Your own character in the mascot's place: a Mixamo character waving in a living room, a mannequin presenting on a stage, an expressive robot giving a thumbs up in a park, and the first character pointing at a product screen](media/explainer/character/poster.jpg)](media/explainer/character/your-own-character.mp4)
+
+**[▶ Watch: your own character](media/explainer/character/your-own-character.mp4)**
+(22 seconds): bring your mascot or avatar as a rigged 3D model (`.glb`)
+and it takes the robot's place, playing its own animations or posed from
+its skeleton, holding your product, and talking with the voice. Three
+different rigs, [one script](media/explainer/character/script.md).
 
 <sub>Music from #Uppbeat (free for Creators!): https://uppbeat.io/music/tracks/21-on-the-block/funky-diesel License code: WKCBH1LMDV3AQDIE · Voiceover: AI voice (Kokoro)</sub>
 
@@ -288,7 +298,9 @@ times for TikTok, Reels, and Shorts, and, if you want, makes the video:
   in, waves, types at a desk with your app on the monitor, points at your
   screen, holds up your laptop, cheers, and lip-syncs to the voice, moving
   through a living room, a launch stage, a city rooftop, and a park (or
-  standing in your own photo); or as
+  standing in your own photo). Have your own mascot or avatar as a rigged
+  3D model (`.glb`)? It takes the robot's place, with every action and
+  prop; or as
   a pixel-art game with chiptune music (`style: 3d` or `style: pixel`).
 - **The bold look:** `captions: bold` gives any narrated video the cover
   of the big creator ads: huge capitals boxed in black with the selling
@@ -300,6 +312,11 @@ times for TikTok, Reels, and Shorts, and, if you want, makes the video:
   your real install commands, an AI agent's session does the job, the
   things you made float past, and the camera moves from screen to screen
   without a cut, under small subtitles (`captions: subtitle`).
+- **Copy a video you like:** send a reference video and say "make ours
+  like this". `reference.js` reads how it's edited (every cut and
+  transition, how long scenes hold, the montage bursts, one moving camera
+  or cut after cut, its palette, its tempo, whether it cuts on the beat)
+  and plans yours to match, copying the editing, never the content.
 - **Your own footage:** a talking-head take from your phone gets its
   pauses cut and captions added (`cut.js`); screen recordings play in a
   phone frame.
@@ -330,13 +347,15 @@ node render.js page.html out.mp4 --cover 0   # the video, its captions (.srt), a
 
 **A mascot video or the bold cover, step by step.** Ask Claude in plain
 words, for example "make a 3D mascot video about our new invoicing app,
-here's a screenshot", or "make a TikTok with the big bold captions,
+here's a screenshot" (add "with our own mascot, here's the .glb" to put
+your character in the robot's place), or "make a TikTok with the big bold captions,
 here's a photo of me holding my laptop and a screenshot of the app". It
 writes a script like this one, voices it, and renders it:
 
 ```
 ---
 style: 3d              # the mascot; leave it out for photo backgrounds
+character: assets/our-mascot.glb   # optional: your own rigged 3D character instead of the robot
 captions: bold         # big boxed captions; *words* in asterisks turn yellow
 hook: we made invoicing *one tap*
 series: week 2         # a tag in the top corner
@@ -356,6 +375,8 @@ The bold look, and putting your app on the screen in a photo of you:
 A launch video of your app or tool, its screens instead of a presenter
 ("make a launch video for my CLI, here are the install commands"):
 [The product demo](docs/video.md#the-product-demo-a-launch-videos-look).
+A video edited like one you like ("make ours like this one", with the
+video attached): [Copy a video you like](docs/video.md#copy-a-video-you-like).
 
 Everything else, from backgrounds and sound to templates and connected
 video tools: **[docs/video.md](docs/video.md)**.
@@ -516,6 +537,7 @@ scripts/
     brand.js             # applies the Visual Identity to a page: colors, font, logo end card
     cut.js               # a filmed talking-head take: pauses cut, captions, and a page to render it
     beats.js             # a music track's tempo, beats, bars, and drops, to cut a video on its beat
+    reference.js         # how a reference video is edited (cuts, transitions, pacing, palette, tempo), and a plan to match it
     gallery.js           # rebuilds the template gallery in docs/gallery
     templates/           # 8 marketing + 22 everyday + 3D (the mascot: templates/mascot.py; the product demo's screens: templates/demo.py) and pixel-art starting pages, built by templates/build.py
 ```

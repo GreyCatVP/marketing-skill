@@ -288,6 +288,11 @@ times for TikTok, Reels, and Shorts, and, if you want, makes the video:
   words in yellow, the first line on screen from frame 0, a series tag
   ("week 2") in the corner, and your screenshot on the laptop or phone in
   your own photo.
+- **The product demo:** a launch video's look for software: the camera
+  drifts into a dark room and pushes into the monitor, a terminal types
+  your real install commands, an AI agent's session does the job, the
+  things you made float past, and the camera moves from screen to screen
+  without a cut, under small subtitles (`captions: subtitle`).
 - **Your own footage:** a talking-head take from your phone gets its
   pauses cut and captions added (`cut.js`); screen recordings play in a
   phone frame.
@@ -341,6 +346,9 @@ prop, and scene the mascot has:
 [3D and pixel-art animation](docs/video.md#3d-and-pixel-art-animation).
 The bold look, and putting your app on the screen in a photo of you:
 [The bold look](docs/video.md#the-bold-look-a-cover-that-stops-the-scroll).
+A launch video of your app or tool, its screens instead of a presenter
+("make a launch video for my CLI, here are the install commands"):
+[The product demo](docs/video.md#the-product-demo-a-launch-videos-look).
 
 Everything else, from backgrounds and sound to templates and connected
 video tools: **[docs/video.md](docs/video.md)**.
@@ -502,7 +510,7 @@ scripts/
     cut.js               # a filmed talking-head take: pauses cut, captions, and a page to render it
     beats.js             # a music track's tempo, beats, bars, and drops, to cut a video on its beat
     gallery.js           # rebuilds the template gallery in docs/gallery
-    templates/           # 8 marketing + 22 everyday + 3D (the mascot: templates/mascot.py) and pixel-art starting pages, built by templates/build.py
+    templates/           # 8 marketing + 22 everyday + 3D (the mascot: templates/mascot.py; the product demo's screens: templates/demo.py) and pixel-art starting pages, built by templates/build.py
 ```
 
 ## Share what you made

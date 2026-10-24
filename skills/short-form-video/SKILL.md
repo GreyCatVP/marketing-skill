@@ -116,6 +116,13 @@ command below.
      since a character holds attention better than floating text. For a
      style the renderer can't draw (cartoon or anime characters,
      claymation, the user's own mascot design), see step 3.
+   - A product launch or demo (software, an app, a plugin, a tool): show
+     the product working, the way shared launch videos do, rather than a
+     presenter ("The product demo" in `video-rendering.md`): a desk at
+     night pushing into its screen, a terminal typing the real commands,
+     an AI agent's session doing the task, the real things it made, the
+     camera moving between them without a cut, small subtitles. Ask for
+     the real commands, outputs, and screenshots it should show.
    - The cover: for an ad, a launch, or anything meant to stop the scroll,
      offer the bold look (`captions: bold`, "The bold look" in
      `video-rendering.md`): huge boxed capitals with the selling words in

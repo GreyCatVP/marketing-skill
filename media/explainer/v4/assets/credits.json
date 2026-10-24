@@ -1,0 +1,22 @@
+[
+  {
+    "file": "funky-diesel.mp3",
+    "id": "manual-funky-diesel.mp3",
+    "provider": "Uppbeat",
+    "creator": "21 On The Block",
+    "source": "https://uppbeat.io/music/tracks/21-on-the-block/funky-diesel",
+    "license": "Uppbeat free license, code WKCBH1LMDV3AQDIE",
+    "required": true,
+    "line": "Music from #Uppbeat (free for Creators!): https://uppbeat.io/music/tracks/21-on-the-block/funky-diesel License code: WKCBH1LMDV3AQDIE"
+  },
+  {
+    "file": "v4-1.wav",
+    "id": "ai-v4-1.wav",
+    "provider": "ai",
+    "tool": "Kokoro 82M v1.0 (af_heart), run locally",
+    "prompt": "the 16 lines of script.md, one file per line (v4-1.wav ... v4-16.wav)",
+    "license": "AI-generated (check the tool's commercial-use terms)",
+    "required": false,
+    "line": ""
+  }
+]

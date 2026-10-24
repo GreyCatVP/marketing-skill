@@ -23,3 +23,6 @@ media/explainer/assets/music/*
 media/explainer/assets/voice-*
 media/explainer/v3/assets/*.mp3
 media/explainer/v3/assets/v3-*.wav
+media/explainer/v4/assets/*.mp3
+media/explainer/v4/assets/v4-*.wav
+media/explainer/v4/assets/opening.mp4

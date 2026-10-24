@@ -272,6 +272,10 @@ async function seek(page, seconds) {
 
 const hasFfmpeg = () => spawnSync('ffmpeg', ['-version']).status === 0;
 
+// Subtitles (<body class="sub">, compose.js "captions: subtitle") run a phrase at a time, like a
+// film's, rather than the punchy few words of social captions.
+const SUBTITLE_CHUNKS = { maxWords: 9, maxChars: 48, maxDur: 3.4 };
+
 // Average brightness of an image, 0 (black) to 1 (white), or null without ffmpeg.
 function meanLuma(file) {
   if (!hasFfmpeg()) return null;
@@ -872,6 +876,7 @@ async function prepareVoices(page, settings) {
     return { problems, cues };
   }
   const sorted = [...clips].sort((a, b) => a.time - b.time);
+  const subtitles = await page.evaluate(() => document.body.classList.contains('sub'));
   for (const clip of [...clips]) {
     const name = path.basename(clip.file);
     if (clip.sync && !hasAudioStream(clip.file)) {
@@ -888,7 +893,7 @@ async function prepareVoices(page, settings) {
     const timing = await captions.alignWords(clip.prepared, clip.caption, { shift: clip.trimmed, sidecarFor: clip.file, whisper: !!settings.whisper });
     for (const n of timing.notes) problems.push(`captions for ${name}: ${n}`);
     clip.captionMethod = timing.method;
-    const chunks = captions.chunkWords(timing.words);
+    const chunks = captions.chunkWords(timing.words, subtitles ? SUBTITLE_CHUNKS : undefined);
     const next = sorted.find((c) => c.time > clip.time);
     let hold = Number.isFinite(clip.sceneOut) ? clip.sceneOut : end + 0.5;
     if (next) hold = Math.min(hold, next.time);

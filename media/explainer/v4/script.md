@@ -1,0 +1,24 @@
+---
+title: marketing-skill, the launch-video cut
+style: 3d
+captions: subtitle
+format: landscape
+recordings: assets/v4-{n}.wav
+music: assets/funky-diesel.mp3
+---
+1. My marketing plugin for Claude Code just got a huge update. [shot: desk mascot=no]
+2. Two commands, and you get fourteen marketing skills. [shot: terminal lines='$ claude plugin marketplace add marcosmodly/marketing-skill|Adding marketplace…|Cloning via HTTPS: https://github.com/marcosmodly/marketing-skill.git|✔ Successfully added marketplace: marketing-skill|$ claude plugin install marketing-skill@marketing-skill|Installing plugin "marketing-skill@marketing-skill"...|✔ Successfully installed plugin: marketing-skill@marketing-skill (scope: user)']
+3. Research, calendars, SEO, ads, email, video, and publishing. [shot: icons items="🔍 Research,📅 Calendar,🔎 SEO,📣 Ads,✉️ Email,🎬 Video,🚀 Publish" set=studio]
+4. Ask for a competitor battlecard, and it searches the web and cites every source. [shot: agent ask="Research Acme and build a sales battlecard" steps="Skill(marketing-skill:competitor-research)|Web Search(acme pricing changes)|⎿ Did 1 search in 2s|Fetch(https://acme.example/pricing)|⎿ Received 48.2KB" done="Battlecard ready, every claim sourced." doc="# Acme: competitor brief|## Bottom line|## Company overview|## Recent moves (last 90 days)|## Messaging & positioning|## SWOT|## Recommendations|## Sources"]
+5. It plans a week of posts, and never repeats last week's topics. [shot: notes items="Mon: launch post,Tue: LinkedIn tip,Wed: X thread,Thu: newsletter,Fri: Reddit post"]
+6. One blog post becomes a LinkedIn post, a thread, and a newsletter. [shot: agent ask="Repurpose blog/launch.md for LinkedIn, X, and the newsletter" steps="Skill(marketing-skill:content-repurposer)|Read(blog/launch.md)|⎿ Read 84 lines" done="Three versions, one per channel." doc="# Launch post, repurposed|## LinkedIn post|- The hook first, short lines, one soft CTA|## Twitter/X thread|- Numbered, every post under 280 characters|## Newsletter blurb|- A subject line, a short intro, three takeaways"]
+7. It reads a subreddit's rules before it writes your post. [shot: agent ask="Write a launch post for r/claudeskills" steps="Skill(marketing-skill:community-post-generator)|Fetch(https://www.reddit.com/r/claudeskills/about/rules)|Web Search(r/claudeskills top posts this month)" done="Go/No-Go first, then a draft in the sub's own style."]
+8. Then the big one: video. [shot: title text="Video" set=night]
+9. It writes the script, voices it, and renders the video on your own machine. [shot: agent ask="Make a 30-second launch video" steps="Skill(marketing-skill:short-form-video)|Write(state/videos/launch.md)|Bash(node scripts/video/compose.js state/videos/launch.md)|⎿ Voicing 8 lines with af_heart (voice.js)...|Bash(node scripts/video/render.js state/videos/launch.html launch.mp4)|⎿ Wrote launch.mp4: 1080x1920, 30s at 30fps" done="Ready for you to review: launch.mp4"]
+10. Thirty-two templates, from tier lists to text-message skits. [shot: wall items="assets/t-promo.jpg,assets/t-text-chat.jpg,assets/t-tier-list.jpg,assets/t-3d-desk.jpg,assets/t-pov.jpg,assets/t-quiz.jpg,assets/t-how-to.jpg,assets/t-pixel-boss.jpg,assets/t-starter-pack.jpg,assets/t-notifications.jpg,assets/t-countdown.jpg,assets/t-3d-title.jpg,assets/t-faq.jpg,assets/t-hot-take.jpg,assets/t-post-card.jpg,assets/t-this-or-that.jpg,assets/t-pixel-coins.jpg,assets/t-before-after.jpg" labels="promo,text-chat,tier-list,3d,pov,quiz,how-to,pixel,starter-pack,notifications,countdown,3d title,faq,hot-take,post-card,this-or-that,pixel coins,before-after"]
+11. And a 3D mascot that walks, talks, and lip-syncs to the voice. [shot: mascot do=walk set=night]
+12. Nothing posts or sends until you say yes. [shot: agent ask="Post it to TikTok, Reels, and Shorts" steps="Skill(marketing-skill:publish-pipeline)|⎿ 3 posts ready: TikTok, Reels, Shorts" done="Send which of these? Reply with their numbers to approve."]
+13. It's free, open source, and it works in Codex too. [shot: terminal lines="$ codex plugin marketplace add marcosmodly/marketing-skill|$ codex plugin add marketing-skill@marketing-skill"]
+14. Oh, and this video? It made this too. [shot: player src=assets/opening.mp4 aspect=16:9 offset=1.6 title="marketing-skill-v4.mp4"]
+15. If it helps, a star on GitHub helps other people find it. [shot: button text="☆ Star" done="★ Starred" set=night]
+16. What should it make next? Tell me in the comments. [shot: comments text="What should it make next?" ask="a podcast clip maker"]

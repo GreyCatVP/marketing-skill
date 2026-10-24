@@ -150,6 +150,9 @@ cta: try it free · link in bio
   - `button`: the call to action as a big button a cursor clicks,
     `text="☆ Star"` changing to `done="★ Starred"` (or "+ Follow" to
     "Following") under confetti while the mascot cheers.
+  - The product's own screens, for a launch video or a demo: `terminal`,
+    `agent`, `wall`, `player`, and `comments` (see "The product demo"
+    below).
   - The abstract shots still work alongside: `shapes`, `hero` (a phone;
     `src=` the user's real screenshot), `cards` (`items=` short labels),
     `chart` (`values=` the user's real numbers only), `coin` (`src=` their
@@ -218,6 +221,62 @@ product (`[shot: mascot do=talk prop=laptop src=assets/app.png]`).
 - Never make up the person: a face on the cover is the user's own, or
   someone who agreed to it, never stock or an AI image passed off as a
   real customer or founder.
+
+## The product demo: a launch video's look
+
+When the user wants a launch video, a product demo, or "a video like
+<some product>'s launch", show the product working rather than a
+presenter talking about it. Launch videos that get shared spend most of
+their time on the product's own screens, move the camera from one to the
+next instead of cutting, stay in one dark palette, and keep the words
+small. In `style: 3d`, with `captions: subtitle`:
+
+```
+---
+title: the launch
+style: 3d
+captions: subtitle
+format: landscape
+---
+1. I built a plugin that does my marketing. [shot: desk mascot=no]
+2. Two commands install it. [shot: terminal lines="$ claude plugin marketplace add you/repo|✔ Successfully added marketplace: repo"]
+3. Ask it for a battlecard. [shot: agent ask="Research Acme" steps="Skill(you:research)|Web Search(acme pricing)|⎿ Did 1 search in 2s" done="Battlecard ready." doc="# Acme brief|## Bottom line|## SWOT|## Sources"]
+4. It made every one of these. [shot: wall items="assets/a.jpg,assets/b.jpg,assets/c.jpg" labels="promo,quiz,pov"]
+5. Oh, and this video? It made this too. [shot: player src=assets/opening.mp4 aspect=16:9 offset=1.5]
+6. What should it make next? [shot: comments text="What should it make next?" ask="a podcast clip maker"]
+```
+
+- `desk mascot=no` opens on an empty desk at night with the next shot
+  live on the monitor; the camera drifts in and pushes into the screen
+  until the screen is the frame, with no cut.
+- `terminal`: `lines=` the real commands (a line starting `$ ` is typed,
+  the rest print as its output; `|` between lines), `title=` the window.
+  Run the commands and copy what they really print; never invent output.
+- `agent`: an AI agent's session (Claude Code by default, `app=Codex` for
+  Codex): `ask=` typed at its prompt, `steps=` its tool calls streaming in
+  (`Web Search(...)`, `Read(...)`, `Write(...)`; a step starting `⎿` is
+  the result of the one above), `done=` the last line, and `doc=` the
+  document it wrote sliding in beside it (`# ` a title, `## ` a heading,
+  `- ` a bullet) while the camera pans over. Use the steps the skill
+  really takes and its real output headings; a made-up competitor is
+  `Acme` at `acme.example`, never a real company with invented facts.
+- `wall`: `items=` the real things the product made (frames, thumbnails,
+  screenshots; up to 24), `labels=` under them, floating in the dark as
+  the camera flies through.
+- `player`: the user's real video or picture in a player window, the
+  scrubber moving; `aspect=16:9` for a clip, `offset=` where to start.
+  For "this video made itself", render the page's first seconds
+  (`render.js page.html assets/opening.mp4 --duration 7`), then render
+  the whole page.
+- `comments`: the ending, a handwritten question over an empty comment
+  box whose placeholder types `ask=`. It never shows anyone's comments.
+- Between two screen shots the camera pushes through one into the next;
+  between a screen and a 3D shot it hands over the same way, so the
+  video reads as one take. A light `icons set=studio` line in the middle
+  is a good change of pace (the subtitles get a soft dark backing over
+  it); keep the mascot, if any, to one or two lines.
+- Screen shots render quickly (several frames a second), so a
+  screen-heavy video renders in a fraction of a mascot video's time.
 
 ## Start the page
 

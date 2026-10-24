@@ -559,4 +559,7 @@ and bugs in [Issues](https://github.com/marcosmodly/marketing-skill/issues).
 
 ## Contributors
 
+Fixes, new skills, and docs are welcome. [CONTRIBUTING.md](CONTRIBUTING.md)
+covers how to send a pull request and run the checks first.
+
 - [marcosmodly](https://github.com/marcosmodly)

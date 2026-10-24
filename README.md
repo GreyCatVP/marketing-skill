@@ -32,10 +32,15 @@ Made something with it? [Share it in Show and tell](https://github.com/marcosmod
 the plugin installing and running its skills in Claude Code, edited like
 a product launch, with one camera moving from screen to screen. The
 plugin made it itself from [one script](media/explainer/v4/script.md),
-with a voiceover, subtitles synced to it, and music cut on the beat. The
-earlier [mascot tour](media/explainer/v3/marketing-skill-v3-landscape.mp4)
-(and its [vertical cut](media/explainer/v3/marketing-skill-v3.mp4) for
-TikTok, Reels, and Shorts) shows the 3D mascot.
+with a voiceover, subtitles synced to it, and music cut on the beat.
+
+[![The vertical cut for TikTok, Reels, and Shorts: the plugin's 3D mascot at a desk, on a stage, on a rooftop, in a living room, and in a park, under big bold captions](media/explainer/v3/poster.jpg)](media/explainer/v3/marketing-skill-v3.mp4)
+
+**[▶ Watch the vertical cut](media/explainer/v3/marketing-skill-v3.mp4)**
+(9:16, for TikTok, Reels, and Shorts): the plugin's 3D mascot presenting
+all fourteen skills under the bold captions, made from
+[its own script](media/explainer/v3/script.md) the same way.
+
 <sub>Music from #Uppbeat (free for Creators!): https://uppbeat.io/music/tracks/21-on-the-block/funky-diesel License code: WKCBH1LMDV3AQDIE · Voiceover: AI voice (Kokoro)</sub>
 
 32 video templates, rendered on your machine with music composed in your

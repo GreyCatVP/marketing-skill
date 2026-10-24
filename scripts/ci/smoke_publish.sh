@@ -38,6 +38,13 @@ printf 'fake' >/tmp/smoke-video.mp4
 run youtube env YOUTUBE_ACCESS_TOKEN=$fake python3 $d --platform youtube --title hi --text hi --video-path /tmp/smoke-video.mp4 --made-for-kids false --dry-run
 run instagram env META_PAGE_ACCESS_TOKEN=$fake IG_USER_ID=1 python3 $d --platform instagram --text hi --video-url https://example.com/v.mp4 --dry-run
 run tiktok env TIKTOK_ACCESS_TOKEN=$fake python3 $d --platform tiktok --text hi --video-url https://example.com/v.mp4 --dry-run
+run youtube-ai env YOUTUBE_ACCESS_TOKEN=$fake python3 $d --platform youtube --title hi --text hi --video-path /tmp/smoke-video.mp4 --made-for-kids false --ai-generated --dry-run
+# a realistic AI video can't go to TikTok or Instagram unlabeled: the script stops instead
+if env TIKTOK_ACCESS_TOKEN=$fake python3 $d --platform tiktok --text hi --video-url https://example.com/v.mp4 --ai-generated --dry-run >/dev/null 2>&1; then
+  echo "FAIL: tiktok --ai-generated should refuse"
+  exit 1
+fi
+echo "ok: tiktok --ai-generated refuses"
 
 # covers: TikTok takes a frame time, Instagram a frame time or an image URL
 out=$(env TIKTOK_ACCESS_TOKEN=$fake python3 $d --platform tiktok --text hi --video-url https://example.com/v.mp4 --cover-ms 1500 --dry-run 2>&1)

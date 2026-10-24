@@ -264,7 +264,11 @@ text posts, email, images), target audience, tone, output format, banned
 words, and formatting constraints, defined once and reused everywhere.
 
 - **Guided setup:** run `/marketing-skill:marketing-setup` any time
-  (first-run or to update your answers).
+  (first-run or to update your answers). If you make videos, it also asks
+  where you post them, who presents them (you, your own 3D character, the
+  robot mascot, a realistic AI avatar, or no one), a video whose style to
+  follow, which paid tools you have, and whose voice
+  ([what Claude asks before a video](docs/video.md#what-claude-asks-before-a-video)).
 - **Automatic:** if you skip setup, the first skill you actually use will
   ask the same 4 questions itself before proceeding, and save your answers
   for next time.

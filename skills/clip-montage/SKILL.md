@@ -85,6 +85,14 @@ command below. `VIDEO` below means `${CLAUDE_PLUGIN_ROOT}/scripts/video`.
      fine, a phone voice memo works), with what they said in it word for
      word for the captions. Or clips where someone talks to the camera.
      Or none: most montages are music only.
+   - **A montage they'd like it to look like, if any:** a video they send
+     (or the Style reference in `brand-voice.md`'s Video Setup). Run
+     `node VIDEO/reference.js <video>`, read its `reference.md`, and look at
+     its sheets; then match its pace (`pace:` its typical shot length, in
+     beats when its cuts land on the beat), its bursts of quick cuts, its
+     captions, and its feel, and say in a line what you're matching. Copy
+     the editing, never its footage, music, or words; ask for the file
+     rather than downloading someone's post from the app.
    - **Only photos?** Ask whether they can film a few clips instead (it's
      free and the truest picture). If they can't, hand over to
      `montage-video`, which moves the photos with free local moves. Bring

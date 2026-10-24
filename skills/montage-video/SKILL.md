@@ -159,6 +159,11 @@ command below. `VIDEO` below means `${CLAUDE_PLUGIN_ROOT}/scripts/video`.
      the price, beds, baths, square footage, dimensions, materials, and
      product claims. If one is missing, ask, or leave it out. Never fill
      it in.
+   - **A video to follow, if any:** a montage they'd like it to look like
+     (or the Style reference in `brand-voice.md`'s Video Setup). Run
+     `node VIDEO/reference.js <video>`, read its `reference.md` and sheets,
+     and match its pace (`pace:`), its moves, and its feel, copying the
+     editing, never its footage, music, or words.
    - **Staged or edited photos:** ask whether any photo is virtually
      staged, or edited beyond color and exposure. A virtually staged photo
      gets the `[staged]` badge.

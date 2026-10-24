@@ -58,7 +58,7 @@
  * video-rendering.md has the recipe).
  *
  * Your own character: "character: assets/hero.glb" puts the user's rigged 3D character (a .glb
- * from Blender, Mixamo, Ready Player Me, or VRoid) in the robot mascot's place in every shot it
+ * from Blender, Ready Player Me, or VRoid, a .vrm, or Mixamo's .fbx) in the robot mascot's place in every shot it
  * appears in; [shot: mascot do=wave character=assets/other.glb] in just one. Its own clips play when
  * their names match the action (Wave, Walking, Dance...), otherwise its skeleton is posed like the
  * robot's, and it lip-syncs through its blend shapes (templates/character.py).
@@ -335,7 +335,7 @@ async function main() {
   const dir = path.dirname(page);
   const assets = path.join(dir, 'assets');
   fs.mkdirSync(assets, { recursive: true });
-  if (character && !/\.(glb|vrm)$/i.test(character)) fail(`character: ${character} isn't a .glb file; export the rigged character from Blender, Mixamo, or VRoid as glTF binary (.glb), which carries its textures inside.`);
+  if (character && !/\.(glb|vrm|fbx)$/i.test(character)) fail(`character: ${character} isn't a .glb, .vrm, or .fbx file; export the rigged character from Blender or VRoid as glTF binary (.glb), which carries its textures inside, or use Mixamo's .fbx download as it is.`);
   if (character && !fs.existsSync(path.join(dir, character))) console.warn(`Note: ${character} (the character) not found next to the page; put it in assets/`);
   for (const l of lines) {
     const src = l.shot && l.shot.attrs.src;

@@ -7,9 +7,37 @@ videos with captions synced to the voice (`compose.js`), 3D and
 pixel-art animation narrated the same way, your own filmed takes
 (`cut.js`), and the brand's look and sound on every one.
 
+- [What Claude asks before a video](#what-claude-asks-before-a-video)
 - [Connecting a visual-generation tool](#connecting-a-visual-generation-tool)
 - [Connecting a short-form video generation tool](#connecting-a-short-form-video-generation-tool)
 - [Rendering a short-form video locally](#rendering-a-short-form-video-locally)
+
+## What Claude asks before a video
+
+The first time you ask for a video (or in `/marketing-skill:marketing-setup`),
+Claude asks a few questions in one message, so the video uses what you
+already have. Each has a default, so "defaults" is a full answer, and the
+answers are saved under Video Setup in `references/brand-voice.md` so
+you're only asked once ([the full list](../references/video-setup.md)):
+
+1. **Where it'll be posted:** TikTok, Reels, and Shorts get 9:16; YouTube,
+   Reddit, LinkedIn, X, and websites get 16:9; or both from one script.
+2. **Who presents it:** you on camera (film a phone take), your own 3D
+   character (a rigged `.glb`), the plugin's robot mascot, a realistic AI
+   avatar (from a paid tool such as HeyGen), or no presenter (your
+   product's screens, or words over backgrounds).
+3. **A video whose style to follow:** send the file; `reference.js` reads
+   how it's edited and yours copies the editing, not the content.
+4. **Paid tools you have:** video models (Higgsfield, Weave, Runway),
+   avatars (HeyGen, Synthesia), voices (ElevenLabs), music (Epidemic
+   Sound, Artlist), stock keys (Pexels, Pixabay). Nothing spends your
+   credits without a yes for that video.
+5. **Whose voice:** the free local AI voice, your own recordings, or a
+   paid voice.
+
+Everything else is free and runs on your machine. A video with a
+realistic AI avatar or a cloned voice gets the platform's AI label when
+it's posted.
 
 ## Connecting a visual-generation tool
 
@@ -377,8 +405,9 @@ comment lists every shot and what it takes.
   second a frame per core, so a 20-second video takes a few minutes on a
   4-core machine. `--draft` checks the motion in a fraction of that.
 - **Your own character:** if your mascot or avatar exists as a rigged
-  3D model, it stars instead of the robot. Export it as one `.glb` file
-  (from Blender, Mixamo, Ready Player Me, or VRoid), put it in `assets/`,
+  3D model, it stars instead of the robot: one `.glb` file (from Blender,
+  Ready Player Me, or VRoid), a VRoid `.vrm`, or Mixamo's `.fbx` as it
+  downloads. Put it in `assets/`,
   and add `character: assets/your-character.glb` to the script (or a
   `Character:` line to your Visual Identity, for every 3D video). It does
   every action and holds every prop the robot does: its own animation
@@ -387,8 +416,9 @@ comment lists every shot and what it takes.
   robot's. It lip-syncs through its blend shapes (`jawOpen`, `viseme_aa`)
   or its jaw bone. No 3D model yet? Upload a character to
   [Mixamo](https://www.mixamo.com) (free) and it comes back rigged, with
-  animations to pick from; download it as FBX and export it as `.glb`
-  from Blender.
+  animations to pick from; download it as FBX ("With Skin") and use the
+  file as it is, named after its move (`Waving.fbx`) so it plays for that
+  action.
 - **Other styles** (cartoon characters, anime, claymation, or your own
   mascot when it's only a drawing): those need a video model,
   through a connected tool such as Higgsfield or Figma Weave (see the

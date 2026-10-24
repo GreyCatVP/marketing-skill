@@ -380,6 +380,13 @@ def parse_args():
     parser.add_argument("--disable-duet", action="store_true", help="--platform tiktok only. Off (duets allowed) unless passed.")
     parser.add_argument("--disable-comment", action="store_true", help="--platform tiktok only. Off (comments allowed) unless passed.")
     parser.add_argument("--disable-stitch", action="store_true", help="--platform tiktok only. Off (stitching allowed) unless passed.")
+    parser.add_argument("--ai-generated", action="store_true",
+                         help="The video shows realistic AI-made content: an AI avatar presenting, a cloned or "
+                              "real-sounding voice of a real person, or a lifelike scene that didn't happen. "
+                              "--platform youtube: sets status.containsSyntheticMedia, YouTube's own disclosure. "
+                              "--platform tiktok and instagram: this script can't set their AI label through the "
+                              "API, so it stops and says to post from the app with the label on. Not needed for "
+                              "clearly animated content (the 3D mascot, pixel art, motion graphics).")
     parser.add_argument("--upload-timeout", type=float, default=600,
                          help="--platform youtube and instagram (default: 600s). YouTube: timeout for sending "
                               "the video bytes. Instagram: how long to keep polling the media container while "
@@ -661,6 +668,8 @@ def run_youtube(args):
         "status": {
             "privacyStatus": args.privacy_status,
             "selfDeclaredMadeForKids": args.made_for_kids == "true",
+            # YouTube's disclosure for realistic altered or synthetic content (an AI avatar, a cloned voice)
+            **({"containsSyntheticMedia": True} if args.ai_generated else {}),
         },
     }).encode("utf-8")
     secrets = [env["YOUTUBE_ACCESS_TOKEN"]]
@@ -1195,6 +1204,20 @@ def main():
             sys.exit(2)
         if args.cover_ms is not None and args.cover_ms < 0:
             print("--cover-ms is a time in milliseconds from the start, so it can't be negative.", file=sys.stderr)
+            sys.exit(2)
+
+    if args.ai_generated:
+        if args.platform in ("tiktok", "instagram"):
+            app, where = (("TikTok", "'AI-generated content' in the post's settings") if args.platform == "tiktok"
+                          else ("Instagram", "'AI label' under the post's advanced settings"))
+            print(
+                f"--ai-generated: this script can't set {app}'s AI-generated label through the API, and a "
+                f"realistic AI video needs it. Post this one from the {app} app with {where} switched on.",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        if args.platform != "youtube":
+            print("--ai-generated is for --platform youtube, tiktok, and instagram (video posts).", file=sys.stderr)
             sys.exit(2)
 
     if args.platform in VIDEO_RUNNERS:

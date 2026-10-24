@@ -1,5 +1,5 @@
 ---
-description: Asks the 4 setup questions and saves task priority, content types, audience, tone, and output-format defaults to references/brand-voice.md.
+description: Asks the 4 setup questions (and, for video, what videos can be made with) and saves the answers to references/brand-voice.md.
 allowed-tools: Read, Write
 ---
 
@@ -43,15 +43,21 @@ ask the user.
    (a website link or a description is enough; you pick the hex values
    for accent, background, and text), a Google Fonts display font, a logo
    file, and the account handle. Save what they give under Visual
-   Identity.
+   Identity. Then the **video setup** questions in
+   `${CLAUDE_PLUGIN_ROOT}/references/video-setup.md` (where they post,
+   who presents, a style reference, paid tools, whose voice), one at a
+   time, saying what each choice costs; save them under Video Setup, and
+   a character file as `Character:` under Visual Identity.
 5. Write the answers into the same file. Keep every existing `##`
    heading exactly as it is, replacing only the placeholder text under
    each, so every skill's reads keep working. Replace the first line with
    `<!-- MARKETING-SKILL:CONFIGURED (last updated: YYYY-MM-DD) -->`
-   using today's date.
+   using today's date. A file from before Video Setup existed gets that
+   section added at the end.
 6. Confirm in one line: `Saved: priority=<...>, content_types=<...>,
    audience=<...>, tone=<...>, format=<...>` (plus `sound=<genre, key,
-   hook>` and `look=<accent, font>` if chosen), and note they can re-run
+   hook>`, `look=<accent, font>`, and `video=<presenter, shape>` if
+   chosen), and note they can re-run
    this or edit the file.
 
 ## Rules

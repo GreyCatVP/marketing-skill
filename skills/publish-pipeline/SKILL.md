@@ -181,8 +181,15 @@ command below.
    - **YouTube, Instagram, and TikTok (`--platform youtube`/`instagram`/
      `tiktok`)** are a different shape from every platform above — all
      three post actual video, and confirm the content came from
-     `short-form-video`, not this skill improvising a caption. Don't
-     present any of the three with borrowed ease from another:
+     `short-form-video`, not this skill improvising a caption. If the
+     video shows realistic AI-made content (an AI avatar presenting, a
+     cloned voice, a lifelike generated scene), pass `--ai-generated`: on
+     YouTube it sets the platform's own synthetic-content disclosure; for
+     TikTok and Instagram the script stops, since their AI label can't be
+     set through the API, so the user posts that one from the app with the
+     label on. Clearly animated videos (the 3D mascot, pixel art, motion
+     graphics) don't need it. Don't present any of the three with borrowed
+     ease from another:
      - **YouTube** is the most self-serve of the three: the user's own
        Google Cloud OAuth client, authorized against their own channel, is
        enough — no platform-side approval queue the way Reddit or TikTok

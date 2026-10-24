@@ -45,6 +45,18 @@
  * aren't spoken). When the hook is the first line, it shows once, as that line's caption.
  * "series: week 2" and "brand: Your Name" put a tag in each top corner for the whole video.
  *
+ * The product demo (a launch video's look): the product's own screens instead of a presenter. A
+ * terminal types its real commands, an AI agent's session streams the steps a skill takes and the
+ * document it writes, the real things it made float past, and the camera moves from one screen to
+ * the next without a cut, starting by pushing into the monitor of a desk at night. "captions:
+ * subtitle" keeps the words small and quiet, a phrase at a time, so the screens carry the video.
+ *   1. I built a plugin that does my marketing. [shot: desk mascot=no]
+ *   2. One command installs it. [shot: terminal lines="$ claude plugin install you@you|Installed"]
+ *   3. Ask it for a battlecard. [shot: agent ask="Research Acme" steps="Web Search(acme)" done="Ready."]
+ *   4. It made all of these. [shot: wall items="assets/a.jpg,assets/b.jpg"]
+ * Show real commands, real output, and the steps the skill really takes (references/
+ * video-rendering.md has the recipe).
+ *
  * Landscape: "format: landscape" (or --format landscape) makes the same video 1920x1080 (16:9)
  * for YouTube, Reddit, and LinkedIn, with the captions low and centered and the 3D sets
  * opened out to the wider frame. Pixel art stays vertical.
@@ -103,11 +115,12 @@ const STYLES = {
   photo: { template: 'narrated.html' },
   '3d': {
     template: '3d.html', canvas: '<canvas class="art" width="1080" height="1920" data-lint="off"></canvas>',
-    shots: ['mascot', 'desk', 'title', 'icons', 'notes', 'button', 'shapes', 'hero', 'cards', 'chart', 'coin', 'rings', 'globe'],
+    shots: ['mascot', 'desk', 'title', 'icons', 'notes', 'button', 'terminal', 'agent', 'wall', 'player', 'comments', 'shapes', 'hero', 'cards', 'chart', 'coin', 'rings', 'globe'],
     // the mascot presents, with a few abstract shots between its lines for pace
     first: 'mascot do=wave', last: 'mascot do=cheer',
     cycle: ['mascot do=talk', 'globe', 'mascot do=point', 'cards', 'mascot do=thumbs', 'rings', 'mascot do=present', 'shapes'],
-    sfx: { cards: 'swish:card-1', coin: 'ding:land', 'mascot:cheer': 'pop:land', 'mascot:walk': 'pop:stop', desk: 'whoosh:enter', title: 'pop:done', icons: 'pop:done', notes: 'swish:note-1', button: 'click:click' },
+    sfx: { cards: 'swish:card-1', coin: 'ding:land', 'mascot:cheer': 'pop:land', 'mascot:walk': 'pop:stop', desk: 'whoosh:enter', title: 'pop:done', icons: 'pop:done', notes: 'swish:note-1', button: 'click:click',
+      terminal: 'typing:type', agent: 'typing:type', wall: 'swish:done', player: 'click:play', comments: 'typing:type' },
   },
   pixel: {
     template: 'pixel.html', canvas: '<canvas class="art" width="135" height="240" data-lint="off"></canvas>',
@@ -289,6 +302,7 @@ async function main() {
     };
   }).filter((l) => l.text);
   const bold = String(meta.captions || '').toLowerCase() === 'bold';
+  const subtitle = String(meta.captions || '').toLowerCase() === 'subtitle';
   const format = String(args.format || meta.format || 'portrait').toLowerCase();
   const landscape = ['landscape', '16:9', 'wide'].includes(format);
   if (!landscape && !['portrait', '9:16', 'vertical'].includes(format)) fail(`Unknown format "${format}" (use portrait or landscape).`);
@@ -415,7 +429,7 @@ async function main() {
   if (landscape) head = head.replace('</head>', `${LANDSCAPE_CSS}</head>`);
   const bodyClass = (/<body[^>]*\bclass="([^"]*)"/.exec(html.slice(html.indexOf('</head>'))) || [])[1] || 'fyp';
   const attrs = [
-    `class="${bodyClass}${bold ? ' bold' : ''}"`, ...(landscape ? ['data-size="1920x1080"'] : []), `data-duration="${duration}"`, `data-drop="${drop}"`,
+    `class="${bodyClass}${bold ? ' bold' : ''}${subtitle ? ' sub' : ''}"`, ...(landscape ? ['data-size="1920x1080"'] : []), `data-duration="${duration}"`, `data-drop="${drop}"`,
     ...(musicSrc ? [`data-music-src="${esc(musicSrc)}"`, 'data-music="none"', ...(track ? [`data-music-start="${track.musicStart}"`] : [])] : [`data-music="${sound.music}"`]),
     ...['bpm', 'key', 'mode', 'energy', 'motif'].filter((k) => sound[k] !== undefined).map((k) => `data-${k}="${esc(String(sound[k]))}"`),
   ].join(' ');
@@ -430,7 +444,7 @@ async function main() {
     // bold: a short line shows whole; a long one a few words at a time, so it doesn't bury the picture.
     // The first line is always whole: it's the cover.
     const whole = i === 0 || s.text.split(/\s+/).length <= BOLD_WHOLE;
-    const cls = bold ? `say auto${whole ? ' line' : ''}${i === 0 ? ' now' : ''}` : 'say auto';
+    const cls = bold ? `say auto${whole ? ' line' : ''}${i === 0 ? ' now' : ''}` : `say auto${subtitle && i === 0 ? ' now' : ''}`;
     const kw = s.kw.length ? ` data-kw="${esc([...new Set(s.kw)].join(','))}"` : '';
     parts.push(`    <div class="${cls}" data-voice="${esc(s.clip)}" style="--voice:${s.start}s"${kw}>${esc(s.text)}</div>`);
     return `  <!-- line ${s.n}, ${s.start}–${s.end}s -->\n  <div class="scene narr center"${last ? '' : ` style="--out:${r2(s.end - 0.15)}s"`}>\n${parts.join('\n')}\n  </div>`;
@@ -477,7 +491,7 @@ ${inserts}</body>
   console.log(`  sound: ${musicSrc ? `licensed track ${musicSrc}${track ? `, ${track.bpm} BPM, started at ${track.musicStart}s so its lift lands as the hook ends, cuts on its beat` : ''}` : `${sound.music}${sound.music !== 'none' ? `, ${sound.bpm} BPM, ${sound.key} ${sound.mode || ''}, energy ${sound.energy}, cuts on the beat` : ''}`}${musicSrc ? '' : identity ? ' (the Sonic Identity)' : ' (the template default; no Sonic Identity saved yet)'}`);
   console.log(`  look: ${branded.changes.length ? branded.changes.join('; ') : 'the template default; no Visual Identity saved yet'}`);
   for (const p of branded.problems) console.warn(`Note: ${p}`);
-  if (!meta.hook && !bold) console.warn('Note: no hook in the frontmatter, so the first frame has no text. Add "hook: ..." to stop the scroll.');
+  if (!meta.hook && !bold && !subtitle) console.warn('Note: no hook in the frontmatter, so the first frame has no text. Add "hook: ..." to stop the scroll.');
   for (const n of trackNotes) console.warn(`Note: ${musicSrc}: ${n}`);
   if (track && track.musicStart + duration > track.duration) console.warn(`Note: ${musicSrc} runs out ${r2(track.musicStart + duration - track.duration)}s before the video ends; shorten the script or pick a longer track.`);
   if (musicSrc && !track) console.warn(`Note: set data-music-start from beats.js (node beats.js ${musicSrc} --align ${drop} --duration ${duration}).`);

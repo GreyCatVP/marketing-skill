@@ -2,9 +2,12 @@
 with three.js, lit and colored from the brand's own accent. build.py imports SCENE3D_TEMPLATES.
 
 The engine is a library of shots, each a pure function of time, so render.js can seek any frame
-exactly: shapes, hero (a phone with the user's screenshot), cards, chart, coin, rings, and globe.
+exactly: shapes, hero (a phone with the user's screenshot), cards, chart, coin, rings, and globe;
+the mascot and its places (mascot.py); and the product's own screens (demo.py), which draw() hands
+the frame between without a cut.
 """
 from drawn import NARRATED_CSS, TIMELINE_JS, drawn_body
+from demo import DEMO_CSS, DEMO_DOC, DEMO_JS
 from mascot import MASCOT_DOC, MASCOT_JS
 
 THREE_VERSION = "0.186.1"  # pinned to the version in scripts/video/package.json
@@ -26,6 +29,7 @@ SHOT_DOC = f"""  Shots (data-shot), each running from its --in until the next sh
     globe   a dotted globe with arcs between places, for reach and "anywhere".
             Events: --arc-1, --arc-2...
 {MASCOT_DOC}
+{DEMO_DOC}
   data-sfx on a shot cues a sound on one of its events, e.g. data-sfx="ding:land"
   (the events are set when the page loads, so render.js finds them)."""
 
@@ -517,11 +521,26 @@ SHOTS.globe = async (el, shot) => {
   };
 };
 
-""" + MASCOT_JS + r"""
-const draw = (view, lt) => {
+""" + MASCOT_JS + DEMO_JS + r"""
+// A screen shot (demo.py) hands the frame on without a cut: over HANDOVER seconds it pushes on
+// through and fades while the next shot arrives. A desk pushing into a screen needs no handover:
+// the screen already fills the frame when the desk ends.
+const HANDOVER = 0.45;
+const draw = (view, lt, shot) => {
+  for (const s of timeline) if (s.view && s.view.screen) s.view.screen.hide();
   document.body.dataset.tone = view.tone || 'dark'; // a light set gets a lighter scrim behind the captions
+  const prev = timeline[timeline.indexOf(shot) - 1];
+  const k = lt / HANDOVER;
+  const handing = !!prev && !!prev.view && k < 1 && !!(view.screen || prev.view.screen) && !(prev.view.into && view.screen);
+  if (view.screen) {
+    if (handing && prev.view.screen) prev.view.show(prev.dur + lt, { leave: k });
+    else if (handing) { prev.view.update(prev.dur + lt); renderer.render(prev.view.scene, prev.view.camera); }
+    view.show(lt, handing ? { arrive: k } : {});
+    return;
+  }
   view.update(lt);
   renderer.render(view.scene, view.camera);
+  if (handing) prev.view.show(prev.dur + lt, { leave: k });
 };
 """
 
@@ -568,7 +587,7 @@ SCENE3D_TEMPLATES["3d.html"] = dict(
     css=NARRATED_CSS + """  .art-scrim { position: absolute; inset: 0; pointer-events: none;
                background: linear-gradient(to bottom, rgba(0,0,0,.28), rgba(0,0,0,0) 22%, rgba(0,0,0,0) 56%, rgba(0,0,0,.5) 78%, rgba(0,0,0,.3)); }
   body[data-tone="light"] .art-scrim { opacity: .4; }
-""",
+""" + DEMO_CSS,
     head_extra=f"""<script type="importmap">{{"imports": {{"three": "https://cdn.jsdelivr.net/npm/three@{THREE_VERSION}/build/three.module.js",
   "three/addons/": "https://cdn.jsdelivr.net/npm/three@{THREE_VERSION}/examples/jsm/"}}}}</script>
 <script type="module">{ENGINE_JS}{TIMELINE_JS}</script>

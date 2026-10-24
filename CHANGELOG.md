@@ -32,6 +32,19 @@ Skills that read "our changelog" for source material read this file too.
   screen=assets/app.png at=...]` puts their screenshot on the laptop or
   phone they're holding, from the screen's four corners, moving with the
   photo's zoom.
+- **The product demo, a launch video's look**: five screen shots for
+  showing a product working instead of a presenter, in `templates/demo.py`.
+  `terminal` types the product's real commands and prints their output,
+  `agent` plays an AI agent's session (the request typed, its tool calls
+  streaming in, the document it wrote sliding in beside it), `wall` floats
+  the real things it made past the camera, `player` plays the user's video
+  in a window, and `comments` ends on a handwritten question over a
+  comment box. The camera moves over each screen and pushes through into
+  the next instead of cutting, and a `desk` right before one shows it live
+  on the monitor and pushes in until the screen is the frame.
+  `captions: subtitle` keeps the words small, white, and a phrase at a
+  time. Screens render several frames a second. The plugin's own
+  launch-video cut is in `media/explainer/v4/`.
 - **Landscape videos**: `format: landscape` in a script (or `compose.js
   --format landscape`) renders the same video 1920x1080 for YouTube,
   Reddit, and LinkedIn. `render.js` reads the frame size from the page

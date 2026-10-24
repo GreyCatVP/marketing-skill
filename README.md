@@ -26,14 +26,21 @@ Made something with it? [Share it in Show and tell](https://github.com/marcosmod
 
 ## See it
 
-[![The plugin's 80-second tour: its 3D mascot presenting all fourteen skills on a stage, in a park, on a rooftop, and in a living room](media/explainer/v3/poster-landscape.jpg)](media/explainer/v3/marketing-skill-v3-landscape.mp4)
+[![The plugin's one-minute launch video: a desk at night, the camera pushing into the monitor, Claude Code installing the plugin and running its skills, and the templates' real frames floating past](media/explainer/v4/poster-landscape.jpg)](media/explainer/v4/marketing-skill-v4-landscape.mp4)
 
-**[▶ Watch the 80-second tour](media/explainer/v3/marketing-skill-v3-landscape.mp4)**:
-the plugin's mascot presenting all fourteen skills, made by the plugin
-itself from [one script](media/explainer/v3/script.md), with a voiceover,
-captions synced to it, and music cut on the beat. The same script also
-renders the [vertical cut](media/explainer/v3/marketing-skill-v3.mp4) for
-TikTok, Reels, and Shorts.
+**[▶ Watch the one-minute launch video](media/explainer/v4/marketing-skill-v4-landscape.mp4)**:
+the plugin installing and running its skills in Claude Code, edited like
+a product launch, with one camera moving from screen to screen. The
+plugin made it itself from [one script](media/explainer/v4/script.md),
+with a voiceover, subtitles synced to it, and music cut on the beat.
+
+[![The vertical cut for TikTok, Reels, and Shorts: the plugin's 3D mascot at a desk, on a stage, on a rooftop, in a living room, and in a park, under big bold captions](media/explainer/v3/poster.jpg)](media/explainer/v3/marketing-skill-v3.mp4)
+
+**[▶ Watch the vertical cut](media/explainer/v3/marketing-skill-v3.mp4)**
+(9:16, for TikTok, Reels, and Shorts): the plugin's 3D mascot presenting
+all fourteen skills under the bold captions, made from
+[its own script](media/explainer/v3/script.md) the same way.
+
 <sub>Music from #Uppbeat (free for Creators!): https://uppbeat.io/music/tracks/21-on-the-block/funky-diesel License code: WKCBH1LMDV3AQDIE · Voiceover: AI voice (Kokoro)</sub>
 
 32 video templates, rendered on your machine with music composed in your
@@ -288,6 +295,11 @@ times for TikTok, Reels, and Shorts, and, if you want, makes the video:
   words in yellow, the first line on screen from frame 0, a series tag
   ("week 2") in the corner, and your screenshot on the laptop or phone in
   your own photo.
+- **The product demo:** a launch video's look for software: the camera
+  drifts into a dark room and pushes into the monitor, a terminal types
+  your real install commands, an AI agent's session does the job, the
+  things you made float past, and the camera moves from screen to screen
+  without a cut, under small subtitles (`captions: subtitle`).
 - **Your own footage:** a talking-head take from your phone gets its
   pauses cut and captions added (`cut.js`); screen recordings play in a
   phone frame.
@@ -341,6 +353,9 @@ prop, and scene the mascot has:
 [3D and pixel-art animation](docs/video.md#3d-and-pixel-art-animation).
 The bold look, and putting your app on the screen in a photo of you:
 [The bold look](docs/video.md#the-bold-look-a-cover-that-stops-the-scroll).
+A launch video of your app or tool, its screens instead of a presenter
+("make a launch video for my CLI, here are the install commands"):
+[The product demo](docs/video.md#the-product-demo-a-launch-videos-look).
 
 Everything else, from backgrounds and sound to templates and connected
 video tools: **[docs/video.md](docs/video.md)**.
@@ -502,7 +517,7 @@ scripts/
     cut.js               # a filmed talking-head take: pauses cut, captions, and a page to render it
     beats.js             # a music track's tempo, beats, bars, and drops, to cut a video on its beat
     gallery.js           # rebuilds the template gallery in docs/gallery
-    templates/           # 8 marketing + 22 everyday + 3D (the mascot: templates/mascot.py) and pixel-art starting pages, built by templates/build.py
+    templates/           # 8 marketing + 22 everyday + 3D (the mascot: templates/mascot.py; the product demo's screens: templates/demo.py) and pixel-art starting pages, built by templates/build.py
 ```
 
 ## Share what you made

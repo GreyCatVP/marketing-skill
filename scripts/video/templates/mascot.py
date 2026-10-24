@@ -1342,10 +1342,15 @@ SHOTS.desk = async (el, shot) => {
     const leg = new THREE.Mesh(new THREE.BoxGeometry(0.06, DESK - 0.06, 0.06), wood);
     leg.position.set(x, (DESK - 0.06) / 2, z); scene.add(leg);
   }
-  // the monitor, turned a little toward the chair, with the user's screen on it
+  // the monitor, turned a little toward the chair, with the user's screen on it; or, when a screen
+  // shot comes next (demo.py), that shot itself, live, until the camera pushes in and it takes the frame
+  const withMascot = (el.dataset.mascot || '').toLowerCase() !== 'no';
+  const after = timeline[timeline.indexOf(shot) + 1];
+  const into = !!after && SCREEN_SHOTS.has(after.type);
   const monitor = new THREE.Group();
-  const [mw, mh] = [1.44, 0.88];
-  const s = await screenCanvas(el.dataset.src, 1280, 782, 10, 'contain');
+  const [mw, mh] = [1.44, WIDE ? 0.81 : 0.88];
+  const s = into && !withMascot ? { c: canvas2d(16, 16)[0] } : await screenCanvas(el.dataset.src, 1280, Math.round(1280 * mh / mw), 10, 'contain');
+  if (into && !withMascot) { const g = s.c.getContext('2d'); g.fillStyle = '#0d0d10'; g.fillRect(0, 0, 16, 16); }
   const frame = new THREE.Mesh(new RoundedBoxGeometry(mw + 0.05, mh + 0.05, 0.05, 4, 0.02), new THREE.MeshStandardMaterial({ color: '#15161c', roughness: 0.4, metalness: 0.5 }));
   const screenMat = new THREE.MeshBasicMaterial({ map: texture(s.c), toneMapped: false });
   const screen = new THREE.Mesh(new THREE.PlaneGeometry(mw, mh), screenMat);
@@ -1401,7 +1406,6 @@ SHOTS.desk = async (el, shot) => {
   const kGlow = new THREE.PointLight(PAL.accent, 1.2, 1.1, 2); kGlow.position.set(-0.62, DESK + 0.12, -0.2); scene.add(kGlow);
 
   // the mascot on a swivel chair, typing; it spins round to wave, then back to work
-  const withMascot = (el.dataset.mascot || '').toLowerCase() !== 'no';
   const CHAIR = { x: -0.78, z: 0.5, turn: Math.PI - 0.32 };
   const chair = new THREE.Group();
   const chairM = plastic(PAL.ink.clone().lerp(PAL.accent, 0.12), 0.5);
@@ -1418,7 +1422,12 @@ SHOTS.desk = async (el, shot) => {
   const START = V(0.5, 2.7, 5.6);
   const normal = V(Math.sin(MON.turn), 0, Math.cos(MON.turn));
   const center = V(MON.x, MON.y, MON.z);
-  const END = center.clone().add(normal.clone().multiplyScalar(WIDE ? 0.9 : 0.56)); // into the screen: past its height on a tall frame, to its width on a wide one
+  // into the screen: past its height on a tall frame, to its width on a wide one; or, for a screen
+  // shot next, to exactly where the part of the screen shaped like the frame fills it
+  const [rw, rh] = W / H >= mw / mh ? [mw, mw * H / W] : [mh * W / H, mh];
+  const FOV_END = 44;
+  const END = center.clone().add(normal.clone().multiplyScalar(into ? (rh / 2) / Math.tan(THREE.MathUtils.degToRad(FOV_END) / 2) : WIDE ? 0.9 : 0.56));
+  const CORNERS = [V(-rw / 2, rh / 2, 0.027), V(rw / 2, rh / 2, 0.027), V(rw / 2, -rh / 2, 0.027), V(-rw / 2, -rh / 2, 0.027)];
   const camTurn = Math.atan2(START.x - CHAIR.x, START.z - CHAIR.z);
   const PUSH = Math.min(1.2, D * 0.4); // the last stretch: into the screen
   const T1 = shot.first ? -1 : Math.min(1.1, D * 0.25); // the spin round to wave
@@ -1440,7 +1449,7 @@ SHOTS.desk = async (el, shot) => {
   const ctx = { words: [], t: 0, bpm: 112, drop: 0, propSide: 0, side: 1 };
   const blinkAt = (lt) => { const d = (lt + 0.7) % 3.1; return d < 0.16 ? 1 - Math.abs(d - 0.08) / 0.08 : 0; };
   return {
-    scene, camera, tone: 'dark',
+    scene, camera, tone: 'dark', into,
     events: { ...(waving ? { turn: Math.max(0, T1) } : {}), enter: Math.max(0, D - 0.3) },
     update(lt) {
       ctx.t = shot.in + lt; ctx.words = spokenWords();
@@ -1455,14 +1464,22 @@ SHOTS.desk = async (el, shot) => {
       kGlow.intensity = 1.0 + 0.4 * Math.sin(lt * 9);
       // the camera: a slow drift toward the desk, then a push into the screen until it fills the frame
       const drift = inOut(lt / Math.max(0.1, D - PUSH));
-      const near = START.clone().lerp(center.clone().add(V(0.45, 0.6, 2.6)), 0.3 * drift);
+      const near = START.clone().lerp(center.clone().add(V(0.45, 0.6, 2.6)), (into ? 0.5 : 0.3) * drift); // into a screen shot, it drifts in further, like a launch video's opening
       const k = clamp((lt - (D - PUSH)) / PUSH);
       const pos = near.clone().lerp(END, k * k * k);
       camera.position.copy(pos);
       camera.lookAt(center.clone().add(V(-0.32 * (1 - k), -0.42 * (1 - k), 0)));
-      camera.fov = lerp(42, 44, k * k);
+      camera.fov = lerp(42, FOV_END, k * k);
       camera.updateProjectionMatrix();
       screenMat.color.setScalar(1 + 0.25 * k);
+      if (into && after.view && after.view.screen) {
+        // the next shot's page, mapped onto the monitor from its corners as this camera sees them
+        // (over the mascot, it fades in only once the push has left the mascot behind)
+        camera.updateMatrixWorld();
+        monitor.updateMatrixWorld();
+        const pts = CORNERS.map((c) => { const v = monitor.localToWorld(c.clone()).project(camera); return [(v.x + 1) / 2 * W, (1 - v.y) / 2 * H]; });
+        after.view.show(0, { matrix: quadMatrix(W, H, pts), fade: rig ? smooth(k, 0.15, 0.5) : 1 });
+      }
     },
   };
 };

@@ -392,6 +392,41 @@ scenes open out to the wide frame: more of the room, the stage, the city,
 or the park, and the mascot framed closer. The plugin's own explainer is
 made this way, once vertical and once landscape, from one script.
 
+### The product demo (a launch video's look)
+
+The launch videos that get shared don't have a presenter in front of a
+backdrop. They show the product working: the camera drifts into a dark
+room and pushes into the monitor, the screen becomes the frame, a
+terminal types the install command, the app does the job, and the camera
+glides from one screen to the next without a cut, with small subtitles at
+the bottom. Make one with `style: 3d`, `captions: subtitle`, and the
+screen shots:
+
+```
+---
+title: the launch
+style: 3d
+captions: subtitle
+format: landscape
+---
+1. I built a plugin that does my marketing. [shot: desk mascot=no]
+2. Two commands install it. [shot: terminal lines="$ claude plugin install you@you|✔ Successfully installed plugin: you@you"]
+3. Ask it for a battlecard. [shot: agent ask="Research Acme" steps="Web Search(acme pricing)|⎿ Did 1 search in 2s" done="Battlecard ready." doc="# Acme brief|## Bottom line|## Sources"]
+4. It made every one of these. [shot: wall items="assets/a.jpg,assets/b.jpg" labels="promo,quiz"]
+5. What should it make next? [shot: comments text="What should it make next?" ask="a podcast clip maker"]
+```
+
+- `terminal` types `$ ` lines and prints the rest as their output; copy
+  what your commands really print.
+- `agent` is an AI agent's session: the request typed, the tool calls
+  streaming in, and the document it wrote sliding in beside it.
+- `wall` floats the real things you made past the camera; `player` plays
+  your real video in a window (a clip of this same video's opening makes
+  the "this video made itself" ending).
+- Screens render several frames a second, much faster than the mascot.
+- The plugin's own [launch-video cut](../media/explainer/v4/) is made
+  this way.
+
 ### The bold look (a cover that stops the scroll)
 
 The big creator ads open on a face, a product, and a few huge words:
@@ -539,7 +574,8 @@ draws its own frames defines `window.renderFrame(t)`, which the renderer
 calls with each frame's time (see `3d.html` and `pixel.html`). The
 templates are built from one shared base by `templates/build.py` (the
 everyday ones are defined in `templates/fyp.py`, and the drawn ones in
-`scene3d.py` and `pixel.py`); edit those and run `python3 build.py`
+`scene3d.py`, with the mascot in `mascot.py` and the product demo's
+screens in `demo.py`, and `pixel.py`); edit those and run `python3 build.py`
 rather than hand-editing 32 copies.
 
 The skill saves its pages and renders under `state/videos/`, with media in

@@ -41,6 +41,14 @@ with a voiceover, subtitles synced to it, and music cut on the beat.
 all fourteen skills under the bold captions, made from
 [its own script](media/explainer/v3/script.md) the same way.
 
+[![Your own character in the mascot's place: a Mixamo character waving in a living room, a mannequin presenting on a stage, an expressive robot giving a thumbs up in a park, and the first character pointing at a product screen](media/explainer/character/poster.jpg)](media/explainer/character/your-own-character.mp4)
+
+**[▶ Watch: your own character](media/explainer/character/your-own-character.mp4)**
+(22 seconds): bring your mascot or avatar as a rigged 3D model (`.glb`)
+and it takes the robot's place, playing its own animations or posed from
+its skeleton, holding your product, and talking with the voice. Three
+different rigs, [one script](media/explainer/character/script.md).
+
 <sub>Music from #Uppbeat (free for Creators!): https://uppbeat.io/music/tracks/21-on-the-block/funky-diesel License code: WKCBH1LMDV3AQDIE · Voiceover: AI voice (Kokoro)</sub>
 
 32 video templates, rendered on your machine with music composed in your

@@ -394,6 +394,10 @@ comment lists every shot and what it takes.
   through a connected tool such as Higgsfield or Figma Weave (see the
   start of this guide), with the style in the prompt. That spends the
   tool's credits.
+- **A realistic talking avatar** (a lifelike presenter from HeyGen, Synthesia,
+  D-ID, or Hedra, through a connected tool and its credits) comes back as a
+  clip: `cut.js` treats it like your own filmed take, with captions, the
+  bold look, and music. It gets the platform's AI label when posted.
 
 ### Landscape for YouTube, Reddit, and LinkedIn
 
@@ -439,6 +443,23 @@ format: landscape
 - Screens render several frames a second, much faster than the mascot.
 - The plugin's own [launch-video cut](../media/explainer/v4/) is made
   this way.
+
+### Copy a video you like
+
+Send a video whose editing you like and say "make ours like this one".
+The skill runs `reference.js` on it first:
+
+```
+node reference.js their-launch.mp4
+```
+
+It finds every cut and every transition, how long scenes hold and where
+the quick montage bursts are, whether it's one moving camera or cut after
+cut, how dark it is and its main colors, its tempo and whether it cuts on
+the beat, and writes a sheet with one labeled frame per scene, so Claude
+can read the captions and framing too. Then it writes a plan in the
+renderer's own settings to match. It copies how the video is edited, never
+what's in it: none of its footage, music, characters, or words.
 
 ### The bold look (a cover that stops the scroll)
 

@@ -475,11 +475,54 @@ ship one.
   frame, the music one energy step lower, and the brand's end card. It runs
   `--check`; render as usual. Captions use the person's real words only,
   never a tidied version, and only post people who agreed to it.
+- **A realistic avatar's clip** (a talking presenter made by a connected
+  AI avatar tool such as HeyGen, Synthesia, D-ID, or Hedra) goes through
+  `cut.js` the same way, with the script it was given as `--text`. Label
+  it as AI-generated when posting, and use a stock avatar or the user's
+  own likeness with their consent, never a real person who didn't agree.
 - **By hand:** `<video class="bg-media" id="take" src="assets/take.mp4"
   data-audio>` plays a clip's own sound in sync with it (from its
   `data-offset`, while the clip is on screen), leveled like a voiceover
   with the music ducked under it, and `<div class="say auto"
   data-clip="take">what's said</div>` captions it.
+
+## Copy a reference video's editing
+
+When the user sends a video they like ("make ours like this"), read how
+it's edited before writing anything:
+
+```
+node ${CLAUDE_PLUGIN_ROOT}/scripts/video/reference.js <video> [--out <dir>]
+```
+
+It writes `reference.md`, `reference.json`, and `sheet-1.jpg`... (one
+frame per scene, labeled with its number, time, and length; `~` marks a
+scene that arrives by a transition rather than a cut) in
+`<video name>-reference/` next to the video. It measures:
+
+- the scenes: every hard cut and every transition (a dissolve, a push
+  through, a whip, flying into a screen), how long scenes hold (half the
+  running time is in scenes at least this long), bursts of quick cuts (a
+  montage inside the video), whether it speeds up, and how long the hook
+  holds before the first change;
+- the camera: one moving camera from scene to scene, fast cutting, or
+  cuts between moving or steady shots;
+- the look: dark, mid, or light, and its main colors;
+- the sound: the tempo, whether the cuts land on the beat more often than
+  chance, and the loudness.
+
+Then look at the sheets for what numbers can't show: the captions (size,
+case, boxed or plain, where they sit, a phrase or a word at a time), the
+framing, what's on screen, and the transitions. `reference.md` ends with
+a plan in compose.js's own settings (format, line count and length, the
+shots that move the same way, the sets for its palette, the music tempo,
+the caption style); follow it, adjusting for the user's own content and
+brand. Tell the user what you're matching in a line or two.
+
+Copy how it's edited, never what's in it: none of its footage, music,
+characters, logos, or words go into the new video. Where the reference
+does something the renderer can't (a photoreal 3D room, real footage of
+people), say so and offer the nearest thing it can.
 
 ## The hook, the look, and the cover
 

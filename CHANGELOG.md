@@ -32,6 +32,20 @@ Skills that read "our changelog" for source material read this file too.
   screen=assets/app.png at=...]` puts their screenshot on the laptop or
   phone they're holding, from the screen's four corners, moving with the
   photo's zoom.
+- **Copy a reference video's editing**: `scripts/video/reference.js
+  <video>` reads how a video is edited: every hard cut and transition
+  (a dissolve, a push through, flying into a screen), how long scenes
+  hold, bursts of quick cuts, one moving camera or cut after cut, the hook's
+  length, how dark it is and its main colors, its tempo and whether it cuts
+  on the beat, and its loudness. It writes `reference.md` with a plan in
+  compose.js's own settings to match, and sheets of one labeled frame per
+  scene for reading the captions and framing. The `short-form-video` skill
+  runs it when the user sends a video and says "make it like this". It
+  copies the editing, never the footage, music, characters, or words.
+- Realistic avatars: a talking clip from a connected AI avatar tool
+  (HeyGen, Synthesia, D-ID, Hedra) goes through `cut.js` like a filmed
+  take, labeled as AI when posted; a realistic rigged `.glb` works as the
+  mascot.
 - **Your own character in the mascot's place**: `character:
   assets/hero.glb` in a script (or `Character:` in the Visual Identity, or
   `character=` on one shot) puts the user's own rigged 3D character in

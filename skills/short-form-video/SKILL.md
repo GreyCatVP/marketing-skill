@@ -91,6 +91,16 @@ command below.
      `state/content-calendar.md` if it exists). The type decides the beat
      structure in step 4 and how the video can actually get made: rendered
      from text, rendered with the user's real assets, generated, or filmed.
+   - **A reference video** ("make it like this one", a video they
+     attach or link): read how it's edited before anything else. Save it
+     locally and run `node ${CLAUDE_PLUGIN_ROOT}/scripts/video/reference.js
+     <video>`, then read the `reference.md` it writes and look at its
+     `sheet-*.jpg` (one frame per scene). Match its format, length, pacing,
+     cuts or continuous camera, palette, tempo, and caption style with the
+     plan it gives ("Copy a reference video's editing" in
+     `video-rendering.md`), and tell the user in a line or two what you're
+     matching. Copy the editing only, never what's in it: no footage,
+     music, characters, logos, or words from it.
    - **Trends, optionally.** For an everyday post, a quick WebSearch for
      what formats or topics are trending this week can suggest an angle.
      Treat it as a hint only: search results lag the apps, so say it needs
@@ -230,6 +240,16 @@ command below.
      prompted with the style, under the same credit rule as above. Offer
      the local 3D mascot or pixel art as the free alternative, and never
      imitate a specific studio's or game's characters.
+   - **A realistic talking avatar** (a lifelike person presenting, not
+     the user filmed): a connected AI avatar tool (HeyGen, Synthesia, D-ID,
+     Hedra, or similar) makes the talking clip, under the same credit rule
+     as above. Once it's made, handle the clip like a filmed take
+     (`cut.js`, "Your own footage" in `video-rendering.md`) for captions,
+     the bold look, and music. Use a stock avatar or the user's own
+     likeness with their consent, never a real person who didn't agree, and
+     switch on the platform's AI-content label when posting. A realistic
+     rigged 3D model (`.glb`) also works locally as the mascot ("The user's
+     own character"), with a game-like rather than filmed look.
    - **When the type needs real footage** ("Film" in `video-types.md`, such
      as behind the scenes, a vlog, UGC, or an on-camera testimonial), no
      tool can stand in for it. Say so, and plan to deliver a phone shot

@@ -26,14 +26,16 @@ Made something with it? [Share it in Show and tell](https://github.com/marcosmod
 
 ## See it
 
-[![The plugin's 80-second tour: its 3D mascot presenting all fourteen skills on a stage, in a park, on a rooftop, and in a living room](media/explainer/v3/poster-landscape.jpg)](media/explainer/v3/marketing-skill-v3-landscape.mp4)
+[![The plugin's one-minute launch video: a desk at night, the camera pushing into the monitor, Claude Code installing the plugin and running its skills, and the templates' real frames floating past](media/explainer/v4/poster-landscape.jpg)](media/explainer/v4/marketing-skill-v4-landscape.mp4)
 
-**[▶ Watch the 80-second tour](media/explainer/v3/marketing-skill-v3-landscape.mp4)**:
-the plugin's mascot presenting all fourteen skills, made by the plugin
-itself from [one script](media/explainer/v3/script.md), with a voiceover,
-captions synced to it, and music cut on the beat. The same script also
-renders the [vertical cut](media/explainer/v3/marketing-skill-v3.mp4) for
-TikTok, Reels, and Shorts.
+**[▶ Watch the one-minute launch video](media/explainer/v4/marketing-skill-v4-landscape.mp4)**:
+the plugin installing and running its skills in Claude Code, edited like
+a product launch, with one camera moving from screen to screen. The
+plugin made it itself from [one script](media/explainer/v4/script.md),
+with a voiceover, subtitles synced to it, and music cut on the beat. The
+earlier [mascot tour](media/explainer/v3/marketing-skill-v3-landscape.mp4)
+(and its [vertical cut](media/explainer/v3/marketing-skill-v3.mp4) for
+TikTok, Reels, and Shorts) shows the 3D mascot.
 <sub>Music from #Uppbeat (free for Creators!): https://uppbeat.io/music/tracks/21-on-the-block/funky-diesel License code: WKCBH1LMDV3AQDIE · Voiceover: AI voice (Kokoro)</sub>
 
 32 video templates, rendered on your machine with music composed in your

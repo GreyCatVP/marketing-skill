@@ -2829,10 +2829,10 @@ function uiRows(w, sched, render) {
 const prevOf = (shot) => timeline[timeline.indexOf(shot) - 1];
 const intoFromDesk = (shot) => { const p = prevOf(shot); return !!p && p.type === 'desk'; };
 
-// ---- terminal: the product's real commands, typed
 // the screens' fonts, loaded before anything is measured, so text wraps the same in every frame
 const uiFonts = () => Promise.all([`500 ${FS}px "JetBrains Mono"`, '500 25px Inter', '800 25px Inter', '700 100px Caveat'].map((f) => document.fonts.load(f).catch(() => null)));
 
+// ---- terminal: the product's real commands, typed
 SHOTS.terminal = async (el, shot) => {
   await uiFonts();
   const lines = listOf(el.dataset.lines || `$ ${el.dataset.cmd || 'npx your-product'}`)

@@ -1,0 +1,167 @@
+1
+00:00:00,190 --> 00:00:02,370
+My marketing plugin for Claude Code
+
+2
+00:00:02,370 --> 00:00:04,030
+just got a huge update.
+
+3
+00:00:04,080 --> 00:00:05,060
+Two commands,
+
+4
+00:00:05,060 --> 00:00:07,270
+and you get fourteen marketing skills.
+
+5
+00:00:07,440 --> 00:00:08,141
+Research,
+
+6
+00:00:08,141 --> 00:00:08,922
+calendars,
+
+7
+00:00:08,922 --> 00:00:09,620
+SEO,
+
+8
+00:00:09,620 --> 00:00:09,885
+ads,
+
+9
+00:00:09,885 --> 00:00:10,292
+email,
+
+10
+00:00:10,292 --> 00:00:10,700
+video,
+
+11
+00:00:10,700 --> 00:00:12,250
+and publishing.
+
+12
+00:00:12,430 --> 00:00:14,460
+Ask for a competitor battlecard,
+
+13
+00:00:14,460 --> 00:00:17,250
+and it searches the web and cites every source.
+
+14
+00:00:17,430 --> 00:00:18,940
+It plans a week of posts,
+
+15
+00:00:18,940 --> 00:00:21,700
+and never repeats last week's topics.
+
+16
+00:00:21,890 --> 00:00:24,360
+One blog post becomes a LinkedIn post,
+
+17
+00:00:24,360 --> 00:00:25,170
+a thread,
+
+18
+00:00:25,170 --> 00:00:26,690
+and a newsletter.
+
+19
+00:00:26,870 --> 00:00:28,570
+It reads a subreddit's rules
+
+20
+00:00:28,570 --> 00:00:30,130
+before it writes your post.
+
+21
+00:00:30,220 --> 00:00:31,130
+Then the big one:
+
+22
+00:00:31,130 --> 00:00:32,250
+video.
+
+23
+00:00:32,430 --> 00:00:33,670
+It writes the script,
+
+24
+00:00:33,670 --> 00:00:34,490
+voices it,
+
+25
+00:00:34,490 --> 00:00:36,770
+and renders the video on your own machine.
+
+26
+00:00:36,920 --> 00:00:38,120
+Thirty-two templates,
+
+27
+00:00:38,120 --> 00:00:40,590
+from tier lists to text-message skits.
+
+28
+00:00:40,770 --> 00:00:42,730
+And a 3D mascot that walks,
+
+29
+00:00:42,730 --> 00:00:43,051
+talks,
+
+30
+00:00:43,051 --> 00:00:45,020
+and lip-syncs to the voice.
+
+31
+00:00:45,210 --> 00:00:46,870
+Nothing posts or sends
+
+32
+00:00:46,870 --> 00:00:48,360
+until you say yes.
+
+33
+00:00:48,540 --> 00:00:49,134
+It's free,
+
+34
+00:00:49,134 --> 00:00:50,210
+open source,
+
+35
+00:00:50,210 --> 00:00:52,250
+and it works in Codex too.
+
+36
+00:00:52,450 --> 00:00:52,601
+Oh,
+
+37
+00:00:52,601 --> 00:00:53,660
+and this video?
+
+38
+00:00:53,660 --> 00:00:55,030
+It made this too.
+
+39
+00:00:55,220 --> 00:00:56,000
+If it helps,
+
+40
+00:00:56,000 --> 00:00:58,920
+a star on GitHub helps other people find it.
+
+41
+00:00:59,100 --> 00:01:00,450
+What should it make next?
+
+42
+00:01:00,450 --> 00:01:02,023
+Tell me in the comments.

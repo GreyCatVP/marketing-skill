@@ -113,9 +113,13 @@ command below.
      or retro game look, or an animated video, use an animation style ("3D
      or pixel-art animation: a style" in `video-rendering.md`); with no
      footage and no face to show, the 3D mascot is the strongest default,
-     since a character holds attention better than floating text. For a
-     style the renderer can't draw (cartoon or anime characters,
-     claymation, the user's own mascot design), see step 3.
+     since a character holds attention better than floating text. If the
+     user has their own mascot or avatar as a rigged 3D model (a `.glb`
+     from Blender, Mixamo, Ready Player Me, or VRoid), it takes the
+     robot's place ("The user's own character" in `video-rendering.md`):
+     ask whether they have one. For a style the renderer can't draw
+     (cartoon or anime characters, claymation, a mascot that's only a
+     drawing), see step 3.
    - A product launch or demo (software, an app, a plugin, a tool): show
      the product working, the way shared launch videos do, rather than a
      presenter ("The product demo" in `video-rendering.md`): a desk at
@@ -220,8 +224,9 @@ command below.
      epistemic bar `community-post-generator` applies to secondhand claims
      about platform rules.
    - **Animation styles the renderer can't draw** (cartoon or anime
-     characters, claymation, or the user's own mascot design in place of
-     the plugin's robot): only a connected video model can make these,
+     characters, claymation, or the user's own mascot when it's only a
+     drawing; a rigged 3D model of it renders locally): only a connected
+     video model can make these,
      prompted with the style, under the same credit rule as above. Offer
      the local 3D mascot or pixel art as the free alternative, and never
      imitate a specific studio's or game's characters.

@@ -57,6 +57,12 @@
  * Show real commands, real output, and the steps the skill really takes (references/
  * video-rendering.md has the recipe).
  *
+ * Your own character: "character: assets/hero.glb" puts the user's rigged 3D character (a .glb
+ * from Blender, Mixamo, Ready Player Me, or VRoid) in the robot mascot's place in every shot it
+ * appears in; [shot: mascot do=wave character=assets/other.glb] in just one. Its own clips play when
+ * their names match the action (Wave, Walking, Dance...), otherwise its skeleton is posed like the
+ * robot's, and it lip-syncs through its blend shapes (templates/character.py).
+ *
  * Landscape: "format: landscape" (or --format landscape) makes the same video 1920x1080 (16:9)
  * for YouTube, Reddit, and LinkedIn, with the captions low and centered and the 3D sets
  * opened out to the wider frame. Pixel art stays vertical.
@@ -321,11 +327,16 @@ async function main() {
     console.warn('Note: [shot: ...] needs "style: 3d" or "style: pixel" in the frontmatter; ignored for photo backgrounds.');
   }
 
+  // the user's own rigged character in the mascot's place (character.py), from the script or the Visual Identity
+  const character = (meta.character || '').trim();
+  if (character && styleName !== '3d') console.warn('Note: character: is for style 3d, where it takes the mascot\'s place; ignored.');
   const slug = slugify(meta.title || path.basename(scriptFile, path.extname(scriptFile)));
   const page = path.resolve(args.out || path.join(ROOT, 'state', 'videos', `${new Date().toISOString().slice(0, 10)}-${slug}.html`));
   const dir = path.dirname(page);
   const assets = path.join(dir, 'assets');
   fs.mkdirSync(assets, { recursive: true });
+  if (character && !/\.(glb|vrm)$/i.test(character)) fail(`character: ${character} isn't a .glb file; export the rigged character from Blender, Mixamo, or VRoid as glTF binary (.glb), which carries its textures inside.`);
+  if (character && !fs.existsSync(path.join(dir, character))) console.warn(`Note: ${character} (the character) not found next to the page; put it in assets/`);
   for (const l of lines) {
     const src = l.shot && l.shot.attrs.src;
     if (src && !fs.existsSync(path.join(dir, src))) console.warn(`Note: ${src} (line ${l.n}'s ${l.shot.name} shot) not found next to the page; put it in assets/`);
@@ -430,6 +441,7 @@ async function main() {
   const bodyClass = (/<body[^>]*\bclass="([^"]*)"/.exec(html.slice(html.indexOf('</head>'))) || [])[1] || 'fyp';
   const attrs = [
     `class="${bodyClass}${bold ? ' bold' : ''}${subtitle ? ' sub' : ''}"`, ...(landscape ? ['data-size="1920x1080"'] : []), `data-duration="${duration}"`, `data-drop="${drop}"`,
+    ...(character ? [`data-character="${esc(character)}"`] : []),
     ...(musicSrc ? [`data-music-src="${esc(musicSrc)}"`, 'data-music="none"', ...(track ? [`data-music-start="${track.musicStart}"`] : [])] : [`data-music="${sound.music}"`]),
     ...['bpm', 'key', 'mode', 'energy', 'motif'].filter((k) => sound[k] !== undefined).map((k) => `data-${k}="${esc(String(sound[k]))}"`),
   ].join(' ');

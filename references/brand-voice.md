@@ -88,3 +88,4 @@ set, it looks like:
 - Font: Space Grotesk
 - Logo: state/videos/assets/logo.png
 - Handle: @yourbrand
+- Character: state/videos/assets/mascot.glb (optional: the brand's own rigged 3D character, in place of the robot in 3D videos)

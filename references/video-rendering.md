@@ -182,12 +182,37 @@ cta: try it free · link in bio
   every half second per core in software), so tell the user to expect a
   few minutes for a 20-second video, and use `--draft` to check the
   motion first; pixel art is as quick as any template.
-- **Other animation styles** (cartoon or anime characters, claymation, or
-  the user's own mascot design in place of the robot) can't be drawn
-  locally. They need a connected video model (Higgsfield or Figma Weave,
-  step 3 of the skill) with the style in the prompt, which spends the
-  user's credits; offer the 3D mascot or pixel art as the free
-  alternative.
+- **The user's own character in the robot's place:** when they have
+  their mascot or avatar as a rigged 3D model, it stars instead of the
+  robot, rendered locally like everything else. Ask for it as one `.glb`
+  file (glTF binary; a `.vrm` from VRoid works too), put it in `assets/`,
+  and add `character: assets/<name>.glb` to the script's frontmatter
+  (`character=` on one shot puts it in just that shot; a `Character:`
+  line in the Visual Identity puts it in every 3D video). Every shot the
+  robot appears in takes it: `mascot` with all its actions and props,
+  `desk`, `title`, `icons`, and `button`.
+  - Its own animation clips play when their names match an action
+    (`Wave`, `Walking`, `Dance`, `ThumbsUp`, `Jump` for `cheer`, `Idle`).
+    Otherwise its skeleton is posed like the robot's (bones are matched
+    by name: Mixamo's, Blender's `.L`/`.R`, VRoid's, Ready Player Me's),
+    on top of its idle clip if it has one.
+  - It lip-syncs through its blend shapes (`jawOpen`, `viseme_aa`, `A`,
+    `mouthOpen`), blinks (`eyeBlink`, `Blink`), and smiles or looks sad or
+    surprised when the action calls for it; with no blend shapes it opens
+    its jaw bone, or nods on the words.
+  - Where to get one: a character uploaded to Mixamo (free) comes back
+    rigged and with animations (download as FBX, then export as glTF
+    binary from Blender), Ready Player Me and VRoid export rigged avatars,
+    and any rigged model from a 3D artist works. Use the user's own
+    character, one they made or bought the rights to, never a famous
+    studio's or game's. A model without a skeleton still works, moving
+    as a whole.
+- **Other animation styles** (cartoon or anime characters drawn in 2D,
+  claymation, or the user's own mascot when it's only a drawing, with no
+  3D model) can't be drawn locally. They need a connected video model
+  (Higgsfield or Figma Weave, step 3 of the skill) with the style in the
+  prompt, which spends the user's credits; offer the 3D mascot or pixel
+  art as the free alternative.
 
 ## The bold look: the cover that stops the scroll
 

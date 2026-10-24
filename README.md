@@ -288,7 +288,9 @@ times for TikTok, Reels, and Shorts, and, if you want, makes the video:
   in, waves, types at a desk with your app on the monitor, points at your
   screen, holds up your laptop, cheers, and lip-syncs to the voice, moving
   through a living room, a launch stage, a city rooftop, and a park (or
-  standing in your own photo); or as
+  standing in your own photo). Have your own mascot or avatar as a rigged
+  3D model (`.glb`)? It takes the robot's place, with every action and
+  prop; or as
   a pixel-art game with chiptune music (`style: 3d` or `style: pixel`).
 - **The bold look:** `captions: bold` gives any narrated video the cover
   of the big creator ads: huge capitals boxed in black with the selling
@@ -330,13 +332,15 @@ node render.js page.html out.mp4 --cover 0   # the video, its captions (.srt), a
 
 **A mascot video or the bold cover, step by step.** Ask Claude in plain
 words, for example "make a 3D mascot video about our new invoicing app,
-here's a screenshot", or "make a TikTok with the big bold captions,
+here's a screenshot" (add "with our own mascot, here's the .glb" to put
+your character in the robot's place), or "make a TikTok with the big bold captions,
 here's a photo of me holding my laptop and a screenshot of the app". It
 writes a script like this one, voices it, and renders it:
 
 ```
 ---
 style: 3d              # the mascot; leave it out for photo backgrounds
+character: assets/our-mascot.glb   # optional: your own rigged 3D character instead of the robot
 captions: bold         # big boxed captions; *words* in asterisks turn yellow
 hook: we made invoicing *one tap*
 series: week 2         # a tag in the top corner

@@ -3,10 +3,12 @@ with three.js, lit and colored from the brand's own accent. build.py imports SCE
 
 The engine is a library of shots, each a pure function of time, so render.js can seek any frame
 exactly: shapes, hero (a phone with the user's screenshot), cards, chart, coin, rings, and globe;
-the mascot and its places (mascot.py); and the product's own screens (demo.py), which draw() hands
+the mascot and its places (mascot.py), or the user's own rigged character in its place
+(character.py); and the product's own screens (demo.py), which draw() hands
 the frame between without a cut.
 """
 from drawn import NARRATED_CSS, TIMELINE_JS, drawn_body
+from character import CHARACTER_DOC, CHARACTER_JS
 from demo import DEMO_CSS, DEMO_DOC, DEMO_JS
 from mascot import MASCOT_DOC, MASCOT_JS
 
@@ -29,6 +31,7 @@ SHOT_DOC = f"""  Shots (data-shot), each running from its --in until the next sh
     globe   a dotted globe with arcs between places, for reach and "anywhere".
             Events: --arc-1, --arc-2...
 {MASCOT_DOC}
+{CHARACTER_DOC}
 {DEMO_DOC}
   data-sfx on a shot cues a sound on one of its events, e.g. data-sfx="ding:land"
   (the events are set when the page loads, so render.js finds them)."""
@@ -37,6 +40,10 @@ ENGINE_JS = r"""
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 
 // ---- frame, colors, helpers
 const ART = document.querySelector('canvas.art');
@@ -521,7 +528,7 @@ SHOTS.globe = async (el, shot) => {
   };
 };
 
-""" + MASCOT_JS + DEMO_JS + r"""
+""" + MASCOT_JS + CHARACTER_JS + DEMO_JS + r"""
 // A screen shot (demo.py) hands the frame on without a cut: over HANDOVER seconds it pushes on
 // through and fades while the next shot arrives. A desk pushing into a screen needs no handover:
 // the screen already fills the frame when the desk ends.

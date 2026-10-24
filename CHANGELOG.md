@@ -32,6 +32,19 @@ Skills that read "our changelog" for source material read this file too.
   screen=assets/app.png at=...]` puts their screenshot on the laptop or
   phone they're holding, from the screen's four corners, moving with the
   photo's zoom.
+- **Your own character in the mascot's place**: `character:
+  assets/hero.glb` in a script (or `Character:` in the Visual Identity, or
+  `character=` on one shot) puts the user's own rigged 3D character in
+  every shot the robot appears in, from `templates/character.py`. It
+  loads any rigged glTF (`.glb`, or a VRoid `.vrm`; Draco and meshopt
+  compression work), matches its bones by name (Mixamo, Blender `.L`/`.R`,
+  VRoid, Ready Player Me), and stands it at the robot's height, facing the
+  camera. Its own clips play when their names match an action (`Wave`,
+  `Walking`, `Dance`, `ThumbsUp`, `Jump`, `Idle`); otherwise two-bone IK
+  poses its arms and legs from the robot's poses, at its own proportions.
+  Props come down below its chin with its hands on them, and it lip-syncs
+  through its blend shapes (`jawOpen`, `viseme_aa`, `A`), its jaw bone, or
+  a nod on the words. A model without a skeleton moves as a whole.
 - **The product demo, a launch video's look**: five screen shots for
   showing a product working instead of a presenter, in `templates/demo.py`.
   `terminal` types the product's real commands and prints their output,

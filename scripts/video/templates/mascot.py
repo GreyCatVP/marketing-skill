@@ -199,6 +199,19 @@ function drawFace(g, f) {
   }
 }
 
+// the face, drawn on the robot's visor, or set on the user's own character (character.py)
+function setFace(rig, f) {
+  if (rig.custom) return rig.face(f);
+  drawFace(rig.faceCanvas, f);
+  rig.faceTex.needsUpdate = true;
+}
+// a held prop where the pose puts it, in the chest's space
+function placeProp(rig, group, at) {
+  if (rig.custom) return rig.placeProp(group, at);
+  group.position.set(...at.pos);
+  group.rotation.set(...at.rot);
+}
+
 // ---- the robot
 function buildMascot() {
   const shell = plastic(PAL.pearl, 0.26);
@@ -291,7 +304,10 @@ function reach(j1, j2, a, b, target, pole) {
 
 const _m = new THREE.Matrix4();
 const _wq = new THREE.Quaternion();
-function applyPose(rig, pose) {
+// action and lt: the action the pose comes from and how far in, so a character with its own clip
+// for that action (character.py) can play it
+function applyPose(rig, pose, action, lt) {
+  if (rig.custom) return rig.pose(pose, action, lt);
   const { j } = rig;
   j.root.position.set(pose.x, pose.y, pose.z);
   j.root.rotation.set(0, pose.turn, 0);
@@ -1119,7 +1135,7 @@ SHOTS.mascot = async (el, shot) => {
   const propName = (el.dataset.prop || '').toLowerCase();
   const place = await buildSet(el);
   const { scene, camera } = place;
-  const rig = buildMascot();
+  const rig = await mascotFor(el);
   scene.add(rig.root);
   const total = parseFloat(document.body.dataset.duration) || 0;
   const topText = (shot.first && document.querySelector('.hook')) || (shot.in + shot.dur >= total - 0.05 && document.querySelector('.end'));
@@ -1190,15 +1206,14 @@ SHOTS.mascot = async (el, shot) => {
       ctx.words = spokenWords();
       const [wx, wy] = wobble(lt);
       const pose = poseAt(lt);
-      applyPose(rig, pose);
+      applyPose(rig, pose, action, lt + settle);
       blob.position.set(pose.x, 0.004, pose.z);
       blob.material.opacity = 0.42 / (1 + 3 * pose.y);
       blob.scale.setScalar(1 + 0.6 * pose.y);
-      if (pose.prop) { prop.group.position.set(...pose.prop.pos); prop.group.rotation.set(...pose.prop.rot); }
+      if (pose.prop) placeProp(rig, prop.group, pose.prop);
       rig.j.antenna.rotation.set(-wy * 0.5, 0, -wx * 0.45);
       const said = lips ? mouthAt(shot.in + lt, ctx.words) : 0;
-      drawFace(rig.faceCanvas, { face: faceOverride || pose.face, blink: blinkAt(lt), look: pose.look, mouth: said });
-      rig.faceTex.needsUpdate = true;
+      setFace(rig, { face: faceOverride || pose.face, blink: blinkAt(lt), look: pose.look, mouth: said });
       rig.bulb.material.emissiveIntensity = 0.9 + 0.5 * Math.max(0, Math.sin((shot.in + lt) * 3.1));
       if (prop && prop.kind === 'screen') {
         const k = shot.first ? 1 : back((lt - 0.1) / 0.7);
@@ -1415,7 +1430,7 @@ SHOTS.desk = async (el, shot) => {
   const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.34, 12), metalM); stem.position.set(CHAIR.x, 0.2, CHAIR.z);
   const star = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.03, 5), metalM); star.position.set(CHAIR.x, 0.04, CHAIR.z);
   scene.add(chair, stem, star);
-  const rig = withMascot ? buildMascot() : null;
+  const rig = withMascot ? await mascotFor(el) : null;
   if (rig) scene.add(rig.root);
   const camera = new THREE.PerspectiveCamera(42, W / H, 0.05, 60);
   const D = shot.dur;
@@ -1458,8 +1473,7 @@ SHOTS.desk = async (el, shot) => {
       chair.rotation.y = pose.turn;
       if (rig) {
         applyPose(rig, pose);
-        drawFace(rig.faceCanvas, { face: pose.face, blink: blinkAt(lt), look: pose.look, mouth: mouthAt(shot.in + lt, ctx.words) * spin(lt) });
-        rig.faceTex.needsUpdate = true;
+        setFace(rig, { face: pose.face, blink: blinkAt(lt), look: pose.look, mouth: mouthAt(shot.in + lt, ctx.words) * spin(lt) });
       }
       kGlow.intensity = 1.0 + 0.4 * Math.sin(lt * 9);
       // the camera: a slow drift toward the desk, then a push into the screen until it fills the frame
@@ -1551,7 +1565,7 @@ SHOTS.title = async (el, shot) => {
   }
   const FALL = 0.42;
   const done = letters.length ? letters[letters.length - 1].delay + FALL : 0;
-  const rig = withMascot ? buildMascot() : null;
+  const rig = withMascot ? await mascotFor(el) : null;
   if (rig) scene.add(rig.root);
   const blob = contactShadow(1.4, 0.004, 0.42);
   if (rig) scene.add(blob);
@@ -1581,11 +1595,10 @@ SHOTS.title = async (el, shot) => {
         if (after > 0) p = mixPose(p, ACTIONS.cheer(after, ctx), smooth(after, 0, 0.2));
         p.y *= 0.5; // a smaller hop beside the letters
         p = { ...alive(p, lt, 2.2), x: WIDE ? 2.1 : 1.05, z: -0.35, turn: -0.35 };
-        applyPose(rig, p);
+        applyPose(rig, p, after > 0 ? 'cheer' : 'present', after > 0 ? after : lt);
         blob.position.set(p.x, 0.004, p.z);
         blob.material.opacity = 0.42 / (1 + 3 * p.y);
-        drawFace(rig.faceCanvas, { face: p.face, blink: 0, look: [-0.6, 0], mouth: mouthAt(shot.in + lt, ctx.words) });
-        rig.faceTex.needsUpdate = true;
+        setFace(rig, { face: p.face, blink: 0, look: [-0.6, 0], mouth: mouthAt(shot.in + lt, ctx.words) });
         fx(Math.max(0, lt - done) + (shot.first ? 0.8 : 0), 0.1, V(-0.2, 1.6, 0.4));
       }
       const k = inOut(lt / shot.dur);
@@ -1638,7 +1651,7 @@ SHOTS.icons = async (el, shot) => {
   });
   const CY = (rows * SY) / 2 + 0.35; // the grid's middle, its bottom row clear of the floor
   const slot = (col, row) => [((col - (cols - 1) / 2) * SX), CY + ((rows - 1) / 2 - row) * SY];
-  const rig = withMascot ? buildMascot() : null;
+  const rig = withMascot ? await mascotFor(el) : null;
   const last = { col: items.length % cols, row: Math.floor(items.length / cols) };
   if (rig) { rig.root.scale.setScalar(0.36); scene.add(rig.root); }
   const ctx = { words: [], t: 0, bpm: 112, drop: 0, propSide: 0, side: 1 };
@@ -1669,10 +1682,9 @@ SHOTS.icons = async (el, shot) => {
         const [x, y] = slot(last.col, last.row);
         let p = ACTIONS.wave(Math.max(0, u) + 0.2, ctx);
         p = { ...alive(p, lt, 4.1), x, y: y - T / 2 - 0.05 + (1 - clamp(u / FALL) ** 2) * 3.2, z: 0 }; // the root's own scale shrinks the robot, not where it stands
-        applyPose(rig, p);
+        applyPose(rig, p, 'wave', Math.max(0, u) + 0.2);
         rig.root.visible = u > 0;
-        drawFace(rig.faceCanvas, { face: 'happy', blink: 0, look: [0, 0], mouth: mouthAt(shot.in + lt, ctx.words) });
-        rig.faceTex.needsUpdate = true;
+        setFace(rig, { face: 'happy', blink: 0, look: [0, 0], mouth: mouthAt(shot.in + lt, ctx.words) });
       }
       // fit the grid between the top of the frame and the captions, a little from above
       const px = raised([span[0], span[1], topText ? 470 : 300, 1230]);
@@ -1786,7 +1798,7 @@ SHOTS.button = async (el, shot) => {
   button.position.set(0, 2.85, 0.2);
   const cursor = cursorMesh();
   scene.add(button, cursor);
-  const rig = buildMascot();
+  const rig = await mascotFor(el);
   scene.add(rig.root);
   const fx = confetti(scene, 70);
   const CLICK = shot.first ? 0.6 : 1.1;
@@ -1815,9 +1827,8 @@ SHOTS.button = async (el, shot) => {
       p.handL = [0.62, 0.56, 0.16]; p.poleL = [0.8, -0.6, 0]; p.finger = [1, 0]; // pointing up at it
       if (pressed) p = mixPose(p, ACTIONS.cheer(lt - CLICK + 0.3, ctx), smooth(lt - CLICK, 0, 0.2));
       p.y *= 0.6;
-      applyPose(rig, { ...alive(p, lt, 3.3), x: 0, z: -0.3 });
-      drawFace(rig.faceCanvas, { face: pressed ? 'love' : 'happy', blink: 0, look: p.look, mouth: mouthAt(shot.in + lt, ctx.words) });
-      rig.faceTex.needsUpdate = true;
+      applyPose(rig, { ...alive(p, lt, 3.3), x: 0, z: -0.3 }, pressed ? 'cheer' : null, lt - CLICK + 0.3);
+      setFace(rig, { face: pressed ? 'love' : 'happy', blink: 0, look: p.look, mouth: mouthAt(shot.in + lt, ctx.words) });
       fx(lt, CLICK, V(0, 2.85, 0.3));
       frameSpan(camera, raised(topText ? [-0.02, 3.3, 560, 1330] : [-0.02, 3.3, 280, 1290]), { push: lerp(1.04, 0.98, inOut(lt / shot.dur)), orbit: 0.06 * Math.sin(lt * 0.3) });
     },

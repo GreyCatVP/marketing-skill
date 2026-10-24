@@ -376,8 +376,21 @@ comment lists every shot and what it takes.
   machines) it's drawn in software: the mascot's scenes take about half a
   second a frame per core, so a 20-second video takes a few minutes on a
   4-core machine. `--draft` checks the motion in a fraction of that.
+- **Your own character:** if your mascot or avatar exists as a rigged
+  3D model, it stars instead of the robot. Export it as one `.glb` file
+  (from Blender, Mixamo, Ready Player Me, or VRoid), put it in `assets/`,
+  and add `character: assets/your-character.glb` to the script (or a
+  `Character:` line to your Visual Identity, for every 3D video). It does
+  every action and holds every prop the robot does: its own animation
+  clips play when their names match (`Wave`, `Walking`, `Dance`,
+  `ThumbsUp`, `Idle`), and otherwise its skeleton is posed like the
+  robot's. It lip-syncs through its blend shapes (`jawOpen`, `viseme_aa`)
+  or its jaw bone. No 3D model yet? Upload a character to
+  [Mixamo](https://www.mixamo.com) (free) and it comes back rigged, with
+  animations to pick from; download it as FBX and export it as `.glb`
+  from Blender.
 - **Other styles** (cartoon characters, anime, claymation, or your own
-  mascot's design in place of the robot): those need a video model,
+  mascot when it's only a drawing): those need a video model,
   through a connected tool such as Higgsfield or Figma Weave (see the
   start of this guide), with the style in the prompt. That spends the
   tool's credits.

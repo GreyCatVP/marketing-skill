@@ -408,6 +408,7 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
@@ -2692,7 +2693,7 @@ function loadCharacterFile(src) {
     loader.setDRACOLoader(draco);
     loader.setMeshoptDecoder(MeshoptDecoder);
     // read with XHR, not fetch: a page opened from a file (as render.js opens it) may read local
-    // files through XHR only. A .glb carries its textures inside, so nothing else is fetched.
+    // files through XHR only. A .glb (or a Mixamo .fbx) carries its textures inside, so nothing else is fetched.
     const bytes = new Promise((resolve, reject) => {
       const x = new XMLHttpRequest();
       x.open('GET', src);
@@ -2701,7 +2702,18 @@ function loadCharacterFile(src) {
       x.onerror = () => reject(new Error('not found, or the browser may not read it'));
       x.send();
     });
-    charFiles.set(src, bytes.then((b) => loader.parseAsync(b, src.replace(/[^/]*$/, '')))
+    // a .fbx (what Mixamo downloads) is read as it is, with its clips, into the same shape as a glTF
+    const parse = /\.fbx$/i.test(src)
+      ? (b) => { const group = new FBXLoader().parse(b, src.replace(/[^/]*$/, '')); return { scene: group, animations: group.animations || [] }; }
+      : (b) => loader.parseAsync(b, src.replace(/[^/]*$/, ''));
+    // a clip with a tool's default name ("mixamo.com", "Take 001") takes the file's name, so a
+    // Mixamo download called "Waving.fbx" plays for wave
+    const named = (g) => {
+      const file = decodeURIComponent(src.split('/').pop()).replace(/\.[^.]+$/, '');
+      for (const c of g.animations || []) if (/^(|layer\d*|take\d*|default|animation|anim\d*|action\d*|scene)$/.test(clipKey(c.name))) c.name = file;
+      return g;
+    };
+    charFiles.set(src, bytes.then(parse).then(named)
       .catch((e) => { throw new Error(`character ${src} didn't load: ${e.message || e}`); }));
   }
   return charFiles.get(src);
@@ -3493,7 +3505,7 @@ if (!navigator.webdriver) {
   .corner.series { right: 64px; }
 </style>
 </head>
-<body class="fyp sub" data-size="1920x1080" data-duration="71.05" data-drop="4.06" data-music-src="assets/funky-diesel.mp3" data-music="none" data-music-start="4.82" data-bpm="108">
+<body class="fyp sub" data-size="1920x1080" data-duration="77.71" data-drop="4.06" data-music-src="assets/funky-diesel.mp3" data-music="none" data-music-start="4.82" data-bpm="108">
   <canvas class="art" width="1920" height="1080" data-lint="off"></canvas>
   <div class="art-scrim" data-lint="off"></div>
 
@@ -3505,16 +3517,17 @@ if (!navigator.webdriver) {
   <div class="shot" data-shot="agent" style="--in:21.85s" data-ask="Repurpose blog/launch.md for LinkedIn, X, and the newsletter" data-steps="Skill(marketing-skill:content-repurposer)|Read(blog/launch.md)|⎿ Read 84 lines" data-done="Three versions, one per channel." data-doc="# Launch post, repurposed|## LinkedIn post|- The hook first, short lines, one soft CTA|## Twitter/X thread|- Numbered, every post under 280 characters|## Newsletter blurb|- A subject line, a short intro, three takeaways" data-sfx="typing:type"></div>
   <div class="shot" data-shot="agent" style="--in:26.84s" data-ask="Write a launch post for r/claudeskills" data-steps="Skill(marketing-skill:community-post-generator)|Fetch(https://www.reddit.com/r/claudeskills/about/rules)|Web Search(r/claudeskills top posts this month)" data-done="Go/No-Go first, then a draft in the sub's own style." data-sfx="typing:type"></div>
   <div class="shot" data-shot="title" style="--in:30.17s" data-text="Video" data-set="night" data-sfx="pop:done"></div>
-  <div class="shot" data-shot="agent" style="--in:32.4s" data-ask="Make a 30-second launch video" data-steps="Skill(marketing-skill:short-form-video)|Write(state/videos/launch.md)|Bash(node scripts/video/compose.js state/videos/launch.md)|⎿ Voicing 8 lines with af_heart (voice.js)...|Bash(node scripts/video/render.js state/videos/launch.html launch.mp4)|⎿ Wrote launch.mp4: 1080x1920, 30s at 30fps" data-done="Ready for you to review: launch.mp4" data-sfx="typing:type"></div>
-  <div class="shot" data-shot="wall" style="--in:36.85s" data-items="assets/t-promo.jpg,assets/t-text-chat.jpg,assets/t-tier-list.jpg,assets/t-3d-desk.jpg,assets/t-pov.jpg,assets/t-quiz.jpg,assets/t-how-to.jpg,assets/t-pixel-boss.jpg,assets/t-starter-pack.jpg,assets/t-notifications.jpg,assets/t-countdown.jpg,assets/t-3d-title.jpg,assets/t-faq.jpg,assets/t-hot-take.jpg,assets/t-post-card.jpg,assets/t-this-or-that.jpg,assets/t-pixel-coins.jpg,assets/t-before-after.jpg" data-labels="promo,text-chat,tier-list,3d,pov,quiz,how-to,pixel,starter-pack,notifications,countdown,3d title,faq,hot-take,post-card,this-or-that,pixel coins,before-after" data-sfx="swish:done"></div>
-  <div class="shot" data-shot="mascot" style="--in:40.74s" data-do="walk" data-set="night" data-sfx="pop:stop"></div>
-  <div class="shot" data-shot="mascot" style="--in:45.17s" data-do="wave" data-set="night" data-character="assets/Soldier.glb"></div>
-  <div class="shot" data-shot="agent" style="--in:49.62s" data-ask="Edit our launch video like this one: ref.mp4" data-steps="Bash(node scripts/video/reference.js ref.mp4)|⎿ 35 scenes (15 hard cuts, 19 transitions), one moving camera|⎿ A burst of 7 quick cuts at 0:21.6. Dark overall.|Read(ref-reference/sheet-1.jpg)" data-done="Matching its camera, palette, and subtitles." data-doc="# How ref.mp4 is edited|## Pacing|- 35 scenes: 15 cuts, 19 transitions|- A burst of 7 quick cuts at 0:21.6|## Look|- Dark overall, one palette|## To match it|- One moving camera: the screen shots|- Small subtitles, a phrase at a time" data-sfx="typing:type"></div>
-  <div class="shot" data-shot="agent" style="--in:53.51s" data-ask="Post it to TikTok, Reels, and Shorts" data-steps="Skill(marketing-skill:publish-pipeline)|⎿ 3 posts ready: TikTok, Reels, Shorts" data-done="Send which of these? Reply with their numbers to approve." data-sfx="typing:type"></div>
-  <div class="shot" data-shot="terminal" style="--in:56.85s" data-lines="$ codex plugin marketplace add marcosmodly/marketing-skill|$ codex plugin add marketing-skill@marketing-skill" data-sfx="typing:type"></div>
-  <div class="shot" data-shot="player" style="--in:60.73s" data-src="assets/opening.mp4" data-aspect="16:9" data-offset="1.6" data-title="marketing-skill-v4.mp4" data-sfx="click:play"></div>
-  <div class="shot" data-shot="button" style="--in:63.51s" data-text="☆ Star" data-done="★ Starred" data-set="night" data-sfx="click:click"></div>
-  <div class="shot" data-shot="comments" style="--in:67.4s" data-text="What should it make next?" data-ask="a podcast clip maker" data-sfx="typing:type"></div>
+  <div class="shot" data-shot="agent" style="--in:32.4s" data-ask="Make a launch video for my app" data-steps="Skill(marketing-skill:short-form-video)|Read(references/brand-voice.md)|⎿ No Video Setup saved yet" data-done="Five quick questions first, or reply 'defaults'." data-doc="# Before your video|- Where will it be posted? 9:16 or 16:9|- Who presents it? You, your character, the robot, an AI avatar, or no one|- A video whose style to follow?|- Which paid tools do you have?|- Whose voice?" data-sfx="typing:type"></div>
+  <div class="shot" data-shot="agent" style="--in:39.06s" data-ask="Make a 30-second launch video" data-steps="Skill(marketing-skill:short-form-video)|Write(state/videos/launch.md)|Bash(node scripts/video/compose.js state/videos/launch.md)|⎿ Voicing 8 lines with af_heart (voice.js)...|Bash(node scripts/video/render.js state/videos/launch.html launch.mp4)|⎿ Wrote launch.mp4: 1080x1920, 30s at 30fps" data-done="Ready for you to review: launch.mp4" data-sfx="typing:type"></div>
+  <div class="shot" data-shot="wall" style="--in:43.51s" data-items="assets/t-promo.jpg,assets/t-text-chat.jpg,assets/t-tier-list.jpg,assets/t-3d-desk.jpg,assets/t-pov.jpg,assets/t-quiz.jpg,assets/t-how-to.jpg,assets/t-pixel-boss.jpg,assets/t-starter-pack.jpg,assets/t-notifications.jpg,assets/t-countdown.jpg,assets/t-3d-title.jpg,assets/t-faq.jpg,assets/t-hot-take.jpg,assets/t-post-card.jpg,assets/t-this-or-that.jpg,assets/t-pixel-coins.jpg,assets/t-before-after.jpg" data-labels="promo,text-chat,tier-list,3d,pov,quiz,how-to,pixel,starter-pack,notifications,countdown,3d title,faq,hot-take,post-card,this-or-that,pixel coins,before-after" data-sfx="swish:done"></div>
+  <div class="shot" data-shot="mascot" style="--in:47.4s" data-do="walk" data-set="night" data-sfx="pop:stop"></div>
+  <div class="shot" data-shot="mascot" style="--in:51.85s" data-do="wave" data-set="night" data-character="assets/Soldier.glb"></div>
+  <div class="shot" data-shot="agent" style="--in:56.29s" data-ask="Edit our launch video like this one: ref.mp4" data-steps="Bash(node scripts/video/reference.js ref.mp4)|⎿ 35 scenes (15 hard cuts, 19 transitions), one moving camera|⎿ A burst of 7 quick cuts at 0:21.6. Dark overall.|Read(ref-reference/sheet-1.jpg)" data-done="Matching its camera, palette, and subtitles." data-doc="# How ref.mp4 is edited|## Pacing|- 35 scenes: 15 cuts, 19 transitions|- A burst of 7 quick cuts at 0:21.6|## Look|- Dark overall, one palette|## To match it|- One moving camera: the screen shots|- Small subtitles, a phrase at a time" data-sfx="typing:type"></div>
+  <div class="shot" data-shot="agent" style="--in:60.18s" data-ask="Post it to TikTok, Reels, and Shorts" data-steps="Skill(marketing-skill:publish-pipeline)|⎿ 3 posts ready: TikTok, Reels, Shorts" data-done="Send which of these? Reply with their numbers to approve." data-sfx="typing:type"></div>
+  <div class="shot" data-shot="terminal" style="--in:63.51s" data-lines="$ codex plugin marketplace add marcosmodly/marketing-skill|$ codex plugin add marketing-skill@marketing-skill" data-sfx="typing:type"></div>
+  <div class="shot" data-shot="player" style="--in:67.4s" data-src="assets/opening.mp4" data-aspect="16:9" data-offset="1.6" data-title="marketing-skill-v4.mp4" data-sfx="click:play"></div>
+  <div class="shot" data-shot="button" style="--in:70.17s" data-text="☆ Star" data-done="★ Starred" data-set="night" data-sfx="click:click"></div>
+  <div class="shot" data-shot="comments" style="--in:74.06s" data-text="What should it make next?" data-ask="a podcast clip maker" data-sfx="typing:type"></div>
 
 
   <!-- line 1, 0.15–4.06s -->
@@ -3557,54 +3570,59 @@ if (!navigator.webdriver) {
     <div class="say auto" data-voice="assets/v4-8.wav" style="--voice:30.17s">Then the big one: video.</div>
   </div>
 
-  <!-- line 9, 32.4–36.85s -->
-  <div class="scene narr center" style="--out:36.7s">
-    <div class="say auto" data-voice="assets/v4-9.wav" style="--voice:32.4s">It writes the script, voices it, and renders the video on your own machine.</div>
+  <!-- line 9, 32.4–39.06s -->
+  <div class="scene narr center" style="--out:38.91s">
+    <div class="say auto" data-voice="assets/v4-9.wav" style="--voice:32.4s">First, it asks what you've got: where you post, who presents, a video you like, and the tools you pay for.</div>
   </div>
 
-  <!-- line 10, 36.85–40.74s -->
-  <div class="scene narr center" style="--out:40.59s">
-    <div class="say auto" data-voice="assets/v4-10.wav" style="--voice:36.85s">Thirty-two templates, from tier lists to text-message skits.</div>
+  <!-- line 10, 39.06–43.51s -->
+  <div class="scene narr center" style="--out:43.36s">
+    <div class="say auto" data-voice="assets/v4-10.wav" style="--voice:39.06s">It writes the script, voices it, and renders the video on your own machine.</div>
   </div>
 
-  <!-- line 11, 40.74–45.17s -->
-  <div class="scene narr center" style="--out:45.02s">
-    <div class="say auto" data-voice="assets/v4-11.wav" style="--voice:40.74s">And a 3D mascot that walks, talks, and lip-syncs to the voice.</div>
+  <!-- line 11, 43.51–47.4s -->
+  <div class="scene narr center" style="--out:47.25s">
+    <div class="say auto" data-voice="assets/v4-11.wav" style="--voice:43.51s">Thirty-two templates, from tier lists to text-message skits.</div>
   </div>
 
-  <!-- line 12, 45.17–49.62s -->
-  <div class="scene narr center" style="--out:49.47s">
-    <div class="say auto" data-voice="assets/v4-12.wav" style="--voice:45.17s">Or bring your own character, from a cartoon to a realistic avatar.</div>
+  <!-- line 12, 47.4–51.85s -->
+  <div class="scene narr center" style="--out:51.7s">
+    <div class="say auto" data-voice="assets/v4-12.wav" style="--voice:47.4s">And a 3D mascot that walks, talks, and lip-syncs to the voice.</div>
   </div>
 
-  <!-- line 13, 49.62–53.51s -->
-  <div class="scene narr center" style="--out:53.36s">
-    <div class="say auto" data-voice="assets/v4-13.wav" style="--voice:49.62s">Send it a video you love, and it copies how it's edited.</div>
+  <!-- line 13, 51.85–56.29s -->
+  <div class="scene narr center" style="--out:56.14s">
+    <div class="say auto" data-voice="assets/v4-13.wav" style="--voice:51.85s">Or bring your own character, from a cartoon to a realistic avatar.</div>
   </div>
 
-  <!-- line 14, 53.51–56.85s -->
-  <div class="scene narr center" style="--out:56.7s">
-    <div class="say auto" data-voice="assets/v4-14.wav" style="--voice:53.51s">Nothing posts or sends until you say yes.</div>
+  <!-- line 14, 56.29–60.18s -->
+  <div class="scene narr center" style="--out:60.03s">
+    <div class="say auto" data-voice="assets/v4-14.wav" style="--voice:56.29s">Send it a video you love, and it copies how it's edited.</div>
   </div>
 
-  <!-- line 15, 56.85–60.73s -->
-  <div class="scene narr center" style="--out:60.58s">
-    <div class="say auto" data-voice="assets/v4-15.wav" style="--voice:56.85s">It's free, open source, and it works in Codex too.</div>
-  </div>
-
-  <!-- line 16, 60.73–63.51s -->
+  <!-- line 15, 60.18–63.51s -->
   <div class="scene narr center" style="--out:63.36s">
-    <div class="say auto" data-voice="assets/v4-16.wav" style="--voice:60.73s">Oh, and this video? It made this too.</div>
+    <div class="say auto" data-voice="assets/v4-15.wav" style="--voice:60.18s">Nothing posts or sends until you say yes.</div>
   </div>
 
-  <!-- line 17, 63.51–67.4s -->
+  <!-- line 16, 63.51–67.4s -->
   <div class="scene narr center" style="--out:67.25s">
-    <div class="say auto" data-voice="assets/v4-17.wav" style="--voice:63.51s">If it helps, a star on GitHub helps other people find it.</div>
+    <div class="say auto" data-voice="assets/v4-16.wav" style="--voice:63.51s">It's free, open source, and it works in Codex too.</div>
   </div>
 
-  <!-- line 18, 67.4–71.05s -->
+  <!-- line 17, 67.4–70.17s -->
+  <div class="scene narr center" style="--out:70.02s">
+    <div class="say auto" data-voice="assets/v4-17.wav" style="--voice:67.4s">Oh, and this video? It made this too.</div>
+  </div>
+
+  <!-- line 18, 70.17–74.06s -->
+  <div class="scene narr center" style="--out:73.91s">
+    <div class="say auto" data-voice="assets/v4-18.wav" style="--voice:70.17s">If it helps, a star on GitHub helps other people find it.</div>
+  </div>
+
+  <!-- line 19, 74.06–77.71s -->
   <div class="scene narr center">
-    <div class="say auto" data-voice="assets/v4-18.wav" style="--voice:67.4s">What should it make next? Tell me in the comments.</div>
+    <div class="say auto" data-voice="assets/v4-19.wav" style="--voice:74.06s">What should it make next? Tell me in the comments.</div>
   </div>
 </body>
 </html>

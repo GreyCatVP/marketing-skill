@@ -26,15 +26,16 @@ Made something with it? [Share it in Show and tell](https://github.com/marcosmod
 
 ## See it
 
-[![The plugin's 71-second launch video: a desk at night, the camera pushing into the monitor, the templates' real frames floating past, a realistic character in the mascot's place, and Claude reading how a reference video is edited](media/explainer/v4/poster-landscape.jpg)](media/explainer/v4/marketing-skill-v4-landscape.mp4)
+[![The plugin's 78-second launch video: a desk at night, the camera pushing into the monitor, Claude asking what you've got before a video, a realistic character in the mascot's place, and Claude reading how a reference video is edited](media/explainer/v4/poster-landscape.jpg)](media/explainer/v4/marketing-skill-v4-landscape.mp4)
 
-**[▶ Watch the 71-second launch video](media/explainer/v4/marketing-skill-v4-landscape.mp4)**:
-the plugin installing and running its skills in Claude Code, your own
-character in the mascot's place, and Claude copying how a video you like
-is edited, all cut like a product launch, with one camera moving from
-screen to screen. The plugin made it itself from
-[one script](media/explainer/v4/script.md), with a voiceover, subtitles
-synced to it, and music cut on the beat.
+**[▶ Watch the 78-second launch video](media/explainer/v4/marketing-skill-v4-landscape.mp4)**:
+the plugin installing and running its skills in Claude Code, the
+questions it asks before a video (where you post, who presents, a video
+you like, the tools you pay for), your own character in the mascot's
+place, and Claude copying how a video you like is edited, all cut like a
+product launch, with one camera moving from screen to screen. The plugin
+made it itself from [one script](media/explainer/v4/script.md), with a
+voiceover, subtitles synced to it, and music cut on the beat.
 
 [![The vertical cut for TikTok, Reels, and Shorts: the plugin's 3D mascot at a desk, on a stage, on a rooftop, in a living room, and in a park, under big bold captions](media/explainer/v3/poster.jpg)](media/explainer/v3/marketing-skill-v3.mp4)
 

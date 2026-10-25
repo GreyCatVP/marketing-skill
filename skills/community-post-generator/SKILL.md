@@ -1,6 +1,6 @@
 ---
 name: community-post-generator
-description: "Writes Reddit, Product Hunt, Hacker News (Show HN), Indie Hackers (Show IH), dev.to (#showdev), Discord, Slack, and Telegram posts that follow each community's actual rules. Researches that specific subreddit's or site's rules and what currently works there live, verifying each source is about the named target, then gives a plain Go/No-Go and only drafts if the post is welcome, written to read like a person wrote it and in the platform's own format (Slack mrkdwn, Telegram HTML). For Discord, Slack, and private Telegram groups, which have no public rules page, it asks the user for the rules instead of guessing. Use when the user wants to post or promote something in a subreddit, launch on Product Hunt, write a Show HN or Show IH, post on dev.to, or share in a Discord server, Slack workspace, Telegram channel or group, or any other rules-driven community or forum. Not for LinkedIn, X, Instagram, or Facebook posts."
+description: "Writes a post for one specific community (a subreddit, Show HN, Product Hunt, Indie Hackers, dev.to, Discord, Slack, Telegram) after checking its rules, with a Go/No-Go first. Use whenever someone wants to post, launch, or share in one, even when they pasted the rules or the post looks obvious. LinkedIn, X, or Facebook: that's content-repurposer."
 allowed-tools: Read, Grep, Glob, Write, WebSearch, WebFetch
 ---
 
@@ -101,6 +101,9 @@ command below.
    answers into that file and flip the marker to `CONFIGURED` with today's
    date. Otherwise, read it for the banned-words list (still applies) —
    but see step 5 on tone, which usually does *not* carry over as-is here.
+   If the file is unconfigured but the user already said to skip setup
+   or use the defaults, don't ask: use its placeholder defaults for this
+   run, say so in one line, and leave the marker as it is.
 
 2. **Confirm scope.**
    - **Out of scope, redirect instead of forcing it:** LinkedIn, Twitter/X,
@@ -233,6 +236,14 @@ command below.
      checked, note it was checked just now. Never assert a community's
      norms from training knowledge alone; subreddit rules change, and a
      stale assumption is exactly how a post gets removed.
+   - **This account's own record there.** Read
+     `${CLAUDE_PLUGIN_ROOT}/state/post-log.md`. If an earlier post to this
+     same community was removed, say so and by whom (a moderator,
+     AutoMod, or Reddit's spam filter) in the research summary; it
+     counts against a Go. If the same link went to other communities in
+     the last few days, say how many and suggest spacing this one out,
+     since the same link in several subreddits at once is what Reddit's
+     spam filter catches.
    - **Track source tier as you go, not just the content.** WebFetch to
      reddit.com, producthunt.com, news.ycombinator.com, indiehackers.com,
      or dev.to can fail outright depending on the runtime's
@@ -622,6 +633,15 @@ Use this exact section order, as Markdown `##` headings:
    and treat it as manual-only until proven otherwise. Say which of the
    four send-path profiles above actually applies to this specific user
    and target rather than defaulting to any one of them by habit.
+   Then close the loop: once the user says the post is live, add its row
+   to `${CLAUDE_PLUGIN_ROOT}/state/post-log.md` (date, platform, the
+   community, a short label, this skill, the Go/No-Go verdict it went
+   out under, and its link), and offer to fill in its numbers a day or
+   two later: pasted by the user, or for Reddit and dev.to fetched with
+   `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/publish_direct.py --platform
+   <reddit|devto> --metrics --post-id <link> --log` if they have that
+   platform's API credentials. That row is how "does this work?" gets an
+   answer from real posts.
 
 ## Formatting rules
 

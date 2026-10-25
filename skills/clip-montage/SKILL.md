@@ -1,6 +1,6 @@
 ---
 name: clip-montage
-description: "The default for any montage, reel, recap, or highlight video made from the user's own footage. It takes the phone videos the user or a client sends (a home or a room, a product, a shop or a restaurant, an event, a day at work) and edits them into a finished vertical montage for TikTok, Instagram Reels, and YouTube Shorts. It picks the best moments of each clip, cuts on the beat of their own music (or a free generated track, or none to add a trending sound in the app), keeps a clip's own sound where someone talks, lays their own voiceover under it with synced captions, and adds labels, a hook, and the CTA. Then it keeps editing on request, saving each version. Free: it renders locally, no credits. Use when the user sends or mentions videos, clips, or footage and asks for a montage, reel, edit, recap, tour, or highlights, or asks for a montage without saying what they have. With only photos, it asks for clips first; photos go to montage-video, and AI photo-to-video only with a paid plan the user confirms."
+description: "Edits the user's own video clips into a finished vertical reel for TikTok, Reels, and Shorts: the best moment of each clip, cuts on the beat, captions, labels, and an end card. Use whenever someone has videos, clips, or footage and wants a montage, reel, recap, tour, or highlights, even before they've sent the files. Only photos: that's montage-video."
 allowed-tools: Read, Grep, Glob, WebSearch, Write, Bash
 ---
 
@@ -60,6 +60,9 @@ command below. `VIDEO` below means `${CLAUDE_PLUGIN_ROOT}/scripts/video`.
    as `/marketing-skill:marketing-setup`) before continuing, then save the
    answers into that file and flip the marker to `CONFIGURED` with today's
    date.
+   If the file is unconfigured but the user already said to skip setup
+   or use the defaults, don't ask: use its placeholder defaults for this
+   run, say so in one line, and leave the marker as it is.
 
 2. **Pick the client.** Exactly as `montage-video` step 2
    (`${CLAUDE_PLUGIN_ROOT}/skills/montage-video/SKILL.md`): a saved client

@@ -14,6 +14,13 @@ import sys
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 # Agent Skills limit for a skill's description
 MAX_DESCRIPTION = 1024
+# Claude Code fits every installed skill's description into about 1% of the
+# context window and drops the least-used ones when that overflows, leaving
+# just the name, so a new install among other plugins loses its descriptions
+# first. Short descriptions, with the trigger up front, survive that.
+MAX_SKILL_DESCRIPTION = 400
+MAX_ALL_DESCRIPTIONS = 5000
+TRIGGER_WITHIN = 200
 # Codex only turns commands smaller than this into skills
 MAX_COMMAND_BYTES = 4096
 
@@ -42,6 +49,7 @@ def frontmatter(path):
 
 def check_skills():
     skills_dir = os.path.join(ROOT, "skills")
+    total = 0
     for name in sorted(os.listdir(skills_dir)):
         path = os.path.join(skills_dir, name, "SKILL.md")
         if not os.path.isfile(path):
@@ -58,8 +66,18 @@ def check_skills():
             problems.append(f"{rel(path)}: no description")
         elif len(desc) > MAX_DESCRIPTION:
             problems.append(f"{rel(path)}: description is {len(desc)} characters, over the {MAX_DESCRIPTION} limit")
+        elif len(desc) > MAX_SKILL_DESCRIPTION:
+            problems.append(f"{rel(path)}: description is {len(desc)} characters; keep it under "
+                            f"{MAX_SKILL_DESCRIPTION} so it survives the skill listing's budget")
+        trigger = re.search(r"\bUse (when|whenever)\b", desc)
+        if desc and (not trigger or trigger.start() > TRIGGER_WITHIN):
+            problems.append(f"{rel(path)}: description needs its 'Use when/whenever' trigger in the first "
+                            f"{TRIGGER_WITHIN} characters")
         if re.search(r"<[a-zA-Z/][^>]*>", desc):
             problems.append(f"{rel(path)}: description contains an XML/HTML tag")
+        total += len(desc)
+    if total > MAX_ALL_DESCRIPTIONS:
+        problems.append(f"skills/: the descriptions add up to {total} characters, over {MAX_ALL_DESCRIPTIONS}")
 
 
 def check_commands():

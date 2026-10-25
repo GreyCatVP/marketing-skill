@@ -6,17 +6,18 @@
 > generic advice. `short-form-video` adds a row when a video is posted (or
 > when you tell it one was), and fills in the numbers when you paste them
 > from each platform's own analytics, or when it fetches them with
-> `scripts/publish_direct.py --metrics` if that platform's credentials are
+> `scripts/publish_direct.py --metrics --log` if that platform's credentials are
 > set up. Safe to hand-edit: add a row, correct a number, delete a test.
 >
-> **How the skills use it.** Once there are about 10 rows with numbers,
-> `short-form-video` and `content-calendar` read it before planning: which
-> formats and hook patterns hold viewers longest on this account, which
-> sounds and lengths do better, and which days and hours its own posts got
-> the most views. They say how many posts a pattern rests on, treat a gap
-> of a few percent between two formats as noise, and keep trying new
-> formats (about 10% of posts) so the log doesn't just repeat itself.
-> Below about 10 rows they use the general guidance and say so.
+> **How the skills use it.** `short-form-video` and `content-calendar`
+> run `scripts/results.py` before planning, which prints the median views,
+> average watch, and 3-second hold for each format and hook pattern from
+> this file, marks any group under 5 videos "too few to tell", and names a
+> leader only when it beats the next by 10% or more. They steer by that,
+> say how many videos it rests on, and keep trying new formats (about 10%
+> of posts) so the log doesn't just repeat itself. Sounds, lengths, and
+> best posting hours are read off the rows once there are about 10 with
+> numbers; until then they use the general guidance and say so.
 >
 > **Columns.** `Format` is the template or video type (`tier-list`,
 > `narrated`, `how-to`, `take`...). `Hook` is the on-screen hook and its

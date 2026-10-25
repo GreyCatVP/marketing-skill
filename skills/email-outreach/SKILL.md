@@ -1,6 +1,6 @@
 ---
 name: email-outreach
-description: "Writes personalized B2B cold emails at a steady daily volume: researches real prospects against your ideal customer profile (ICP), drafts a genuinely 1:1 email for each, and dedupes against a permanent contact log that updates itself from real Gmail replies, bounces, and unsubscribes. Each email is timed to the prospect's local business hours, checked for deliverability and anti-spam compliance, and A/B-tracked by subject line, with the outreach strategy re-confirmed monthly. Queues everything for approval (or creates Gmail drafts if connected) and never sends on its own. Use for cold email, cold outreach, sales prospecting, lead generation, or sales outreach to new contacts. Not for drip or nurture emails to people who already opted in; that is email-sequence."
+description: "Writes personalized cold emails to new prospects: researches each one against the ideal customer profile, never contacts anyone twice, and queues drafts for approval. Use whenever someone wants cold emails, prospecting, or outreach to people who don't know them yet, even a handful. Not for existing clients; opted-in subscribers are email-sequence."
 allowed-tools: Read, Grep, Glob, Write, Edit, WebSearch, WebFetch
 ---
 
@@ -42,6 +42,9 @@ command below.
    answers into that file and flip the marker to `CONFIGURED` with today's
    date. Otherwise, read it for tone, audience, and banned words to apply
    below.
+   If the file is unconfigured but the user already said to skip setup
+   or use the defaults, don't ask: use its placeholder defaults for this
+   run, say so in one line, and leave the marker as it is.
 
 2. **Check outreach-strategy status.** Read
    `${CLAUDE_PLUGIN_ROOT}/references/outreach-strategy.md`.
@@ -66,19 +69,22 @@ command below.
      proceed straight to step 3 using the file's current settings.
 
    **Monthly Strategy Refresh:**
-   - Read `${CLAUDE_PLUGIN_ROOT}/state/outreach-log.md` and tally Status
-     counts for rows dated since the last refresh (`Sent`, `Replied`,
-     `Bounced`, `Unsubscribed`/`Do-Not-Contact`, `Skipped-Duplicate`),
-     and, if there's enough volume for it to mean anything, a reply-rate
-     split by Subject Variant (`A` vs `B`).
+   - Run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/results.py --since
+     <last refresh date>` (it reads `state/outreach-log.md`, never the
+     network) and use its Cold email section: emails sent since the last
+     refresh, the reply, bounce, and unsubscribe rates, and the
+     subject-line A/B call. That call is a significance test, not a
+     glance at two percentages: under 30 sends a side it says "too few
+     to tell", and a gap that could be chance is "no clear winner".
    - Show the user that tally alongside the current ICP/segment(s),
      angle, offer/CTA, sender identity, daily volume, send-time window,
      and follow-up cadence.
    - Ask whether anything should change — segment, angle, offer, sender
      identity, volume, send-time window, cadence, or suppression window
-     — and whether a subject-line variant has pulled clearly ahead
-     enough to standardize on it. "No changes, keep as-is" is a valid
-     answer; don't force a change that isn't warranted.
+     — and whether to standardize on a subject-line variant, which is
+     only on the table when `results.py` says one gets more replies;
+     otherwise say why not and keep testing. "No changes, keep as-is" is
+     a valid answer; don't force a change that isn't warranted.
    - Rewrite the relevant section(s) with any changes, append one new
      dated bullet to Performance Notes summarizing the tally (including
      the variant split) and what — if anything — changed because of it,

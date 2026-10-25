@@ -1,6 +1,6 @@
 ---
 name: content-calendar
-description: "Plans and batch-writes a week or a month of social media posts in one pass: a dated, platform-tagged content calendar across LinkedIn, Twitter/X, newsletters, Reddit, and short-form video, checked against the saved calendar so it never repeats a recent topic or angle, with every post queued for human approval instead of auto-posting. Use when the user asks for a content calendar, social media calendar, posting schedule, a week or month of posts, or to batch-plan content."
+description: "Plans and writes a week or month of dated social posts (LinkedIn, X, newsletter, Reddit, short video), checked against the saved calendar so topics don't repeat, and queued for approval. Use whenever someone wants a content calendar, a posting schedule, or the next week's or month's posts, even for one launch week."
 allowed-tools: Read, Write, Edit, Grep, Glob, WebSearch, WebFetch
 ---
 
@@ -35,6 +35,9 @@ command below.
    answers into that file and flip the marker to `CONFIGURED` with today's
    date. Otherwise, read it for tone, audience, banned words, and
    formatting constraints to apply below.
+   If the file is unconfigured but the user already said to skip setup
+   or use the defaults, don't ask: use its placeholder defaults for this
+   run, say so in one line, and leave the marker as it is.
 
 2. **Read the calendar.** Read
    `${CLAUDE_PLUGIN_ROOT}/state/content-calendar.md` (create it from the
@@ -122,12 +125,14 @@ command below.
      captions, comment bait, UI skits, story and everyday), and name the
      format in that row's `Notes` (e.g. `format: tier-list`) so the next
      batch can see what was used. Save the marketing types (an
-     announcement, a testimonial) for the dates they belong to. If
-     `${CLAUDE_PLUGIN_ROOT}/state/video-log.md` has about 10 or more rows
-     with numbers, lean the mix toward the formats and hook patterns that
-     held viewers longest on this account, and schedule at its own best
-     days and hours, keeping about one slot in ten an experiment; say what
-     the log showed and how many posts it rests on. If the user wants the
+     announcement, a testimonial) for the dates they belong to. Run
+     `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/results.py` (it reads the logs
+     in `state/`, never the network): if its Videos section names a
+     leading format or hook pattern, lean the mix toward it, keeping about
+     one slot in ten an experiment, and quote the numbers it rests on.
+     Groups it marks "too few to tell" don't move the mix. Once
+     `state/video-log.md` has about 10 rows with numbers, also schedule at
+     the account's own best days and hours. If the user wants the
      week's videos made too, render all of their pages in one run with
      `node ${CLAUDE_PLUGIN_ROOT}/scripts/video/render.js --batch <pages...>
      --cover 0` and add each video's MP4, cover, and `.srt` paths to its

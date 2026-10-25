@@ -28,3 +28,9 @@ media/explainer/v4/assets/v4-*.wav
 media/explainer/v4/assets/opening.mp4
 media/explainer/v4/assets/*.glb
 media/explainer/character/assets/*
+
+# claude plugin eval output (each run writes a timestamped folder)
+evals/results/
+
+# trigger eval output
+trigger-evals/results/

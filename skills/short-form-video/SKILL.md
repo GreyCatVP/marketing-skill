@@ -1,6 +1,6 @@
 ---
 name: short-form-video
-description: "Creates ready-to-post short videos for TikTok, Instagram Reels, and YouTube Shorts (9:16), or 16:9 for YouTube, Reddit, LinkedIn, and websites: marketing videos (ads, explainers, how-tos, testimonials, product launches and demos) and everyday FYP posts (POV, tier lists, text-message skits, storytimes): a hook-first script and shot list, per-platform captions and hashtags, and a posting window. If the user opts in, it makes the video: rendered locally with an original soundtrack and voiceover (animated text, a narrated 3D mascot or the user's own 3D character, pixel art, or the product's own screens), edited like a reference video the user sends, or with a connected tool (Higgsfield, HeyGen, Figma Weave, Canva). Use when the user asks for a TikTok, Reel, or Short, a short video for YouTube, Reddit, or LinkedIn, a launch or demo video, a 3D or pixel-art animated video, a video like one they send, a meme or trend-style post, or a viral video."
+description: "Writes and makes short videos for TikTok, Reels, and Shorts (or 16:9 for YouTube, Reddit, LinkedIn): a hook-first script, captions, hashtags, a posting time, and, if wanted, the rendered video. Use whenever someone wants a TikTok, Reel, Short, launch or demo video, or video script, even a quick 15-second one."
 allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write, Bash
 ---
 
@@ -60,6 +60,9 @@ command below.
    will be rendered, and for its Video Setup (where videos get posted,
    who presents them, a style reference, paid tools, whose voice) and the
    Character under its Visual Identity.
+   If the file is unconfigured but the user already said to skip setup
+   or use the defaults, don't ask: use its placeholder defaults for this
+   run, say so in one line, and leave the marker as it is.
 
 2. **Confirm scope.**
    - **What they have to make it with.** A new user doesn't know what
@@ -80,15 +83,21 @@ command below.
      product"/"our feature" — check `README*`, `CHANGELOG*`, and
      `docs/**/*.md` at the project root first if so, same convention as
      `content-repurposer`, before asking the user to describe it).
-   - **What has worked for this account.** Read
-     `${CLAUDE_PLUGIN_ROOT}/state/video-log.md` if it exists. With about
-     10 or more rows that have numbers, let them steer the choices below:
-     the formats, hook patterns, sounds, and lengths that held viewers
-     longest here, and the account's own best posting days and hours (they
-     replace the general windows in "Posting time guidance"). Say how many
-     posts a pattern rests on, treat small gaps as noise, and keep about one
-     in ten posts an experiment. With fewer rows, say the log is too thin
-     yet and use the general guidance.
+   - **What has worked for this account.** Run
+     `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/results.py` (it reads the logs
+     in `state/`, never the network) and work from its Videos section
+     rather than reading `state/video-log.md` by eye. It gives the median
+     views, average watch, and 3-second hold for each format and hook
+     pattern, marks any group under 5 videos "too few to tell", and names
+     a leading format or hook pattern only when its median beats the next
+     by 10% or more. Let a leader steer the choices below, quoting its
+     numbers and how many videos they rest on; when it says nothing
+     clearly leads, say so rather than picking one. Sounds, lengths, and
+     the account's best posting days and hours aren't in its output: read
+     those off the log only once it has about 10 rows with numbers (they
+     then replace the general windows in "Posting time guidance"). Keep
+     about one in ten posts an experiment. With an empty log, say so and
+     use the general guidance.
    - Which platform(s) — default to all three (YouTube Shorts, Instagram
      Reels, TikTok) unless the user names only one or two. Where it's
      posted decides the shape: 9:16 for those three; 16:9 (`format:
@@ -418,9 +427,10 @@ command below.
      format, hook and its pattern, variant, sound, length, and link or ID.
      A few days later, offer to fill in its numbers: the user pastes them
      from the platform's analytics, or `publish_direct.py --platform
-     <platform> --metrics --video-id <id>` fetches them where that
-     platform's credentials are set up (it prints the row's cells). Never
-     estimate a number that wasn't reported; leave the cell blank.
+     <platform> --metrics --post-id <id> --log` fetches them where that
+     platform's credentials are set up and writes them into the video's
+     row. Never estimate a number that wasn't reported; leave the cell
+     blank.
 
 ## When to use this skill
 

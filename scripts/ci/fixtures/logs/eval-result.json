@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "note": "CI fixture for scripts/results.py --eval: the shape of a `claude plugin eval --json` result, trimmed, with made-up scores",
+  "startedAt": "2026-10-25T00:00:00.000Z",
+  "costUsd": 0.5,
+  "partial": false,
+  "cases": [
+    {
+      "name": "reddit-nogo",
+      "runsPerCase": 3,
+      "arms": {
+        "with": [
+          {
+            "score": 1,
+            "passed": true,
+            "graders": [
+              {
+                "name": "no-promo-post",
+                "passed": true,
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "withOnly": true,
+                "scored": false
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "graders": [
+              {
+                "name": "no-promo-post",
+                "passed": true,
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "skill-fired",
+                "passed": false,
+                "withOnly": true,
+                "scored": false
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "graders": [
+              {
+                "name": "no-promo-post",
+                "passed": true,
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "withOnly": true,
+                "scored": false
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 1,
+            "passed": true,
+            "graders": [
+              {
+                "name": "no-promo-post",
+                "passed": true,
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 0,
+            "passed": false,
+            "graders": [
+              {
+                "name": "no-promo-post",
+                "passed": false,
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 0,
+            "passed": false,
+            "graders": [
+              {
+                "name": "no-promo-post",
+                "passed": false,
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 1,
+        "passRate": 1,
+        "scoreWithout": 0.3333333333333333,
+        "passRateWithout": 0.3333333333333333,
+        "delta": 0.6666666666666666
+      }
+    }
+  ],
+  "aggregates": {
+    "casesTotal": 1,
+    "casesPassed": 1,
+    "overallScore": 1,
+    "overallPassRate": 1,
+    "meanDelta": 0.6666666666666666
+  }
+}

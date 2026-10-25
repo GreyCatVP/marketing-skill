@@ -1,6 +1,6 @@
 ---
 name: visual-brief-generator
-description: "Turns content into a structured image or video generation brief: shot list, per-scene AI image/video prompts, aspect ratio per platform, and a style and mood guide, and generates the asset if a visual-generation tool is connected. Use when the user asks for a visual brief, video brief, creative brief, shot list, storyboard, or image or video prompts."
+description: "Writes an image or video generation brief: a shot list, per-scene prompts for AI image and video tools, aspect ratios, and a style guide. Use whenever someone wants a visual or creative brief, a storyboard, a shot list, or prompts for Midjourney, DALL-E, Runway, or similar, even for a few product shots."
 allowed-tools: Read, Grep, Glob, Write
 ---
 
@@ -45,6 +45,9 @@ command below.
    as `/marketing-skill:marketing-setup`) before continuing, then save the
    answers into that file and flip the marker to `CONFIGURED` with today's
    date. Otherwise, read it for mood/tone consistency below.
+   If the file is unconfigured but the user already said to skip setup
+   or use the defaults, don't ask: use its placeholder defaults for this
+   run, say so in one line, and leave the marker as it is.
 
 2. **Confirm scope.**
    - Source content or campaign this brief is for. If the user references

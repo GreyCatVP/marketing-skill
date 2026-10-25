@@ -21,6 +21,8 @@ jobs:
         run: python3 scripts/ci/lint_repo.py
       - name: Publish scripts (dry run only)
         run: bash scripts/ci/smoke_publish.sh
+      - name: Results numbers (results.py on made-up logs)
+        run: bash scripts/ci/smoke_results.sh
       - name: Templates are in sync with build.py
         run: |
           python3 scripts/video/templates/build.py

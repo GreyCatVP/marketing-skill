@@ -217,15 +217,36 @@ prints the value for the frame it checked. YouTube's Shorts cover is
 chosen in its app.
 
 **How it did:** `publish_direct.py --platform youtube|instagram|tiktok
---metrics --video-id <id>` reads a posted video's views, average watch,
+--metrics --post-id <id>` reads a posted video's views, average watch,
 likes, comments, shares, and saves (read-only, so it needs no
-`--confirmed`) and prints a row for `state/video-log.md`. Once that log
-has about ten posts with numbers, `short-form-video` and
-`content-calendar` steer formats, hooks, and posting times by this
-account's own results. Like the rest of `publish_direct.py`, it's written
-against each platform's documented API without a live account to test
-on; YouTube's average-watch figure also needs the
-`yt-analytics.readonly` scope.
+`--confirmed`) and prints the cells for `state/video-log.md`; add `--log`
+and it writes them into the row whose Link / ID holds that video. Every
+send prints a `Posted:` line with the new post's ID and link, which is
+what goes in that column (TikTok's is the exception: it returns a
+publish ID, so take the video ID from the post's link). Like the rest of
+`publish_direct.py`, it's written against each platform's documented API
+without a live account to test on; YouTube's average-watch figure also
+needs the `yt-analytics.readonly` scope.
+
+**How a post did:** the same `--metrics` works for `--platform reddit`
+(score, upvote ratio, comments, and whether it was removed and by whom:
+a moderator, AutoMod, or Reddit's spam filter) and `--platform devto`
+(reactions, comments, and views), with the post's link or ID as
+`--post-id` and the same credentials as posting. `--log` writes those
+into `state/post-log.md`. LinkedIn and X have no metrics path here: X's
+read API is a paid tier, and LinkedIn's post statistics need its
+Community Management API approval, so paste their numbers into the log
+by hand.
+
+**The numbers:** `python3 scripts/results.py` reads the three logs and
+prints what they add up to: posts and removals by community and by the
+Go/No-Go they went out under, median views, average watch, and 3-second
+hold by video format and hook pattern, and cold email reply, bounce, and
+unsubscribe rates with a significance test on the subject-line A/B.
+Groups under 5 are marked "too few to tell", and the A/B isn't called
+under 30 sends a side. `short-form-video`, `content-calendar`, and
+`email-outreach` steer by its output instead of reading the tables by
+eye.
 
 None of this blocks the default path: `short-form-video` always produces
 the full script, caption, and hashtags regardless of whether any of this

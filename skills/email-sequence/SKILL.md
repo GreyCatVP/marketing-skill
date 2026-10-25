@@ -1,6 +1,6 @@
 ---
 name: email-sequence
-description: "Writes a multi-email drip, nurture, or welcome sequence from one campaign goal: each email gets send timing, a subject line plus an A/B alternate, preview text, body, and a single CTA, connected by a narrative arc. Use when the user asks for an email sequence, drip campaign, nurture series, welcome series, onboarding or launch emails, or an email marketing flow for people who already opted in. Cold outreach to new contacts is email-outreach."
+description: "Writes a drip, nurture, welcome, or onboarding email sequence: send timing, subject lines with an A/B alternate, preview text, and one CTA per email. Use whenever someone wants the emails people get after signing up, buying, or starting a trial, even just two or three. Cold emails to new contacts: that's email-outreach."
 allowed-tools: Read, Grep, Glob, WebFetch, Write
 ---
 
@@ -33,6 +33,9 @@ command below.
    as `/marketing-skill:marketing-setup`) before continuing, then save the
    answers into that file and flip the marker to `CONFIGURED` with today's
    date. Otherwise, read it for tone, audience, and banned words below.
+   If the file is unconfigured but the user already said to skip setup
+   or use the defaults, don't ask: use its placeholder defaults for this
+   run, say so in one line, and leave the marker as it is.
 
 2. **Confirm scope.**
    - Sequence goal: welcome/onboarding, post-signup nurture, product

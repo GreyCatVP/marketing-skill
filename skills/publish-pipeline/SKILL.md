@@ -1,6 +1,6 @@
 ---
 name: publish-pipeline
-description: "Publishes approved marketing content: packages finished posts and asset references into JSON and sends them to n8n, Make, or any other incoming-webhook automation, or optionally straight to a platform API with your own credentials, only after showing the exact payload and getting explicit human approval. Use when the user asks to publish, post, ship, or send content live, trigger the automation, fire the webhook, or send a queued calendar post."
+description: "Publishes approved content: sends it to n8n, Make, or any webhook, or straight to a platform API, only after showing the exact payload and getting a yes. Use whenever someone wants to publish, post, or send content live, fire a webhook, or send a queued calendar post."
 allowed-tools: Read, Write, Edit, Bash
 ---
 
@@ -34,6 +34,9 @@ command below.
    produce; target audience + tone; default output format — same as
    `/marketing-skill:marketing-setup`) before continuing, then save the
    answers and flip the marker to `CONFIGURED` with today's date.
+   If the file is unconfigured but the user already said to skip setup
+   or use the defaults, don't ask: use its placeholder defaults for this
+   run, say so in one line, and leave the marker as it is.
 
 2. **Confirm scope.**
    - Which content pieces are ready to send (from `content-repurposer`,
@@ -122,6 +125,15 @@ command below.
    - If the source was a calendar row, update it to `Sent` in
      `state/content-calendar.md` immediately after a successful send
      (keep the row — this is the history log, don't delete it).
+   - **Keep the post's link.** `publish_direct.py` prints a `Posted:` line
+     with the new post's ID and link after a successful send. Put it in
+     the calendar row's Notes, and add the post's row to
+     `state/video-log.md` (a video) or `state/post-log.md` (anything
+     else: Reddit, dev.to, LinkedIn, X, a Discord message), with the
+     Go/No-Go verdict it went out under if it came from
+     `community-post-generator`. Without that link its numbers can't be
+     looked up later. For a webhook hand-off, ask the user for the link
+     once it's live.
    - **Alternate path (optional, not the default): Make MCP.** If a Make
      MCP connector is connected in this session (tools like
      `scenarios_run`, `scenarios_list`), you may call `scenarios_run`

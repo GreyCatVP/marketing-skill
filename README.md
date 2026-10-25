@@ -500,6 +500,25 @@ after you approve specific items in a live conversation.
 Yes. Ask for what you need and only the matching skill runs. To skip the
 plugin system, copy the skill folders in by hand (see [Install](#install)).
 
+### Is it validated by numbers?
+
+Partly, and [docs/results.md](docs/results.md) has what there is.
+
+- **Plugin vs plain Claude:** seven checks in `evals/`, scored with and
+  without the plugin by `claude plugin eval`. They test the things a skill
+  promises: a No-Go when a subreddit bans self-promotion, no made-up search
+  volumes, no invented facts about a competitor. In the latest run the
+  plugin clearly beat plain Claude on one (asking for a Discord server's
+  rules instead of drafting blind), led by a run on two, tied on three,
+  and lost one (its battlecard stated an absence the source didn't). All
+  of it is published, the loss included.
+- **Real results:** not yet beyond the launch posts. Each skill logs what
+  went out, and `python3 scripts/results.py` turns your logs into
+  removal rates, medians, and reply rates, with "too few to tell" until
+  there's enough to go on.
+- **Untested:** the advice built into the skills (hook patterns, posting
+  times, outreach cadence) is common practice. Nothing here has tested it.
+
 ## Repo layout
 
 ```
@@ -518,17 +537,20 @@ references/
   video-rendering.md     # the local render procedure short-form-video follows
   fyp-formats.md         # 22 everyday / FYP formats: why each works, beats, copy at two tones, weekly mix and rotation
   montage-guide.md       # clip-montage's and montage-video's shot order, filming tips, moves, music by mood, and wording rules
-docs/                    # the longer guides: video, publishing, community posts, outreach, and the template gallery
+docs/                    # the longer guides: video, publishing, community posts, outreach, the template gallery, and results.md (the plugin's own numbers)
+evals/                   # claude plugin eval cases: each runs with and without the plugin, and the difference is scored
 state/
   content-calendar.md    # calendar/history index (generated + appended to, hand-editable)
   posts/                  # one file per queued post's full content, linked from the index above
   outreach-log.md         # outreach queue/history + permanent suppression list (generated + appended to, hand-editable)
   outreach/               # one file per drafted email's full content, linked from the log above
   video-log.md            # every posted video with its format, hook, and numbers; steers the next ones
+  post-log.md             # every posted Reddit/HN/dev.to/text post: the verdict it went out under, removed or not, and its numbers
   clients/                # one profile per client (look, sound, contact details, notes); kept out of git
 scripts/
   publish_webhook.py     # stdlib-only webhook sender (see --help)
-  publish_direct.py      # stdlib-only direct-to-platform scaffold (LinkedIn/X/Meta/Reddit/Discord/Slack/Telegram/dev.to/YouTube/Instagram/TikTok), needs your own API credentials (see --help)
+  publish_direct.py      # stdlib-only direct-to-platform scaffold (LinkedIn/X/Meta/Reddit/Discord/Slack/Telegram/dev.to/YouTube/Instagram/TikTok), needs your own API credentials (see --help); --metrics reads a post's numbers back
+  results.py             # stdlib-only: what the logs add up to (removal rates, medians, reply rates, an A/B significance test), or an eval result's table
   video/
     render.js            # animated HTML page -> vertical MP4 with an original soundtrack (needs Node, Playwright, ffmpeg)
     soundtrack.js        # the music and sound-effects synthesizer render.js uses (no dependencies)

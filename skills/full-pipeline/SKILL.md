@@ -1,6 +1,6 @@
 ---
 name: full-pipeline
-description: "Runs an end-to-end marketing campaign from one request: competitor or topic research, repurposed social posts, a visual brief, and publishing via webhook, with a mandatory human approval pause before anything goes live. Use for one-shot 'full campaign', 'do everything', 'research X and publish it', or 'run the whole marketing pipeline end to end' requests."
+description: "Runs a whole campaign from one request: research, posts for each channel, a visual brief, and publishing, pausing for approval before anything goes live. Use whenever someone asks to research something and turn it into published content, or to do a whole campaign end to end."
 allowed-tools: WebSearch, WebFetch, Read, Grep, Glob, Write, Edit, Bash
 ---
 
@@ -32,6 +32,9 @@ command below.
    answers and flip the marker to `CONFIGURED` with today's date. Because
    this happens before Stage 1, none of the individual stages below will
    re-trigger their own onboarding check in the same run.
+   If the file is unconfigured but the user already said to skip setup
+   or use the defaults, don't ask: use its placeholder defaults for this
+   run, say so in one line, and leave the marker as it is.
 
 2. **Confirm scope for all stages up front**, to avoid repeated
    back-and-forth mid-chain:

@@ -1,4 +1,5 @@
 ---
 type: regex
-pattern: '(?i)build\s*in\s*public'
+pattern: 'build\s*in\s*public'
+flags: i
 ---

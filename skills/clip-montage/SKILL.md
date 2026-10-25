@@ -60,6 +60,9 @@ command below. `VIDEO` below means `${CLAUDE_PLUGIN_ROOT}/scripts/video`.
    as `/marketing-skill:marketing-setup`) before continuing, then save the
    answers into that file and flip the marker to `CONFIGURED` with today's
    date.
+   If the file is unconfigured but the user already said to skip setup
+   or use the defaults, don't ask: use its placeholder defaults for this
+   run, say so in one line, and leave the marker as it is.
 
 2. **Pick the client.** Exactly as `montage-video` step 2
    (`${CLAUDE_PLUGIN_ROOT}/skills/montage-video/SKILL.md`): a saved client

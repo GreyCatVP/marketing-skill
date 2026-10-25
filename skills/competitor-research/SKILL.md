@@ -40,6 +40,9 @@ command below.
    answers into that file and flip the marker to `CONFIGURED` with today's
    date. Otherwise, read it for terminology/tone consistency when drafting
    the brief below.
+   If the file is unconfigured but the user already said to skip setup
+   or use the defaults, don't ask: use its placeholder defaults for this
+   run, say so in one line, and leave the marker as it is.
 
 2. **Confirm scope.** Identify:
    - Competitor name and website/domain.

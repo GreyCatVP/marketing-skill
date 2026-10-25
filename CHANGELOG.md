@@ -309,6 +309,39 @@ Skills that read "our changelog" for source material read this file too.
 - CI: repo checks (skill frontmatter, command size, paths the skills point
   at), dry-run smoke tests for both publish scripts, templates in sync
   with `build.py`, and `check.js` over every template.
+- **Numbers instead of eyeballing**: `scripts/results.py` reads the logs
+  and prints what they add up to: posts and removals by community and by
+  Go/No-Go verdict, median views, average watch, and 3-second hold by
+  video format and hook pattern, and cold email reply rates with a
+  two-proportion z-test on the subject-line A/B. Groups under 5 are "too
+  few to tell", and the A/B isn't called under 30 sends a side.
+  `short-form-video`, `content-calendar`, and `email-outreach` steer by
+  its output instead of reading the tables themselves.
+- **A post log**: `state/post-log.md` records Reddit, Hacker News,
+  dev.to, and other text posts with the verdict they went out under and
+  whether they were removed. `community-post-generator` checks it for an
+  earlier removal in the same community, and for the same link going to
+  several communities at once, before its Go/No-Go, and logs the post
+  once it's live.
+- `publish_direct.py --metrics` reads Reddit (score, upvote ratio,
+  comments, and whether it was removed and by whom) and dev.to
+  (reactions, comments, views); `--log` writes the numbers into the
+  post's row; `--post-id` takes over from `--video-id`, which still
+  works. Every send prints a `Posted:` line with the new post's ID and
+  link, and `publish-pipeline` keeps it. A Reddit post refused inside a
+  200 response (a rate limit, a missing flair) now fails instead of
+  reporting "Posted".
+- **An eval against plain Claude**: `evals/` holds seven cases for
+  `claude plugin eval`, which runs each with the plugin and without it
+  and scores the difference: a No-Go when a subreddit bans
+  self-promotion, a post that fits r/saasbuild's rules, the disclosure
+  r/buildinpublic asks for, a Show HN that asks for no votes, asking for
+  a Discord server's rules, an SEO brief with no made-up search volumes,
+  and a battlecard with no invented facts. The latest numbers are in
+  `docs/results.md`.
+- Every skill's setup step now continues with the placeholder defaults
+  when the user has already said to skip setup, instead of asking the 4
+  setup questions anyway.
 
 ## 0.7.0 (2026-10-03)
 

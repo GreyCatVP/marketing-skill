@@ -42,6 +42,9 @@ command below.
    answers into that file and flip the marker to `CONFIGURED` with today's
    date. Otherwise, read it for tone, audience, and banned words to apply
    below.
+   If the file is unconfigured but the user already said to skip setup
+   or use the defaults, don't ask: use its placeholder defaults for this
+   run, say so in one line, and leave the marker as it is.
 
 2. **Check outreach-strategy status.** Read
    `${CLAUDE_PLUGIN_ROOT}/references/outreach-strategy.md`.
@@ -66,19 +69,22 @@ command below.
      proceed straight to step 3 using the file's current settings.
 
    **Monthly Strategy Refresh:**
-   - Read `${CLAUDE_PLUGIN_ROOT}/state/outreach-log.md` and tally Status
-     counts for rows dated since the last refresh (`Sent`, `Replied`,
-     `Bounced`, `Unsubscribed`/`Do-Not-Contact`, `Skipped-Duplicate`),
-     and, if there's enough volume for it to mean anything, a reply-rate
-     split by Subject Variant (`A` vs `B`).
+   - Run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/results.py --since
+     <last refresh date>` (it reads `state/outreach-log.md`, never the
+     network) and use its Cold email section: emails sent since the last
+     refresh, the reply, bounce, and unsubscribe rates, and the
+     subject-line A/B call. That call is a significance test, not a
+     glance at two percentages: under 30 sends a side it says "too few
+     to tell", and a gap that could be chance is "no clear winner".
    - Show the user that tally alongside the current ICP/segment(s),
      angle, offer/CTA, sender identity, daily volume, send-time window,
      and follow-up cadence.
    - Ask whether anything should change — segment, angle, offer, sender
      identity, volume, send-time window, cadence, or suppression window
-     — and whether a subject-line variant has pulled clearly ahead
-     enough to standardize on it. "No changes, keep as-is" is a valid
-     answer; don't force a change that isn't warranted.
+     — and whether to standardize on a subject-line variant, which is
+     only on the table when `results.py` says one gets more replies;
+     otherwise say why not and keep testing. "No changes, keep as-is" is
+     a valid answer; don't force a change that isn't warranted.
    - Rewrite the relevant section(s) with any changes, append one new
      dated bullet to Performance Notes summarizing the tally (including
      the variant split) and what — if anything — changed because of it,

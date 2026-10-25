@@ -32,6 +32,9 @@ command below.
    answers and flip the marker to `CONFIGURED` with today's date. Because
    this happens before Stage 1, none of the individual stages below will
    re-trigger their own onboarding check in the same run.
+   If the file is unconfigured but the user already said to skip setup
+   or use the defaults, don't ask: use its placeholder defaults for this
+   run, say so in one line, and leave the marker as it is.
 
 2. **Confirm scope for all stages up front**, to avoid repeated
    back-and-forth mid-chain:

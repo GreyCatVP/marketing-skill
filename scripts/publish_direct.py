@@ -103,6 +103,7 @@ than faking one.
 import argparse
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -111,6 +112,16 @@ import urllib.request
 
 
 META_GRAPH_API_VERSION = os.environ.get("META_GRAPH_API_VERSION", "v26.0")
+
+PLUGIN_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# which log --metrics --log writes for each platform
+METRICS_LOGS = {
+    "youtube": "video-log.md",
+    "instagram": "video-log.md",
+    "tiktok": "video-log.md",
+    "reddit": "post-log.md",
+    "devto": "post-log.md",
+}
 
 NOTES = {
     "linkedin": "Uses the legacy UGC Posts API (v2/ugcPosts). LinkedIn has "
@@ -393,11 +404,18 @@ def parse_args():
                               "it processes the video before giving up.")
     parser.add_argument("--timeout", type=float, default=15, help="Request timeout in seconds for ordinary (non-upload) calls (default: 15).")
     parser.add_argument("--metrics", action="store_true",
-                         help="Read a posted video's numbers instead of posting (--platform youtube, instagram, or "
-                              "tiktok, with --video-id). Read-only, so it needs neither --dry-run nor --confirmed; "
-                              "--dry-run still previews the request. Prints a row for state/video-log.md.")
-    parser.add_argument("--video-id", help="--metrics only: the platform's ID for the posted video (YouTube video ID, "
-                                            "Instagram media ID, TikTok video ID).")
+                         help="Read a post's numbers instead of posting (--platform youtube, instagram, tiktok, "
+                              "reddit, or devto, with --post-id). Read-only, so it needs neither --dry-run nor "
+                              "--confirmed; --dry-run still previews the request. Prints the cells for "
+                              "state/video-log.md (videos) or state/post-log.md (reddit, devto).")
+    parser.add_argument("--post-id", "--video-id", dest="post_id",
+                         help="--metrics only: the post's ID or link (YouTube video ID, Instagram media ID, TikTok "
+                              "video ID, a Reddit post's URL or ID, a dev.to article's URL or ID).")
+    parser.add_argument("--log", action="store_true",
+                         help="--metrics only: write the numbers into the row whose Link / ID cell holds this post, "
+                              "in state/video-log.md or state/post-log.md (or --log-file). Only the number cells "
+                              "the platform reported, plus Updated.")
+    parser.add_argument("--log-file", help="--metrics --log only: the log to write instead of the default under state/.")
     parser.add_argument("--dry-run", action="store_true", help="Print the request(s) instead of sending them. Never makes a network call.")
     parser.add_argument("--confirmed", action="store_true",
                          help="Required to actually send. Only pass this after a human has seen the exact "
@@ -588,6 +606,43 @@ BUILDERS = {
 }
 
 
+def posted_id(platform, response_body):
+    """The new post's (ID, link) from a successful send's response, for the Link / ID cell of
+    state/post-log.md or state/video-log.md and for --metrics --post-id later. Either is None when
+    the response doesn't carry it (Discord and Slack webhooks return no post at all)."""
+    try:
+        data = json.loads(response_body or "{}")
+    except ValueError:
+        return None, None
+    if not isinstance(data, dict):
+        return None, None
+    if platform == "reddit":
+        post = (data.get("json") or {}).get("data") or {}
+        return post.get("id"), post.get("url")
+    if platform == "x":
+        pid = (data.get("data") or {}).get("id")
+        return pid, pid and f"https://x.com/i/web/status/{pid}"
+    if platform == "telegram":
+        message = data.get("result") or {}
+        username = (message.get("chat") or {}).get("username")
+        mid = message.get("message_id")
+        return mid, mid and username and f"https://t.me/{username}/{mid}"
+    pid = data.get("id")
+    links = {
+        "devto": data.get("url"),
+        "linkedin": pid and f"https://www.linkedin.com/feed/update/{pid}/",
+        "meta": pid and f"https://www.facebook.com/{pid}",
+        "youtube": pid and f"https://youtu.be/{pid}",
+    }
+    return pid, links.get(platform)
+
+
+def print_posted(platform, response_body):
+    pid, link = posted_id(platform, response_body)
+    if pid or link:
+        print(f"Posted: {' '.join(str(x) for x in (pid, link) if x)}")
+
+
 def redact(text, secrets):
     for secret in secrets:
         if secret:
@@ -739,6 +794,7 @@ def run_youtube(args):
 
     print("Uploaded to YouTube")
     print(f"Status: {status} {reason}")
+    print_posted("youtube", response_body)
     print(f"Response: {response_body[:500] or '(empty body)'}")
     return 0
 
@@ -877,6 +933,7 @@ def run_instagram(args):
 
     print("Published to Instagram Reels")
     print(f"Status: {status} {reason}")
+    print_posted("instagram", response_body)
     print(f"Response: {response_body[:500] or '(empty body)'}")
     return 0
 
@@ -1053,7 +1110,8 @@ def run_tiktok(args):
     print(
         "This means TikTok accepted the request, not that the video is live yet - "
         "confirm via TikTok's status-fetch endpoint with the publish ID above, or "
-        "your app's activity log."
+        "your app's activity log. For --metrics later, use the video ID from the "
+        "post's own link (tiktok.com/@you/video/<ID>), not this publish ID."
     )
     return 0
 
@@ -1064,11 +1122,29 @@ def http_json(url, headers, timeout, body=None, method="GET"):
         return json.loads(response.read().decode("utf-8") or "{}")
 
 
+def reddit_post_id(value):
+    """The base-36 ID from a Reddit post's URL, a redd.it link, a t3_ fullname, or the bare ID."""
+    m = re.search(r"(?:/comments/|redd\.it/)([a-z0-9]+)", value, re.I)
+    if m:
+        return m.group(1).lower()
+    return value.strip().lower().removeprefix("t3_")
+
+
 def metrics_requests(args):
     """The read-only requests --metrics makes for each platform, as (label, method, url, headers,
     body, secrets, optional) tuples. Best-effort against each platform's documented API, like the
     rest of this script: confirm the metric names against the platform's docs if a call fails."""
-    vid = urllib.parse.quote(args.video_id, safe="")
+    if args.platform == "reddit":
+        env = require_env("REDDIT_ACCESS_TOKEN", "REDDIT_USER_AGENT")
+        return [("post (Reddit API)", "GET", f"https://oauth.reddit.com/by_id/t3_{reddit_post_id(args.post_id)}",
+                 {"Authorization": f"Bearer {env['REDDIT_ACCESS_TOKEN']}", "User-Agent": env["REDDIT_USER_AGENT"]},
+                 None, [env["REDDIT_ACCESS_TOKEN"]], False)]
+    if args.platform == "devto":
+        env = require_env("DEVTO_API_KEY")
+        # the per-article endpoint has no view count; the author's own list does
+        return [("your articles (dev.to API)", "GET", "https://dev.to/api/articles/me/all?per_page=1000",
+                 {"api-key": env["DEVTO_API_KEY"]}, None, [env["DEVTO_API_KEY"]], False)]
+    vid = urllib.parse.quote(args.post_id, safe="")
     if args.platform == "youtube":
         env = require_env("YOUTUBE_ACCESS_TOKEN")
         headers = {"Authorization": f"Bearer {env['YOUTUBE_ACCESS_TOKEN']}"}
@@ -1091,17 +1167,44 @@ def metrics_requests(args):
                  f"&access_token={urllib.parse.quote(env['META_PAGE_ACCESS_TOKEN'], safe='')}", {}, None,
                  [env["META_PAGE_ACCESS_TOKEN"]], False)]
     env = require_env("TIKTOK_ACCESS_TOKEN")
-    body = json.dumps({"filters": {"video_ids": [args.video_id]}}).encode("utf-8")
+    body = json.dumps({"filters": {"video_ids": [args.post_id]}}).encode("utf-8")
     return [("video stats (TikTok Display API, video.list scope)", "POST",
              "https://open.tiktokapis.com/v2/video/query/?fields=id,view_count,like_count,comment_count,share_count,duration",
              {"Authorization": f"Bearer {env['TIKTOK_ACCESS_TOKEN']}", "Content-Type": "application/json; charset=UTF-8"},
              body, [env["TIKTOK_ACCESS_TOKEN"]], False)]
 
 
-def read_metrics(platform, answers):
-    """Pulls views, average watch, likes, comments, shares, and saves out of the answers."""
+# Reddit's removed_by_category, in the post log's Removed words
+REDDIT_REMOVED = {"moderator": "moderator", "automod_filtered": "automod", "reddit": "reddit",
+                  "anti_evil_ops": "reddit", "deleted": "deleted", "author": "deleted"}
+
+
+def read_metrics(platform, answers, post_id):
+    """Pulls the numbers out of the answers: views, average watch, likes, comments, shares, and
+    saves for a video; removed, score, ratio, comments, and views for a post. A post's own link
+    comes back as "link", so --log can find a row that holds the URL rather than the ID."""
     m = {}
-    if platform == "youtube":
+    if platform == "reddit":
+        children = ((answers.get(0) or {}).get("data") or {}).get("children") or []
+        if not children:
+            raise LookupError(f"Reddit has no post {post_id} (deleted, or not a post ID).")
+        post = children[0].get("data") or {}
+        category = post.get("removed_by_category")
+        m.update(removed="no" if category is None else REDDIT_REMOVED.get(category, category),
+                 score=post.get("score"), ratio=post.get("upvote_ratio"), comments=post.get("num_comments"))
+        if post.get("permalink"):
+            m["link"] = "https://www.reddit.com" + post["permalink"]
+    elif platform == "devto":
+        value = post_id.strip().rstrip("/")
+        for article in answers.get(0) or []:
+            url = (article.get("url") or "").rstrip("/")
+            if value in (str(article.get("id")), url) or url.endswith("/" + value.lstrip("/")):
+                m.update(score=article.get("public_reactions_count"), comments=article.get("comments_count"),
+                         views=article.get("page_views_count"), link=url)
+                break
+        else:
+            raise LookupError(f"None of your dev.to articles match {post_id}.")
+    elif platform == "youtube":
         stats = ((answers.get(0) or {}).get("items") or [{}])[0].get("statistics", {})
         m.update(views=stats.get("viewCount"), likes=stats.get("likeCount"), comments=stats.get("commentCount"))
         report = answers.get(1) or {}
@@ -1126,13 +1229,71 @@ def read_metrics(platform, answers):
     return m
 
 
+def split_row(line):
+    """A Markdown table row's cells, keeping escaped \\| pipes inside a cell."""
+    body = line.strip()
+    body = body[1:] if body.startswith("|") else body
+    body = body[:-1] if body.endswith("|") and not body.endswith("\\|") else body
+    return [cell.strip() for cell in re.split(r"(?<!\\)\|", body)]
+
+
+def find_log_row(lines, keys):
+    """(index of the table's header line, index of the row whose Link / ID cell holds one of keys).
+    Either is None when it isn't there."""
+    header = next((i for i, line in enumerate(lines) if line.startswith("| Posted |")), None)
+    if header is None:
+        return None, None
+    link = split_row(lines[header]).index("Link / ID")
+    patterns = [re.compile(r"(?<![\w-])" + re.escape(key) + r"(?![\w-])", re.I) for key in keys if key]
+    for i in range(header + 2, len(lines)):
+        if not lines[i].startswith("|"):
+            break
+        cells = split_row(lines[i])
+        if len(cells) > link and any(p.search(cells[link]) for p in patterns):
+            return header, i
+    return header, None
+
+
+# the log column each number goes in
+LOG_COLUMNS = {"views": "Views", "avg_watch": "Avg watch", "likes": "Likes", "comments": "Comments",
+               "shares": "Shares", "saves": "Saves", "removed": "Removed", "score": "Score", "ratio": "Ratio"}
+
+
+def log_metrics(path, keys, m):
+    """Writes the numbers in m into the post's row of the log at path: only the cells the platform
+    reported (a hand-entered number stays when the platform has none), plus Updated."""
+    lines = open(path, encoding="utf-8").read().split("\n")
+    header, row = find_log_row(lines, keys)
+    if row is None:
+        print(f"No row in {path} has {keys[0]} in its Link / ID cell. Add the post's row first, then run "
+              "this again.", file=sys.stderr)
+        return 2
+    columns = split_row(lines[header])
+    cells = split_row(lines[row])
+    cells += [""] * (len(columns) - len(cells))
+    for key, column in LOG_COLUMNS.items():
+        if column in columns and m.get(key) is not None:
+            cells[columns.index(column)] = str(m[key])
+    cells[columns.index("Updated")] = time.strftime("%Y-%m-%d")
+    lines[row] = "| " + " | ".join(cells) + " |"
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+    print(f"Updated {os.path.relpath(path)} (row {row + 1})")
+    return 0
+
+
 def run_metrics(args):
-    if args.platform not in ("youtube", "instagram", "tiktok"):
-        print("--metrics works for --platform youtube, instagram, and tiktok.", file=sys.stderr)
+    if args.platform not in METRICS_LOGS:
+        print("--metrics works for --platform youtube, instagram, tiktok, reddit, and devto.", file=sys.stderr)
         return 2
-    if not args.video_id:
-        print("--metrics needs --video-id: the platform's ID for the posted video.", file=sys.stderr)
+    if not args.post_id:
+        print("--metrics needs --post-id: the post's ID or link on that platform.", file=sys.stderr)
         return 2
+    log_path = args.log_file or os.path.join(PLUGIN_ROOT, "state", METRICS_LOGS[args.platform])
+    if args.log and not os.path.exists(log_path):
+        print(f"--log: {log_path} doesn't exist.", file=sys.stderr)
+        return 2
+    keys = [reddit_post_id(args.post_id) if args.platform == "reddit" else args.post_id.strip().rstrip("/")]
     requests = metrics_requests(args)
     if args.dry_run:
         print("=== DRY RUN: no request sent ===")
@@ -1143,6 +1304,12 @@ def run_metrics(args):
                 print(f"  {name}: {redact(value, secrets)}")
             if body:
                 print(f"  Body: {redact(body.decode('utf-8'), secrets)}")
+        if args.log:
+            _, row = find_log_row(open(log_path, encoding="utf-8").read().split("\n"), keys)
+            if row is None:
+                print(f"--log: no row in {os.path.relpath(log_path)} has {keys[0]} in its Link / ID cell yet.")
+            else:
+                print(f"--log: would update row {row + 1} of {os.path.relpath(log_path)}.")
         print("=== END DRY RUN ===")
         return 0
     answers = {}
@@ -1158,11 +1325,22 @@ def run_metrics(args):
         except urllib.error.URLError as e:
             print(f"{label}: couldn't connect ({e.reason})", file=sys.stderr)
             return 1
-    m = read_metrics(args.platform, answers)
-    print(json.dumps({"platform": args.platform, "video_id": args.video_id, **m}, indent=2))
+    try:
+        m = read_metrics(args.platform, answers, args.post_id)
+    except LookupError as e:
+        print(e, file=sys.stderr)
+        return 1
+    print(json.dumps({"platform": args.platform, "post_id": args.post_id, **m}, indent=2))
+    if args.log:
+        return log_metrics(log_path, keys + [m.get("link")], m)
     cell = lambda k: "" if m.get(k) is None else str(m[k])  # noqa: E731
-    print("For state/video-log.md (Views | Avg watch | 3s hold | Likes | Comments | Shares | Saves | Updated):")
-    print(f"| {cell('views')} | {cell('avg_watch')} |  | {cell('likes')} | {cell('comments')} | {cell('shares')} | {cell('saves')} | {time.strftime('%Y-%m-%d')} |")
+    today = time.strftime("%Y-%m-%d")
+    if METRICS_LOGS[args.platform] == "post-log.md":
+        print("For state/post-log.md (Removed | Score | Ratio | Comments | Views | Updated):")
+        print(f"| {cell('removed')} | {cell('score')} | {cell('ratio')} | {cell('comments')} | {cell('views')} | {today} |")
+    else:
+        print("For state/video-log.md (Views | Avg watch | 3s hold | Likes | Comments | Shares | Saves | Updated):")
+        print(f"| {cell('views')} | {cell('avg_watch')} |  | {cell('likes')} | {cell('comments')} | {cell('shares')} | {cell('saves')} | {today} |")
     return 0
 
 
@@ -1292,8 +1470,20 @@ def main():
         print(f"Failed to reach {args.platform} API: {e}", file=sys.stderr)
         sys.exit(3)
 
+    if args.platform == "reddit":
+        # api_type=json reports a refused post (rate limit, missing flair, no such subreddit) as a 200
+        try:
+            errors = (json.loads(response_body or "{}").get("json") or {}).get("errors") or []
+        except (ValueError, AttributeError):
+            errors = []
+        if errors:
+            print("reddit API accepted the request but refused the post", file=sys.stderr)
+            print(f"Errors: {json.dumps(errors)[:500]}", file=sys.stderr)
+            sys.exit(4)
+
     print(f"Posted to {args.platform}")
     print(f"Status: {status} {reason}")
+    print_posted(args.platform, response_body)
     print(f"Response: {response_body[:500] or '(empty body)'}")
     sys.exit(0)
 

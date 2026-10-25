@@ -60,11 +60,32 @@ fi
 echo "ok: youtube refuses a cover"
 
 # metrics: read-only, so it runs without --confirmed; checked here as a dry run
-for platform in youtube instagram tiktok; do
-  out=$(env YOUTUBE_ACCESS_TOKEN=$fake META_PAGE_ACCESS_TOKEN=$fake TIKTOK_ACCESS_TOKEN=$fake python3 $d --platform $platform --metrics --video-id 123 --dry-run 2>&1)
+metrics() {
+  local platform=$1 id=$2
+  shift 2
+  out=$(env YOUTUBE_ACCESS_TOKEN=$fake META_PAGE_ACCESS_TOKEN=$fake TIKTOK_ACCESS_TOKEN=$fake \
+    REDDIT_ACCESS_TOKEN=$fake REDDIT_USER_AGENT=smoke DEVTO_API_KEY=$fake \
+    python3 $d --platform $platform --metrics --post-id "$id" --dry-run "$@" 2>&1)
   grep -q "DRY RUN" <<<"$out" && ! grep -q "$fake" <<<"$out" || { echo "FAIL: $platform --metrics"; echo "$out"; exit 1; }
+}
+for platform in youtube instagram tiktok devto; do
+  metrics $platform 123
   echo "ok: $platform metrics"
 done
+# a Reddit post's link is reduced to its ID
+metrics reddit https://www.reddit.com/r/test/comments/abc123/hi/
+grep -q "by_id/t3_abc123" <<<"$out" || { echo "FAIL: reddit --metrics post ID"; echo "$out"; exit 1; }
+echo "ok: reddit metrics"
+# the old flag name still works
+env YOUTUBE_ACCESS_TOKEN=$fake python3 $d --platform youtube --metrics --video-id 123 --dry-run >/dev/null 2>&1 || { echo "FAIL: --video-id alias"; exit 1; }
+echo "ok: --video-id alias"
+# --log finds the post's row by the ID inside its link
+logs=scripts/ci/fixtures/logs
+metrics reddit abc123 --log --log-file $logs/post-log.md
+grep -q "would update row" <<<"$out" || { echo "FAIL: reddit --metrics --log"; echo "$out"; exit 1; }
+metrics reddit zzz999 --log --log-file $logs/post-log.md
+grep -q "no row" <<<"$out" || { echo "FAIL: --log should report a missing row"; echo "$out"; exit 1; }
+echo "ok: metrics --log"
 
 if env DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/1/$fake python3 $d --platform discord --text hi >/dev/null 2>&1; then
   echo "FAIL: publish_direct.py ran with neither --dry-run nor --confirmed"

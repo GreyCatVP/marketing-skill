@@ -101,6 +101,9 @@ command below.
    answers into that file and flip the marker to `CONFIGURED` with today's
    date. Otherwise, read it for the banned-words list (still applies) —
    but see step 5 on tone, which usually does *not* carry over as-is here.
+   If the file is unconfigured but the user already said to skip setup
+   or use the defaults, don't ask: use its placeholder defaults for this
+   run, say so in one line, and leave the marker as it is.
 
 2. **Confirm scope.**
    - **Out of scope, redirect instead of forcing it:** LinkedIn, Twitter/X,
@@ -233,6 +236,14 @@ command below.
      checked, note it was checked just now. Never assert a community's
      norms from training knowledge alone; subreddit rules change, and a
      stale assumption is exactly how a post gets removed.
+   - **This account's own record there.** Read
+     `${CLAUDE_PLUGIN_ROOT}/state/post-log.md`. If an earlier post to this
+     same community was removed, say so and by whom (a moderator,
+     AutoMod, or Reddit's spam filter) in the research summary; it
+     counts against a Go. If the same link went to other communities in
+     the last few days, say how many and suggest spacing this one out,
+     since the same link in several subreddits at once is what Reddit's
+     spam filter catches.
    - **Track source tier as you go, not just the content.** WebFetch to
      reddit.com, producthunt.com, news.ycombinator.com, indiehackers.com,
      or dev.to can fail outright depending on the runtime's
@@ -622,6 +633,15 @@ Use this exact section order, as Markdown `##` headings:
    and treat it as manual-only until proven otherwise. Say which of the
    four send-path profiles above actually applies to this specific user
    and target rather than defaulting to any one of them by habit.
+   Then close the loop: once the user says the post is live, add its row
+   to `${CLAUDE_PLUGIN_ROOT}/state/post-log.md` (date, platform, the
+   community, a short label, this skill, the Go/No-Go verdict it went
+   out under, and its link), and offer to fill in its numbers a day or
+   two later: pasted by the user, or for Reddit and dev.to fetched with
+   `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/publish_direct.py --platform
+   <reddit|devto> --metrics --post-id <link> --log` if they have that
+   platform's API credentials. That row is how "does this work?" gets an
+   answer from real posts.
 
 ## Formatting rules
 

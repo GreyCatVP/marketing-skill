@@ -55,6 +55,9 @@ command below. `VIDEO` below means `${CLAUDE_PLUGIN_ROOT}/scripts/video`.
    answers into that file and flip the marker to `CONFIGURED` with today's
    date. That file is the user's own business. Each client they make
    videos for gets a profile of their own (step 2).
+   If the file is unconfigured but the user already said to skip setup
+   or use the defaults, don't ask: use its placeholder defaults for this
+   run, say so in one line, and leave the marker as it is.
 
 2. **Pick the client.** List `${CLAUDE_PLUGIN_ROOT}/state/clients/*.md`
    and ask who this video is for. `state/clients/README.md` has the

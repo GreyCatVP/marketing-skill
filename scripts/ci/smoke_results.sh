@@ -36,3 +36,6 @@ expect "--eval table" "| reddit-nogo | 1.00 | 0.33 | +0.67 | 2 of 3 | 3 |"
 
 out=$(python3 $r --log-dir $logs --since 2026-09-05)
 expect "--since drops earlier rows" "## Posts (4)"
+
+out=$(python3 $r --eval $logs/eval-result.json --compare $logs/eval-result.json)
+expect "--compare before / after" "All runs: 3 of 3 before, 3 of 3 after."

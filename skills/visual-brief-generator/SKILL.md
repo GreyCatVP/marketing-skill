@@ -1,6 +1,6 @@
 ---
 name: visual-brief-generator
-description: "Turns content into a structured image or video generation brief: shot list, per-scene AI image/video prompts, aspect ratio per platform, and a style and mood guide, and generates the asset if a visual-generation tool is connected. Use when the user asks for a visual brief, video brief, creative brief, shot list, storyboard, or image or video prompts."
+description: "Writes an image or video generation brief: a shot list, per-scene prompts for AI image and video tools, aspect ratios, and a style guide. Use whenever someone wants a visual or creative brief, a storyboard, a shot list, or prompts for Midjourney, DALL-E, Runway, or similar, even for a few product shots."
 allowed-tools: Read, Grep, Glob, Write
 ---
 

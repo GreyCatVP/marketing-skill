@@ -1,6 +1,6 @@
 ---
 name: content-repurposer
-description: "Repurposes one piece of content (a blog post, article, research brief, announcement, or URL) into a LinkedIn post, a Twitter/X thread, and a newsletter blurb in one pass, each written for that channel's format. Use when the user asks to repurpose, adapt, or cross-post content, or to turn something into a LinkedIn post, tweet thread, X thread, or newsletter section."
+description: "Turns one piece of content (a blog post, an announcement, notes, or a URL) into a LinkedIn post, an X thread, and a newsletter blurb, each in its channel's format. Use whenever someone wants a LinkedIn post, a tweet or thread, or a newsletter section made from something, even a pasted paragraph. Subreddits and forums: that's community-post-generator."
 allowed-tools: Read, Grep, Glob, WebFetch, Write
 ---
 

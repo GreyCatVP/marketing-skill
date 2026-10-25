@@ -1,6 +1,6 @@
 ---
 name: short-form-video
-description: "Creates ready-to-post short videos for TikTok, Instagram Reels, and YouTube Shorts (9:16), or 16:9 for YouTube, Reddit, LinkedIn, and websites: marketing videos (ads, explainers, how-tos, testimonials, product launches and demos) and everyday FYP posts (POV, tier lists, text-message skits, storytimes): a hook-first script and shot list, per-platform captions and hashtags, and a posting window. If the user opts in, it makes the video: rendered locally with an original soundtrack and voiceover (animated text, a narrated 3D mascot or the user's own 3D character, pixel art, or the product's own screens), edited like a reference video the user sends, or with a connected tool (Higgsfield, HeyGen, Figma Weave, Canva). Use when the user asks for a TikTok, Reel, or Short, a short video for YouTube, Reddit, or LinkedIn, a launch or demo video, a 3D or pixel-art animated video, a video like one they send, a meme or trend-style post, or a viral video."
+description: "Writes and makes short videos for TikTok, Reels, and Shorts (or 16:9 for YouTube, Reddit, LinkedIn): a hook-first script, captions, hashtags, a posting time, and, if wanted, the rendered video. Use whenever someone wants a TikTok, Reel, Short, launch or demo video, or video script, even a quick 15-second one."
 allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write, Bash
 ---
 

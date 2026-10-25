@@ -1,6 +1,6 @@
 ---
 name: seo-brief
-description: "Writes an SEO content brief for a blog post or landing page: target keyword, search intent, related and secondary keywords, a suggested heading outline, and meta title and meta description, without inventing search-volume numbers. Use when the user asks for an SEO brief, content brief, keyword research, on-page SEO, a blog outline built for search, or how to rank or optimize a page for Google."
+description: "Writes an SEO content brief for a page: target keyword, search intent, related keywords, a heading outline, and meta title and description, with no made-up search volumes. Use whenever someone wants a page or post to rank, keyword ideas, a content brief, or an outline built for search, even without SEO tools."
 allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write
 ---
 

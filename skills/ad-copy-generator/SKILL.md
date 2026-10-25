@@ -1,6 +1,6 @@
 ---
 name: ad-copy-generator
-description: "Writes paid ad copy for Facebook and Instagram (Meta) Ads, Google Search Ads (RSA headlines and descriptions), and LinkedIn Ads: multiple variants per platform, each testing a different hook angle and sized to that platform's character limits, ready for A/B testing. Use when the user asks for ad copy, ad headlines, ad variants, PPC or paid social copy, Facebook ad text, Google Ads headlines, or A/B test copy for a paid campaign."
+description: "Writes paid ad copy for Meta (Facebook and Instagram), Google Search, and LinkedIn: several variants, each testing a different hook, sized to each platform's limits. Use whenever someone wants ads, ad headlines, PPC or paid social copy, or variants to A/B test, even for one quick ad."
 allowed-tools: Read, Grep, Glob, Write
 ---
 

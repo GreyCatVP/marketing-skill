@@ -1,6 +1,6 @@
 ---
 name: montage-video
-description: "Turns a client's photos of a room, a home for sale or rent, or a product into a finished vertical marketing montage for TikTok, Instagram Reels, and YouTube Shorts: each photo moving like a camera (free local 3D moves and pans, or, only when the user has a paid plan with a video model such as Figma Weave and approves the quote, AI-made camera moves and new angles), cut on the music's beat, with labels, a hook, the price and specs, and the client's logo and contact details on the end card. Adds music in the client's saved sound, a licensed track, or the user's own, and an optional voiceover with synced captions, then keeps editing the video on request and saves each version. Keeps a profile per client. Use when the user shares photos of a property, listing, room, or product and asks for a montage, slideshow, listing video, property tour, or product video. When they have videos (or can film some), clip-montage is the default instead."
+description: "Turns photos of a home, a room, or a product into a finished vertical video: each photo moving like a camera, cut on the beat, with labels, price and specs, and a branded end card. Use whenever someone has listing or product photos and wants a listing video, property tour, slideshow, or product video. Video clips: that's clip-montage."
 allowed-tools: Read, Grep, Glob, WebSearch, Write, Bash
 ---
 

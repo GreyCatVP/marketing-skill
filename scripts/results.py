@@ -22,7 +22,8 @@ tables; --json prints the same numbers for a skill to read.
   python3 scripts/results.py --eval evals/results/latest.json
 
 --eval prints the with-plugin / without-plugin table from a
-`claude plugin eval --json` result instead.
+`claude plugin eval --json` result instead; --compare puts an earlier
+result beside it, case by case (for a before / after change).
 
 Standard library only; reads local files, never the network.
 """
@@ -275,6 +276,27 @@ def eval_table(path):
     return data, rows
 
 
+def compare_table(before_path, after_path):
+    """Before / after pass rates per case from two runs of the same suite: the with-plugin score,
+    which under --ablation none is the share of runs that passed. Totals count runs, not cases."""
+    def scores(path):
+        data = json.load(open(path, encoding="utf-8"))
+        return {c["name"]: (c["aggregates"].get("score"), len((c.get("arms") or {}).get("with") or []))
+                for c in data.get("cases", [])}
+    before, after = scores(before_path), scores(after_path)
+    rows, totals = [], [0, 0, 0, 0]
+    for name in sorted(set(before) | set(after)):
+        (b, bn), (a, an) = before.get(name, (None, 0)), after.get(name, (None, 0))
+        runs = lambda score, n: "" if score is None else f"{round(score * n)} of {n}"  # noqa: E731
+        rows.append([name, runs(b, bn), runs(a, an)])
+        if b is not None:
+            totals[0] += round(b * bn); totals[1] += bn
+        if a is not None:
+            totals[2] += round(a * an); totals[3] += an
+    out = table(["Case", "Before", "After"], rows)
+    return out + f"\n\nAll runs: {totals[0]} of {totals[1]} before, {totals[2]} of {totals[3]} after."
+
+
 def fmt2(value, sign=False):
     if value is None:
         return ""
@@ -290,8 +312,13 @@ def main():
     parser.add_argument("--json", action="store_true", help="Print the numbers as JSON instead of tables.")
     parser.add_argument("--eval", metavar="RESULT_JSON",
                         help="Print the with / without plugin table from a `claude plugin eval --json` result.")
+    parser.add_argument("--compare", metavar="EARLIER_JSON",
+                        help="With --eval: an earlier result of the same suite, shown as Before beside --eval's After.")
     args = parser.parse_args()
 
+    if args.eval and args.compare:
+        print(compare_table(args.compare, args.eval))
+        return 0
     if args.eval:
         data, rows = eval_table(args.eval)
         columns = ["case", "with", "without", "difference", "skill_fired", "runs"]

@@ -1,6 +1,6 @@
 ---
 name: community-post-generator
-description: "Writes Reddit, Product Hunt, Hacker News (Show HN), Indie Hackers (Show IH), dev.to (#showdev), Discord, Slack, and Telegram posts that follow each community's actual rules. Researches that specific subreddit's or site's rules and what currently works there live, verifying each source is about the named target, then gives a plain Go/No-Go and only drafts if the post is welcome, written to read like a person wrote it and in the platform's own format (Slack mrkdwn, Telegram HTML). For Discord, Slack, and private Telegram groups, which have no public rules page, it asks the user for the rules instead of guessing. Use when the user wants to post or promote something in a subreddit, launch on Product Hunt, write a Show HN or Show IH, post on dev.to, or share in a Discord server, Slack workspace, Telegram channel or group, or any other rules-driven community or forum. Not for LinkedIn, X, Instagram, or Facebook posts."
+description: "Writes a post for one specific community (a subreddit, Show HN, Product Hunt, Indie Hackers, dev.to, Discord, Slack, Telegram) after checking its rules, with a Go/No-Go first. Use whenever someone wants to post, launch, or share in one, even when they pasted the rules or the post looks obvious. LinkedIn, X, or Facebook: that's content-repurposer."
 allowed-tools: Read, Grep, Glob, Write, WebSearch, WebFetch
 ---
 

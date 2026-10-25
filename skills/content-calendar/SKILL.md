@@ -1,6 +1,6 @@
 ---
 name: content-calendar
-description: "Plans and batch-writes a week or a month of social media posts in one pass: a dated, platform-tagged content calendar across LinkedIn, Twitter/X, newsletters, Reddit, and short-form video, checked against the saved calendar so it never repeats a recent topic or angle, with every post queued for human approval instead of auto-posting. Use when the user asks for a content calendar, social media calendar, posting schedule, a week or month of posts, or to batch-plan content."
+description: "Plans and writes a week or month of dated social posts (LinkedIn, X, newsletter, Reddit, short video), checked against the saved calendar so topics don't repeat, and queued for approval. Use whenever someone wants a content calendar, a posting schedule, or the next week's or month's posts, even for one launch week."
 allowed-tools: Read, Write, Edit, Grep, Glob, WebSearch, WebFetch
 ---
 

@@ -31,3 +31,6 @@ media/explainer/character/assets/*
 
 # claude plugin eval output (each run writes a timestamped folder)
 evals/results/
+
+# trigger eval output
+trigger-evals/results/

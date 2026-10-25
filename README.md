@@ -508,10 +508,10 @@ Partly, and [docs/results.md](docs/results.md) has what there is.
   without the plugin by `claude plugin eval`. They test the things a skill
   promises: a No-Go when a subreddit bans self-promotion, no made-up search
   volumes, no invented facts about a competitor. In the latest run the
-  plugin matched plain Claude on four and clearly beat it on one (asking
-  for a Discord server's rules instead of drafting blind); the other two
-  don't say much yet. All of it is published, rows with no difference
-  included.
+  plugin clearly beat plain Claude on one (asking for a Discord server's
+  rules instead of drafting blind), led by a run on two, tied on three,
+  and lost one (its battlecard stated an absence the source didn't). All
+  of it is published, the loss included.
 - **Real results:** not yet beyond the launch posts. Each skill logs what
   went out, and `python3 scripts/results.py` turns your logs into
   removal rates, medians, and reply rates, with "too few to tell" until

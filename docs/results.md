@@ -29,52 +29,58 @@ way you'd paste a sidebar.
 ### The latest run
 
 2026-10-25, Claude Code 2.1.310, `claude-sonnet-5-5` doing the work and
-judging, 3 runs a side, $4.49. A score is the share of a case's checks
-that passed, averaged over its runs. "Skill fired" is how many
-with-plugin runs actually used the skill; in the others, Claude answered
-on its own with the plugin loaded.
+judging, 3 runs a side, $4.59, after the skill descriptions were
+rewritten (see [Does the skill fire?](#does-the-skill-fire)). A score is
+the share of a case's checks that passed, averaged over its runs.
+"Skill fired" is how many with-plugin runs actually used the skill.
 
 | Case | With plugin | Without | Difference | Skill fired | Runs per side |
 |---|---|---|---|---|---|
-| competitor-no-invented | 0.67 | 0.00 | +0.67 | 0 of 3 | 3 |
-| discord-no-rules | 1.00 | 0.00 | +1.00 | 2 of 3 | 3 |
+| competitor-no-invented | 0.00 | 0.67 | -0.67 | 3 of 3 | 3 |
+| discord-no-rules | 1.00 | 0.00 | +1.00 | 3 of 3 | 3 |
 | reddit-disclosure | 1.00 | 1.00 | +0.00 | 3 of 3 | 3 |
 | reddit-go-saasbuild | 1.00 | 1.00 | +0.00 | 3 of 3 | 3 |
-| reddit-nogo | 1.00 | 0.67 | +0.33 | 1 of 3 | 3 |
+| reddit-nogo | 1.00 | 0.67 | +0.33 | 3 of 3 | 3 |
 | seo-no-volumes | 1.00 | 1.00 | +0.00 | 3 of 3 | 3 |
-| show-hn | 1.00 | 1.00 | +0.00 | 3 of 3 | 3 |
+| show-hn | 1.00 | 0.83 | +0.17 | 3 of 3 | 3 |
 
 What it shows:
 
-- **One clear difference: Discord.** Asked for a post in a Discord
-  channel, plain Claude wrote a ready-to-send post all 3 times without
-  knowing the server's rules. With the plugin it asked for the rules all
-  3 times.
-- **No difference on four checks.** Plain Claude also gave a well-shaped
-  Show HN with no vote asks, an SEO brief with no made-up search volumes,
-  the disclosure r/buildinpublic asks for, and a post that fits
-  r/saasbuild's rules (none of the drafts had an em dash). On these the
-  plugin matches Claude; it doesn't beat it.
-- **Two rows that don't say much.** In `reddit-nogo` the skill fired in
-  only one of three runs, and the gap is a single run: one plain-Claude
-  reply refused this sub, then wrote a ready-to-post promo for other
-  subreddits whose rules it hadn't seen. In `competitor-no-invented`
-  the skill never fired, so its +0.67 compares Claude with Claude, and
-  the judge disagreed with itself across near-identical battlecards.
-  That case's check needs tightening before it means anything.
-- **A product finding:** when the answer looks obvious, Claude often
-  doesn't reach for the skill at all (1 of 3 for the No-Go, 0 of 3 for
-  the battlecard). Whatever a skill adds only counts when it fires.
+- **The skill fired in all 21 with-plugin runs**, up from 15 of 21 on
+  the old descriptions, so every row now measures the skill.
+- **One clear win: Discord.** Plain Claude wrote a ready-to-send post
+  all 3 times without knowing the server's rules; with the plugin it
+  asked for them all 3 times.
+- **Two small leads, one run each.** One plain-Claude No-Go reply refused
+  the sub and then wrote a promo for other subreddits whose rules it
+  hadn't seen; one plain-Claude Show HN didn't have the Show HN shape (a
+  "Show HN:" title, a URL, and a separate first comment). With 3 runs a side, one run is 0.33 (or 0.17 on a
+  two-check case).
+- **Three ties.** Plain Claude also got the r/buildinpublic disclosure,
+  the r/saasbuild post, and an SEO brief with no made-up volumes right.
+- **One loss: the battlecard.** Now that `competitor-research` fires,
+  its battlecards fail the "nothing that isn't on the page" check all 3
+  times. Asked why, the judge pointed at the skill's own comparison
+  table: it marks the cheaper plans "No" for approvals and an API, when
+  the page only says the top plan adds them (the skill's own "Not
+  listed" was the honest label), and it calls Acme's focus "split"
+  between freelancers and studios. Small, but exactly what the check is
+  for, and the more structured the brief, the more of these it makes.
+  The fix is in the skill: mark something absent only when the source
+  says so.
 
-With 3 runs a side, a difference of 0.33 is one run. The raw result,
-every reply the judge saw included, is
-[`results-data/eval-2026-10-25.json`](results-data/eval-2026-10-25.json).
+The raw results, every judged reply included:
+[this run](results-data/eval-2026-10-25-new-descriptions.json), and the
+run on the old descriptions the same day
+([results-data/eval-2026-10-25-old-descriptions.json](results-data/eval-2026-10-25-old-descriptions.json),
+skill fired 15 of 21, mean difference +0.29). The battlecard row there
+read +0.67 only because the skill never fired.
 
-An earlier run the same day is left out: two of its regex checks were
-written with an inline `(?i)` flag the eval's JavaScript regexes don't
-accept, so they failed on every run of both sides, and its cheaper judge
-model (`claude-haiku-5-5`) failed one with-plugin draft that met the
-check as written. Both were fixed before the run above.
+A run before both is left out: two of its regex checks were written
+with an inline `(?i)` flag the eval's JavaScript regexes don't accept,
+so they failed on every run of both sides, and its cheaper judge model
+(`claude-haiku-5-5`) failed one with-plugin draft that met the check as
+written. Both were fixed before the runs above.
 
 To run it yourself (each run is a paid model call; this suite is 42 runs
 plus the judge's):

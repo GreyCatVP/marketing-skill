@@ -26,14 +26,62 @@ own. Each case tests something a skill promises and a grader can check:
 All seven run offline: the rules or source text are in the prompt, the
 way you'd paste a sidebar.
 
-_The first full run is in progress; its numbers go here._
+### The latest run
 
-To run it yourself (each run is a paid model call; this suite is about
-42 runs plus the judge's):
+2026-10-25, Claude Code 2.1.310, `claude-sonnet-5-5` doing the work and
+judging, 3 runs a side, $4.49. A score is the share of a case's checks
+that passed, averaged over its runs. "Skill fired" is how many
+with-plugin runs actually used the skill; in the others, Claude answered
+on its own with the plugin loaded.
+
+| Case | With plugin | Without | Difference | Skill fired | Runs per side |
+|---|---|---|---|---|---|
+| competitor-no-invented | 0.67 | 0.00 | +0.67 | 0 of 3 | 3 |
+| discord-no-rules | 1.00 | 0.00 | +1.00 | 2 of 3 | 3 |
+| reddit-disclosure | 1.00 | 1.00 | +0.00 | 3 of 3 | 3 |
+| reddit-go-saasbuild | 1.00 | 1.00 | +0.00 | 3 of 3 | 3 |
+| reddit-nogo | 1.00 | 0.67 | +0.33 | 1 of 3 | 3 |
+| seo-no-volumes | 1.00 | 1.00 | +0.00 | 3 of 3 | 3 |
+| show-hn | 1.00 | 1.00 | +0.00 | 3 of 3 | 3 |
+
+What it shows:
+
+- **One clear difference: Discord.** Asked for a post in a Discord
+  channel, plain Claude wrote a ready-to-send post all 3 times without
+  knowing the server's rules. With the plugin it asked for the rules all
+  3 times.
+- **No difference on four checks.** Plain Claude also gave a well-shaped
+  Show HN with no vote asks, an SEO brief with no made-up search volumes,
+  the disclosure r/buildinpublic asks for, and a post that fits
+  r/saasbuild's rules (none of the drafts had an em dash). On these the
+  plugin matches Claude; it doesn't beat it.
+- **Two rows that don't say much.** In `reddit-nogo` the skill fired in
+  only one of three runs, and the gap is a single run: one plain-Claude
+  reply refused this sub, then wrote a ready-to-post promo for other
+  subreddits whose rules it hadn't seen. In `competitor-no-invented`
+  the skill never fired, so its +0.67 compares Claude with Claude, and
+  the judge disagreed with itself across near-identical battlecards.
+  That case's check needs tightening before it means anything.
+- **A product finding:** when the answer looks obvious, Claude often
+  doesn't reach for the skill at all (1 of 3 for the No-Go, 0 of 3 for
+  the battlecard). Whatever a skill adds only counts when it fires.
+
+With 3 runs a side, a difference of 0.33 is one run. The raw result,
+every reply the judge saw included, is
+[`results-data/eval-2026-10-25.json`](results-data/eval-2026-10-25.json).
+
+An earlier run the same day is left out: two of its regex checks were
+written with an inline `(?i)` flag the eval's JavaScript regexes don't
+accept, so they failed on every run of both sides, and its cheaper judge
+model (`claude-haiku-5-5`) failed one with-plugin draft that met the
+check as written. Both were fixed before the run above.
+
+To run it yourself (each run is a paid model call; this suite is 42 runs
+plus the judge's):
 
 ```
-claude plugin eval . --runs 3 --trust-plugin --model claude-sonnet-5-5 \
-  --judge-model claude-haiku-5-5 --threshold 0.67 --max-cost-usd 15 \
+claude plugin eval . --runs 3 -j 4 --trust-plugin --model claude-sonnet-5-5 \
+  --judge-model claude-sonnet-5-5 --threshold 0.67 --max-cost-usd 15 \
   --json evals/results/latest.json
 python3 scripts/results.py --eval evals/results/latest.json
 ```

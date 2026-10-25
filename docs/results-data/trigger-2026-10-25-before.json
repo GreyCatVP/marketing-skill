@@ -1,0 +1,2133 @@
+{
+ "schemaVersion": 1,
+ "claudeVersion": "2.1.310",
+ "startedAt": "2026-10-25T01:53:20.587Z",
+ "durationSeconds": 234,
+ "costUsd": 5.963344299999999,
+ "partial": false,
+ "suite": {
+  "root": ".",
+  "ablation": "none",
+  "modelOverride": "claude-sonnet-5-5",
+  "threshold": 1,
+  "concurrency": 4,
+  "plugins": [
+   {
+    "name": "marketing-skill",
+    "version": "0.8.0",
+    "path": "."
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "fire-ad-copy",
+   "dir": "trigger-evals/fire-ad-copy",
+   "source": "prose",
+   "promptMarkdown": "need 3 facebook ad versions for our $19/mo bookkeeping app for hair salons",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?ad-copy-generator\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 4,
+      "costUsd": 0.0797977,
+      "judgeCostUsd": 0,
+      "durationSeconds": 25,
+      "startedAt": "2026-10-25T01:53:20.718Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 4,
+      "costUsd": 0.062387700000000004,
+      "judgeCostUsd": 0,
+      "durationSeconds": 10,
+      "startedAt": "2026-10-25T01:53:20.719Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 4,
+      "costUsd": 0.0629177,
+      "judgeCostUsd": 0,
+      "durationSeconds": 10,
+      "startedAt": "2026-10-25T01:53:20.719Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  },
+  {
+   "name": "fire-calendar",
+   "dir": "trigger-evals/fire-calendar",
+   "source": "prose",
+   "promptMarkdown": "give me next week's posts for linkedin and x. we launch our invoicing app on wednesday",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?content-calendar\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 7,
+      "costUsd": 0.0983859,
+      "judgeCostUsd": 0,
+      "durationSeconds": 13,
+      "startedAt": "2026-10-25T01:53:20.719Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 7,
+      "costUsd": 0.09914590000000001,
+      "judgeCostUsd": 0,
+      "durationSeconds": 12,
+      "startedAt": "2026-10-25T01:53:30.629Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 7,
+      "costUsd": 0.0985133,
+      "judgeCostUsd": 0,
+      "durationSeconds": 13,
+      "startedAt": "2026-10-25T01:53:30.898Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  },
+  {
+   "name": "fire-clip-montage",
+   "dir": "trigger-evals/fire-clip-montage",
+   "source": "prose",
+   "promptMarkdown": "I've got 6 clips from our bakery's opening day on my phone, can you make them into a reel?",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?clip-montage\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 5,
+      "costUsd": 0.08437720000000001,
+      "judgeCostUsd": 0,
+      "durationSeconds": 11,
+      "startedAt": "2026-10-25T01:53:34.198Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 4,
+      "costUsd": 0.08249920000000001,
+      "judgeCostUsd": 0,
+      "durationSeconds": 10,
+      "startedAt": "2026-10-25T01:53:43.031Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 4,
+      "costUsd": 0.08264260000000001,
+      "judgeCostUsd": 0,
+      "durationSeconds": 10,
+      "startedAt": "2026-10-25T01:53:43.432Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  },
+  {
+   "name": "fire-community-discord",
+   "dir": "trigger-evals/fire-community-discord",
+   "source": "prose",
+   "promptMarkdown": "Write a post for the #showcase channel of the Buildspace Discord server. I'm a member there.\n\nThe project: marketing-skill, a free, open-source (MIT) Claude Code plugin I built. It has 14 marketing skills: competitor research, content calendars, SEO briefs, ad copy, email sequences, cold outreach, short-form video scripts and rendered videos, Reddit and Hacker News posts, and publishing that waits for your approval. It made its own 78-second launch video from a 19-line script, with a free local voice (Kokoro). Repo: https://github.com/marcosmodly/marketing-skill",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?community-post-generator\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 3,
+      "costUsd": 0.1160358,
+      "judgeCostUsd": 0,
+      "durationSeconds": 10,
+      "startedAt": "2026-10-25T01:53:44.801Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 6,
+      "costUsd": 0.13639379999999998,
+      "judgeCostUsd": 0,
+      "durationSeconds": 15,
+      "startedAt": "2026-10-25T01:53:45.506Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 5,
+      "costUsd": 0.1363409,
+      "judgeCostUsd": 0,
+      "durationSeconds": 13,
+      "startedAt": "2026-10-25T01:53:52.625Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  },
+  {
+   "name": "fire-community-nogo",
+   "dir": "trigger-evals/fire-community-nogo",
+   "source": "prose",
+   "promptMarkdown": "I want to post my project in r/devtoolsdaily. Their sidebar rules, copied just now:\n\n1. Be civil.\n2. No self-promotion. Posts about your own product, project, or company are removed, and repeat posters are banned.\n3. Questions and discussion only.\n\nThe project: marketing-skill, a free, open-source (MIT) Claude Code plugin I built. It has 14 marketing skills: competitor research, content calendars, SEO briefs, ad copy, email sequences, cold outreach, short-form video scripts and rendered videos, Reddit and Hacker News posts, and publishing that waits for your approval. Repo: https://github.com/marcosmodly/marketing-skill\n\nWrite me the post.",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?community-post-generator\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 0,
+      "passed": false,
+      "turns": 1,
+      "costUsd": 0.04274,
+      "judgeCostUsd": 0,
+      "durationSeconds": 10,
+      "startedAt": "2026-10-25T01:53:53.431Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": false,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 0,
+      "passed": false,
+      "turns": 1,
+      "costUsd": 0.04346,
+      "judgeCostUsd": 0,
+      "durationSeconds": 10,
+      "startedAt": "2026-10-25T01:53:55.086Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": false,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 0,
+      "passed": false,
+      "turns": 1,
+      "costUsd": 0.044182,
+      "judgeCostUsd": 0,
+      "durationSeconds": 11,
+      "startedAt": "2026-10-25T01:54:00.551Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": false,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 0,
+    "passRate": 0
+   }
+  },
+  {
+   "name": "fire-community-product-hunt",
+   "dir": "trigger-evals/fire-community-product-hunt",
+   "source": "prose",
+   "promptMarkdown": "we're launching on product hunt next tuesday. I need the tagline, the description, and the first comment. it's Chairside, online booking for dental clinics, $49/mo",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?community-post-generator\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 9,
+      "costUsd": 0.2047565,
+      "judgeCostUsd": 0,
+      "durationSeconds": 29,
+      "startedAt": "2026-10-25T01:54:03.666Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 8,
+      "costUsd": 0.20605849999999998,
+      "judgeCostUsd": 0,
+      "durationSeconds": 31,
+      "startedAt": "2026-10-25T01:54:05.464Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 8,
+      "costUsd": 0.2340483,
+      "judgeCostUsd": 0,
+      "durationSeconds": 36,
+      "startedAt": "2026-10-25T01:54:05.474Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  },
+  {
+   "name": "fire-community-sideproject",
+   "dir": "trigger-evals/fire-community-sideproject",
+   "source": "prose",
+   "promptMarkdown": "can you write up a quick post for r/SideProject about my repo? github.com/marcosmodly/marketing-skill. it's a free claude code plugin for marketing stuff",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?community-post-generator\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 9,
+      "costUsd": 0.2072438,
+      "judgeCostUsd": 0,
+      "durationSeconds": 19,
+      "startedAt": "2026-10-25T01:54:11.581Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 9,
+      "costUsd": 0.2518816,
+      "judgeCostUsd": 0,
+      "durationSeconds": 17,
+      "startedAt": "2026-10-25T01:54:30.488Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 9,
+      "costUsd": 0.2196125,
+      "judgeCostUsd": 0,
+      "durationSeconds": 18,
+      "startedAt": "2026-10-25T01:54:32.644Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  },
+  {
+   "name": "fire-competitor-battlecard",
+   "dir": "trigger-evals/fire-competitor-battlecard",
+   "source": "prose",
+   "promptMarkdown": "Build a sales battlecard on Acme Invoicing for us. We sell Ledgerly, invoicing for freelancers. I can't give you web access for this one; all I have is their pricing page, pasted below.\n\n---\nAcme Invoicing \u2014 Pricing\n\nStarter: $12/month. 20 invoices a month, card payments, 1 user.\nPro: $29/month. Unlimited invoices, recurring invoices, late-payment reminders, 3 users.\nBusiness: contact sales. Everything in Pro, plus approvals and an API.\n\nAll plans: a 14-day free trial, no card needed. Cancel anytime.\n\"Trusted by freelancers and small studios.\"\n---",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?competitor-research\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 0,
+      "passed": false,
+      "turns": 1,
+      "costUsd": 0.051070000000000004,
+      "judgeCostUsd": 0,
+      "durationSeconds": 17,
+      "startedAt": "2026-10-25T01:54:36.917Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": false,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 0,
+      "passed": false,
+      "turns": 1,
+      "costUsd": 0.05377,
+      "judgeCostUsd": 0,
+      "durationSeconds": 19,
+      "startedAt": "2026-10-25T01:54:41.406Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": false,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 0,
+      "passed": false,
+      "turns": 1,
+      "costUsd": 0.053748000000000004,
+      "judgeCostUsd": 0,
+      "durationSeconds": 19,
+      "startedAt": "2026-10-25T01:54:47.631Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": false,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 0,
+    "passRate": 0
+   }
+  },
+  {
+   "name": "fire-competitor-quick",
+   "dir": "trigger-evals/fire-competitor-quick",
+   "source": "prose",
+   "promptMarkdown": "how does Notion position itself against Coda? I've got a sales call tomorrow with a team comparing the two and I need talking points",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?competitor-research\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 5,
+      "costUsd": 0.072088,
+      "judgeCostUsd": 0,
+      "durationSeconds": 15,
+      "startedAt": "2026-10-25T01:54:50.438Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 0,
+      "passed": false,
+      "turns": 1,
+      "costUsd": 0.05095,
+      "judgeCostUsd": 0,
+      "durationSeconds": 17,
+      "startedAt": "2026-10-25T01:54:53.722Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": false,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 5,
+      "costUsd": 0.0739157,
+      "judgeCostUsd": 0,
+      "durationSeconds": 16,
+      "startedAt": "2026-10-25T01:55:00.368Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 0.6666666666666666,
+    "passRate": 0.6666666666666666
+   }
+  },
+  {
+   "name": "fire-email-outreach",
+   "dir": "trigger-evals/fire-email-outreach",
+   "source": "prose",
+   "promptMarkdown": "draft cold emails to dental clinic owners in Austin about our online booking tool. we're called Chairside, $49/mo",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?email-outreach\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 6,
+      "costUsd": 0.1208189,
+      "judgeCostUsd": 0,
+      "durationSeconds": 14,
+      "startedAt": "2026-10-25T01:55:05.540Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 6,
+      "costUsd": 0.1197115,
+      "judgeCostUsd": 0,
+      "durationSeconds": 17,
+      "startedAt": "2026-10-25T01:55:06.597Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 6,
+      "costUsd": 0.11946889999999999,
+      "judgeCostUsd": 0,
+      "durationSeconds": 13,
+      "startedAt": "2026-10-25T01:55:10.460Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  },
+  {
+   "name": "fire-email-sequence",
+   "dir": "trigger-evals/fire-email-sequence",
+   "source": "prose",
+   "promptMarkdown": "write the emails people get after they sign up for our 14-day free trial. it's a scheduling app for dog groomers",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?email-sequence\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 5,
+      "costUsd": 0.066876,
+      "judgeCostUsd": 0,
+      "durationSeconds": 13,
+      "startedAt": "2026-10-25T01:55:16.068Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 5,
+      "costUsd": 0.0653425,
+      "judgeCostUsd": 0,
+      "durationSeconds": 11,
+      "startedAt": "2026-10-25T01:55:19.384Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 5,
+      "costUsd": 0.0661725,
+      "judgeCostUsd": 0,
+      "durationSeconds": 12,
+      "startedAt": "2026-10-25T01:55:23.179Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  },
+  {
+   "name": "fire-full-pipeline",
+   "dir": "trigger-evals/fire-full-pipeline",
+   "source": "prose",
+   "promptMarkdown": "research Acme Invoicing, turn what you find into a week of posts, and get them published. do the whole thing",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?full-pipeline\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 8,
+      "costUsd": 0.15196130000000002,
+      "judgeCostUsd": 0,
+      "durationSeconds": 15,
+      "startedAt": "2026-10-25T01:55:23.338Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 5,
+      "costUsd": 0.07002320000000001,
+      "judgeCostUsd": 0,
+      "durationSeconds": 15,
+      "startedAt": "2026-10-25T01:55:29.171Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 7,
+      "costUsd": 0.1429137,
+      "judgeCostUsd": 0,
+      "durationSeconds": 12,
+      "startedAt": "2026-10-25T01:55:30.376Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  },
+  {
+   "name": "fire-montage-video",
+   "dir": "trigger-evals/fire-montage-video",
+   "source": "prose",
+   "promptMarkdown": "make a listing video from the 12 photos of 42 Oak St I took this morning. 3 bed, 2 bath, $489k",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?montage-video\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 5,
+      "costUsd": 0.09214449999999999,
+      "judgeCostUsd": 0,
+      "durationSeconds": 11,
+      "startedAt": "2026-10-25T01:55:34.853Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 6,
+      "costUsd": 0.09461510000000001,
+      "judgeCostUsd": 0,
+      "durationSeconds": 12,
+      "startedAt": "2026-10-25T01:55:37.941Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 5,
+      "costUsd": 0.0929185,
+      "judgeCostUsd": 0,
+      "durationSeconds": 10,
+      "startedAt": "2026-10-25T01:55:42.800Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  },
+  {
+   "name": "fire-publish",
+   "dir": "trigger-evals/fire-publish",
+   "source": "prose",
+   "promptMarkdown": "send the approved tuesday linkedin post from the calendar to our n8n webhook",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?publish-pipeline\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 6,
+      "costUsd": 0.08312359999999999,
+      "judgeCostUsd": 0,
+      "durationSeconds": 9,
+      "startedAt": "2026-10-25T01:55:44.310Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 6,
+      "costUsd": 0.09002100000000002,
+      "judgeCostUsd": 0,
+      "durationSeconds": 9,
+      "startedAt": "2026-10-25T01:55:45.742Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 6,
+      "costUsd": 0.083559,
+      "judgeCostUsd": 0,
+      "durationSeconds": 11,
+      "startedAt": "2026-10-25T01:55:49.534Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  },
+  {
+   "name": "fire-repurposer",
+   "dir": "trigger-evals/fire-repurposer",
+   "source": "prose",
+   "promptMarkdown": "turn this into a linkedin post:\n\nToday we shipped recurring invoices. You set a schedule once, and Ledgerly sends the invoice, follows up when it's late, and marks it paid when the money lands. It took us four months because we rebuilt how reminders work, and the old reminder emails were getting 3% replies. The new ones get 11%.",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?content-repurposer\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 0,
+      "passed": false,
+      "turns": 1,
+      "costUsd": 0.038898,
+      "judgeCostUsd": 0,
+      "durationSeconds": 7,
+      "startedAt": "2026-10-25T01:55:53.250Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": false,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 0,
+      "passed": false,
+      "turns": 1,
+      "costUsd": 0.038922,
+      "judgeCostUsd": 0,
+      "durationSeconds": 6,
+      "startedAt": "2026-10-25T01:55:53.674Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": false,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 0,
+      "passed": false,
+      "turns": 1,
+      "costUsd": 0.039758,
+      "judgeCostUsd": 0,
+      "durationSeconds": 6,
+      "startedAt": "2026-10-25T01:55:54.500Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": false,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 0,
+    "passRate": 0
+   }
+  },
+  {
+   "name": "fire-seo",
+   "dir": "trigger-evals/fire-seo",
+   "source": "prose",
+   "promptMarkdown": "what should i put on our landing page so it ranks for 'freelance invoice app'? we're a 2-person startup with no SEO tools",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?seo-brief\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 6,
+      "costUsd": 0.0697468,
+      "judgeCostUsd": 0,
+      "durationSeconds": 13,
+      "startedAt": "2026-10-25T01:55:59.189Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 6,
+      "costUsd": 0.07211680000000001,
+      "judgeCostUsd": 0,
+      "durationSeconds": 16,
+      "startedAt": "2026-10-25T01:56:00.093Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 7,
+      "costUsd": 0.0863256,
+      "judgeCostUsd": 0,
+      "durationSeconds": 27,
+      "startedAt": "2026-10-25T01:56:00.234Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  },
+  {
+   "name": "fire-short-form-video",
+   "dir": "trigger-evals/fire-short-form-video",
+   "source": "prose",
+   "promptMarkdown": "script a 20 second tiktok about our invoicing app. the hook: freelancers on it get paid 9 days sooner",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?short-form-video\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 7,
+      "costUsd": 0.140713,
+      "judgeCostUsd": 0,
+      "durationSeconds": 23,
+      "startedAt": "2026-10-25T01:56:00.721Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 6,
+      "costUsd": 0.1379921,
+      "judgeCostUsd": 0,
+      "durationSeconds": 26,
+      "startedAt": "2026-10-25T01:56:12.541Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 6,
+      "costUsd": 0.13243670000000002,
+      "judgeCostUsd": 0,
+      "durationSeconds": 25,
+      "startedAt": "2026-10-25T01:56:15.735Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  },
+  {
+   "name": "fire-visual-brief",
+   "dir": "trigger-evals/fire-visual-brief",
+   "source": "prose",
+   "promptMarkdown": "write me midjourney prompts for 4 product shots of our steel water bottle, for the website hero and instagram",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?visual-brief-generator\""
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 4,
+      "costUsd": 0.0871355,
+      "judgeCostUsd": 0,
+      "durationSeconds": 28,
+      "startedAt": "2026-10-25T01:56:23.456Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 1x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 0,
+      "passed": false,
+      "turns": 1,
+      "costUsd": 0.045682,
+      "judgeCostUsd": 0,
+      "durationSeconds": 13,
+      "startedAt": "2026-10-25T01:56:27.352Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": false,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 0,
+      "passed": false,
+      "turns": 1,
+      "costUsd": 0.046132000000000006,
+      "judgeCostUsd": 0,
+      "durationSeconds": 12,
+      "startedAt": "2026-10-25T01:56:38.334Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "fired",
+        "passed": false,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 1..\u221e)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 0.3333333333333333,
+    "passRate": 0.3333333333333333
+   }
+  },
+  {
+   "name": "nofire-client-followup",
+   "dir": "trigger-evals/nofire-client-followup",
+   "source": "prose",
+   "promptMarkdown": "write a short follow-up email to Dana, a client I met yesterday, reminding her the invoice for the logo project is due friday",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "not-fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"marketing-skill:",
+      "min": 0,
+      "max": 0
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 1,
+      "costUsd": 0.036434,
+      "judgeCostUsd": 0,
+      "durationSeconds": 4,
+      "startedAt": "2026-10-25T01:56:40.343Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "not-fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 0..0)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 1,
+      "costUsd": 0.036252,
+      "judgeCostUsd": 0,
+      "durationSeconds": 3,
+      "startedAt": "2026-10-25T01:56:41.043Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "not-fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 0..0)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 1,
+      "costUsd": 0.036388,
+      "judgeCostUsd": 0,
+      "durationSeconds": 4,
+      "startedAt": "2026-10-25T01:56:43.894Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "not-fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 0..0)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  },
+  {
+   "name": "nofire-drip-question",
+   "dir": "trigger-evals/nofire-drip-question",
+   "source": "prose",
+   "promptMarkdown": "quick question, what's the actual difference between a drip campaign and a nurture sequence? no need to write anything",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "not-fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"marketing-skill:",
+      "min": 0,
+      "max": 0
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 1,
+      "costUsd": 0.040126,
+      "judgeCostUsd": 0,
+      "durationSeconds": 8,
+      "startedAt": "2026-10-25T01:56:44.356Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "not-fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 0..0)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 1,
+      "costUsd": 0.039147999999999995,
+      "judgeCostUsd": 0,
+      "durationSeconds": 6,
+      "startedAt": "2026-10-25T01:56:47.409Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "not-fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 0..0)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 1,
+      "costUsd": 0.039136,
+      "judgeCostUsd": 0,
+      "durationSeconds": 6,
+      "startedAt": "2026-10-25T01:56:49.892Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "not-fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 0..0)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  },
+  {
+   "name": "nofire-linkedin-not-community",
+   "dir": "trigger-evals/nofire-linkedin-not-community",
+   "source": "prose",
+   "promptMarkdown": "write a linkedin post announcing our launch: marketing-skill, a free claude code plugin with 14 marketing skills",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "not-fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?community-post-generator\"",
+      "min": 0,
+      "max": 0
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 1,
+      "costUsd": 0.044517999999999995,
+      "judgeCostUsd": 0,
+      "durationSeconds": 10,
+      "startedAt": "2026-10-25T01:56:51.636Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "not-fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 0..0)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 1,
+      "costUsd": 0.043366,
+      "judgeCostUsd": 0,
+      "durationSeconds": 9,
+      "startedAt": "2026-10-25T01:56:52.205Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "not-fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 0..0)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 1,
+      "costUsd": 0.045090000000000005,
+      "judgeCostUsd": 0,
+      "durationSeconds": 10,
+      "startedAt": "2026-10-25T01:56:53.582Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "not-fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 0..0)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  },
+  {
+   "name": "nofire-python-ffprobe",
+   "dir": "trigger-evals/nofire-python-ffprobe",
+   "source": "prose",
+   "promptMarkdown": "my python script reads video duration with ffprobe and prints N/A for .mov files. how do I fix it?",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "not-fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"marketing-skill:",
+      "min": 0,
+      "max": 0
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 1,
+      "costUsd": 0.041576,
+      "judgeCostUsd": 0,
+      "durationSeconds": 8,
+      "startedAt": "2026-10-25T01:56:56.111Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "not-fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 0..0)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 2,
+      "costUsd": 0.0465923,
+      "judgeCostUsd": 0,
+      "durationSeconds": 11,
+      "startedAt": "2026-10-25T01:57:01.231Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "not-fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 0..0)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 2,
+      "costUsd": 0.045465200000000004,
+      "judgeCostUsd": 0,
+      "durationSeconds": 10,
+      "startedAt": "2026-10-25T01:57:02.085Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "not-fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 0..0)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  },
+  {
+   "name": "nofire-readme-typo",
+   "dir": "trigger-evals/nofire-readme-typo",
+   "source": "prose",
+   "promptMarkdown": "in README.md the install line says `claude pluign install marketing-skill`. fix the typo",
+   "runsPerCase": 3,
+   "timeoutSeconds": 300,
+   "maxTurns": 10,
+   "graders": [
+    {
+     "name": "not-fired",
+     "type": "tool_used",
+     "weight": 1,
+     "config": {
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"marketing-skill:",
+      "min": 0,
+      "max": 0
+     }
+    }
+   ],
+   "arms": {
+    "with": [
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 3,
+      "costUsd": 0.0426709,
+      "judgeCostUsd": 0,
+      "durationSeconds": 6,
+      "startedAt": "2026-10-25T01:57:03.790Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "not-fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 0..0)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 3,
+      "costUsd": 0.041209,
+      "judgeCostUsd": 0,
+      "durationSeconds": 7,
+      "startedAt": "2026-10-25T01:57:03.956Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "not-fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 0..0)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     },
+     {
+      "score": 1,
+      "passed": true,
+      "turns": 3,
+      "costUsd": 0.040881600000000004,
+      "judgeCostUsd": 0,
+      "durationSeconds": 5,
+      "startedAt": "2026-10-25T01:57:09.591Z",
+      "error": null,
+      "skippedPaidGraders": false,
+      "graders": [
+       {
+        "name": "not-fired",
+        "passed": true,
+        "weight": 1,
+        "explanation": "Skill called 0x (expected 0..0)",
+        "withOnly": false,
+        "scored": true
+       }
+      ]
+     }
+    ]
+   },
+   "aggregates": {
+    "score": 1,
+    "passRate": 1
+   }
+  }
+ ],
+ "aggregates": {
+  "casesTotal": 23,
+  "casesPassed": 18,
+  "overallScore": 0.8260869565217391,
+  "overallPassRate": 0.8260869565217391
+ }
+}

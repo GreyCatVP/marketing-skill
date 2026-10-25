@@ -86,6 +86,78 @@ claude plugin eval . --runs 3 -j 4 --trust-plugin --model claude-sonnet-5-5 \
 python3 scripts/results.py --eval evals/results/latest.json
 ```
 
+## Does the skill fire?
+
+The table above found that Claude often answers on its own instead of
+using the skill, and whatever a skill adds only counts when it fires.
+[`trigger-evals/`](../trigger-evals) measures that alone: 23 requests
+run with the whole plugin loaded, so all 14 skills compete for them.
+
+- **18 should fire a skill**, at least one per skill: requests that look
+  easy enough for Claude to answer by itself (the subreddit's rules
+  already pasted, only a pricing page and no web access, "turn this into
+  a linkedin post: <a paragraph>").
+- **5 near misses should fire none**: a README typo, a question about
+  drip vs nurture emails, a follow-up to an existing client, a Python
+  fix, and a LinkedIn post (not `community-post-generator`'s job).
+
+Each runs 3 times with `claude plugin eval . --eval-dir trigger-evals
+--ablation none`; a run passes when the right skill fires (or, for a
+near miss, none does).
+
+| Case | Before | After |
+|---|---|---|
+| fire-ad-copy | 3 of 3 | 3 of 3 |
+| fire-calendar | 3 of 3 | 3 of 3 |
+| fire-clip-montage | 3 of 3 | 3 of 3 |
+| fire-community-discord | 3 of 3 | 3 of 3 |
+| fire-community-nogo | 0 of 3 | 3 of 3 |
+| fire-community-product-hunt | 3 of 3 | 3 of 3 |
+| fire-community-sideproject | 3 of 3 | 3 of 3 |
+| fire-competitor-battlecard | 0 of 3 | 3 of 3 |
+| fire-competitor-quick | 2 of 3 | 3 of 3 |
+| fire-email-outreach | 3 of 3 | 3 of 3 |
+| fire-email-sequence | 3 of 3 | 3 of 3 |
+| fire-full-pipeline | 3 of 3 | 3 of 3 |
+| fire-montage-video | 3 of 3 | 3 of 3 |
+| fire-publish | 3 of 3 | 3 of 3 |
+| fire-repurposer | 0 of 3 | 3 of 3 |
+| fire-seo | 3 of 3 | 3 of 3 |
+| fire-short-form-video | 3 of 3 | 3 of 3 |
+| fire-visual-brief | 1 of 3 | 3 of 3 |
+| nofire-client-followup | 3 of 3 | 3 of 3 |
+| nofire-drip-question | 3 of 3 | 3 of 3 |
+| nofire-linkedin-not-community | 3 of 3 | 3 of 3 |
+| nofire-python-ffprobe | 3 of 3 | 3 of 3 |
+| nofire-readme-typo | 3 of 3 | 3 of 3 |
+
+All runs: 57 of 69 before, 69 of 69 after. The right skill fired in 42 of
+54 runs before and 54 of 54 after, and no near miss fired a skill either
+time. Both runs: 2026-10-25, `claude-sonnet-5-5`, about $6 each. Raw
+results: [before](results-data/trigger-2026-10-25-before.json),
+[after](results-data/trigger-2026-10-25-after.json).
+
+What changed between the two is only the skills' descriptions, the text
+Claude reads to decide whether to use one:
+
+- **Why to use it even when it looks easy.** The misses were all requests
+  Claude felt it could answer itself. Each description now says when the
+  skill is still worth it: "even when they pasted the rules or the post
+  looks obvious", "even with no web access and only a pasted page".
+- **Half the length, trigger first.** Claude Code fits every installed
+  skill's description into about 1% of the context window and, past
+  that, drops the least-used skills' descriptions and keeps only their
+  names; a session with 280 skills had 222 down to their names. The 14
+  descriptions went from 8,265 characters to 4,424, with "Use whenever"
+  in the first 200 characters. `scripts/ci/lint_repo.py` now holds them
+  to that.
+
+Read it with care: the descriptions were rewritten after seeing which
+requests missed, so the four cases that went from 0 or 1 to 3 are the
+ones they were aimed at, not a held-out test. The cases that already
+fired, and the near misses, are the check that nothing else got worse.
+3 runs a case is small.
+
 ## Real posts
 
 The author's own launch posts, logged in

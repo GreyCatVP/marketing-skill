@@ -34,6 +34,7 @@ The repo checks need Python 3.12 and nothing else:
 ```
 python3 scripts/ci/lint_repo.py        # skill frontmatter, command size, manifests, paths, links
 bash scripts/ci/smoke_publish.sh       # both publish scripts, dry run only, with fake credentials
+bash scripts/ci/smoke_results.sh       # scripts/results.py's numbers on made-up logs
 python3 scripts/video/templates/build.py
 git diff --exit-code -- scripts/video/templates   # the built templates must match build.py
 ```
@@ -70,10 +71,18 @@ The lint checks most of these, but not all.
 
 - One folder per skill: `skills/<name>/SKILL.md`. The frontmatter
   `name` matches the folder name.
-- The `description` is under 1024 characters, has no XML or HTML tags,
-  and says both what the skill does and the phrases that should trigger
-  it. Claude picks a skill by its description, so this is the most
-  important line in the file.
+- The `description` is under 400 characters, has no XML or HTML tags,
+  and says what the skill does, then the phrases that should trigger it,
+  with its "Use when" or "Use whenever" in the first 200 characters, and
+  all the descriptions together stay under 5,000. Claude picks a skill by
+  its description, so this is the most important line in the file; and
+  Claude Code fits every installed skill's description into a small
+  budget, dropping the least-used ones to just their names, so a long one
+  can vanish. Say when the skill is worth using even if the request looks
+  easy: that's when Claude tends to answer on its own. If you change a
+  description, run `claude plugin eval . --eval-dir trigger-evals
+  --ablation none` (paid model calls, about $6) and compare it with the
+  last run in [docs/results.md](docs/results.md).
 - Point at files in the plugin as `${CLAUDE_PLUGIN_ROOT}/references/...`,
   and only at files that exist (`state/` paths are created at runtime and
   are skipped). Codex doesn't fill in that placeholder, so keep the

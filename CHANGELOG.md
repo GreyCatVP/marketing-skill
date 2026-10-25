@@ -342,6 +342,14 @@ Skills that read "our changelog" for source material read this file too.
 - Every skill's setup step now continues with the placeholder defaults
   when the user has already said to skip setup, instead of asking the 4
   setup questions anyway.
+- **Skills fire when they should**: Claude was answering on its own
+  when a request looked easy (the subreddit's rules already pasted, only
+  a pricing page to go on). Every description now leads with when to use
+  it, says why even when it looks easy, and is half as long, so it isn't
+  the one dropped when many plugins share Claude Code's skill-listing
+  budget. On `trigger-evals/`, the right skill fired in 54 of 54 runs, up
+  from 42, and the 5 near misses still fired none. CI holds descriptions
+  to 400 characters with the trigger in the first 200.
 
 ## 0.7.0 (2026-10-03)
 
